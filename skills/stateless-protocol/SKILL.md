@@ -1,22 +1,20 @@
-**Read the common antigravity version for vendor independence:**
-<SYMPHONY_ROOT>\skills\stateless-protocol\SKILL.md
-
 ---
 name: stateless-protocol
-description: Enforces that the agent never relies on conversation history, preserving all context to the file system.
+description: Never rely on conversation history; the filesystem holds all context.
 ---
 
 # Stateless Protocol
 
-The user regularly wipes the conversation context to prevent token bloat and context hallucination. 
-**You must never rely on the conversation thread as your memory.**
+The user wipes conversation context regularly to avoid token bloat and hallucination. **The chat is never your memory.** If a decision, fix, or requirement isn't in a persistent file, it does not exist.
 
-If a piece of context, a design decision, a bug fix, or a task requirement is not written down in a persistent file, it does not exist.
+**The two-way rule:**
+1. **Don't read from the conversation for durable truth** — reload it from files each session.
+2. **Don't write durable truth into the conversation** — no progress recaps, no "context to carry forward", no re-summarising what you did. That's wasted tokens; the next agent won't see the chat anyway.
 
-## Ongoing Protocol
-Whenever you complete a task, fix a bug, or make a design decision, you MUST proactively update the relevant persistent files **before** concluding the task. Treat every response as if it might be the last one before the context window is wiped clean.
+Instead, before concluding any task, put what matters in the right file — in as few words as possible:
+- **`ARCHITECTURE.md` / `README.md`** — structural or design changes.
+- **`MEMORY.md`** — major decisions, active bugs, next steps (keep it short; move finished items to `# HISTORY`).
+- **`tickets/`** — the task itself; update the status prefix to terminal when done.
+- **`skills/`** — a new reusable workflow.
 
-1. **`README.md` / `ARCHITECTURE.md`:** Ensure the core entry-point document is updated with any new structural changes.
-2. **`MEMORY.md`:** Always update this file with recent major decisions, active bugs, and immediate next steps.
-3. **Tickets (`tickets/`):** Ensure the current task is fully documented in an active ticket file in the `tickets` directory. Update its status to `DONE` when complete.
-4. **Skills (`skills/`):** If a new behavioral workflow is established, codify it into a new skill file immediately.
+Treat every response as if the context is wiped right after it. The filesystem is the memory; the conversation is disposable.
