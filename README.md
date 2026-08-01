@@ -39,7 +39,7 @@ The filename prefix **is** the state machine. A ticket moves `[APPROVED]` → `[
 | Reviewing what an agent did | Trust the transcript | `git diff` |
 | Onboarding a new model | Port the SDK | Point it at one Markdown file |
 
-**Token efficiency is the design goal, not a side effect.** Agents never pass context to each other — the ticket *is* the context. A specialist receives nothing in-band, ever. It reads the file, does the work, and stops.
+**Token efficiency is the design goal, not a side effect.** Agents never pass context to each other — the ticket *is* the context. A specialist receives nothing in-band, ever. It reads the file, does the work, and stops. An agent does not need to know the whole architect to implement a PR or a CR as with solution approach clearly outlined by the architect in the ticket itself.
 
 ---
 
