@@ -1,0 +1,327 @@
+---
+name: global-skill
+description: Global workspace rules, behavior conventions, agent initialization macros, and Git workflow.
+---
+
+# Global Skill
+
+This skill defines general behavior rules and project-wide conventions used by **ALL** agents in the Symphony Protocol. Every agent must read this file after their role profile and before any work.
+
+---
+
+## CRITICAL: No Exploratory Work Before Context Load
+
+**Strict Rule**: You MUST NOT call listing tools, read source code, edit files, or perform any exploratory work until you have completed the full initialization sequence from `Agent role.md` (Steps 1–4) and read this file.
+
+### Discovering Hidden / Dot Directories
+
+Directory listing tools often hide dot-directories (e.g., `.agent_profiles`, `.git`, `.idea`). When you need to explore them, use terminal commands with PowerShell:
+
+```powershell
+Get-ChildItem -Path "<SYMPHONY_ROOT>" -Force
+Get-ChildItem -Path "<SYMPHONY_ROOT>\project1" -Recurse -Force
+```
+
+Always prefer explicit full paths.
+
+### The "Main Folder" Rule
+
+Whenever the user requests to place, copy, or move a file to the "main folder", this strictly refers to the **root project folder** (e.g., `project1/`), and NOT any internal module directories like `app/src/main/`.
+
+---
+
+## Performance Is a First-Class Constraint — The Mantra (All Agents, All Projects — added 2026-07-16, user mandate)
+
+**We breathe performance.** Performance is a requirement on equal footing with correctness — never an afterthought, never a "we'll optimize later." **No feature may ship that compromises perceived or actual performance.** A feature that works but janks, stutters, or makes the user wait is **not done**.
+
+Binding rules for every agent, every project:
+
+1. **Never block the UI / main thread** with I/O, database, disk, network, serialization, or heavy computation. That work goes off-main (background dispatcher / worker / async) with the result delivered back to the UI. A screen must render its shell immediately; data fills in without freezing interaction.
+2. **Warm the next screen while the current one loads.** Where the user's next action is predictable, prefetch/cache it in the background during the current load — e.g., pre-cache the detail of the first few list items while the list itself is loading; pre-cache a week/month's entries while that calendar page is loading. Latency the user never sees is latency defeated.
+3. **Cache on hot paths; compute once.** Do not recompute or re-read the same data on every open, scroll, or redraw. Materialize/memoize what is stable; invalidate precisely.
+4. **The Architect must state a performance budget/approach in every ticket that touches a user-facing hot path** (open/scroll/interaction): explicitly say how it stays fast (async, cached, prefetched, paginated) under `## Architectural Constraints`. QA/Dev must not regress load, scroll, or interaction latency; "it works" is insufficient if it is slower.
+5. **Measure on anything perf-sensitive.** State the before/after (cold open, scroll jank, interaction delay) rather than assuming. Prove it's fast, don't hope.
+6. **On conflict, performance wins.** If a feature cannot be delivered without degrading performance, that is an architectural problem to solve or escalate — not a tax to quietly pass to the user. Only the user may explicitly trade performance away, in writing.
+
+This mantra is vendor-neutral and applies to every project under `antigravity/`. Mirror the one-liner into each project's standing decisions where useful, but this file is canonical.
+
+---
+
+## Read Live State Directly From Disk (All Agents — added 2026-07-05)
+
+Symphony is multi-agent and stateless: ticket filenames/statuses, `MEMORY.md`, git state, and the built APK change **constantly and externally** — another agent, or the user on their own machine, can change them mid-session. Any sandboxed, mounted, or cached filesystem view an agent holds may be a **point-in-time snapshot that does not refresh** when files change externally. Reading volatile state from such a cache yields stale, wrong conclusions (a wrong ticket status, a stale APK build date).
+
+**Hard rule — read volatile state fresh from the real project disk, never from a sandbox/cache; re-read immediately before asserting anything about current state:**
+1. **Ticket listings / statuses / filenames and any file contents** (`MEMORY.md`, ticket bodies, source): read from the actual on-disk project path at the moment you need truth — not from an earlier in-session listing, from conversational memory, or from a sandbox mount. If your toolset exposes both a direct file reader/lister and a separate shell/sandbox, use the **direct file reader** for these reads (it hits the live disk; the sandbox may be a snapshot).
+2. **Git state** (status, ahead/behind, branch, `index.lock`): the live repository is the source of truth. If your environment cannot read live git reliably, **do not assert git state from a cached view** — re-read the real repo or defer to the user.
+3. **APK / build-artifact freshness (timestamps):** never claim a build's age from a cached mount. A direct file reader returns contents, not `mtime`; if you cannot stat the real file, ask the user rather than reporting a possibly-stale timestamp.
+4. **Re-read before you assert:** whenever time has passed or another agent may have acted, re-read the file/directory from disk right before making any claim about its current status. Do not repeat an earlier in-session read as if it were still current.
+
+## Skill: Clarify Before Acting (Token-Efficient Mode)
+
+Before executing any task, classify the request into one of four confidence levels. This is one of the highest-ROI optimizations you can make.
+
+### Level 1 – Clear (90–100% confidence)
+Requirements are sufficiently specified. **Proceed immediately.** State assumptions only if helpful.
+
+### Level 2 – Minor Ambiguity (70–90% confidence)
+Some details are missing but reasonable defaults exist. **Proceed using sensible assumptions.** Explicitly mention them. Do not stop to ask questions.
+
+### Level 3 – Material Ambiguity (40–70% confidence)
+Different interpretations would significantly change implementation, architecture, cost, security, APIs, schemas, or user experience. **Pause.** Ask only the minimum targeted questions required. **Maximum: 3 concise questions.**
+
+Good questions: "Should authentication use JWT or session-based?" "Is backward compatibility required?"
+Bad questions: "Tell me everything you want." "Any other requirements?"
+
+### Level 4 – Critical Ambiguity (<40% confidence)
+The task is too underspecified and proceeding would likely waste work. **Ask a small set of high-leverage questions.** Maximum: 5 questions. They must unblock major decisions.
+
+### Question Quality Rules
+
+Questions must be:
+- Specific
+- Decision-oriented
+- High impact
+- Answerable in one sentence
+- Non-overlapping
+
+### Prevent Clarification Loops
+
+Never enter infinite clarification cycles.
+- **Maximum clarification rounds: 2**
+- **Maximum total questions per task: 5**
+- If questions remain unanswered: state assumptions explicitly, proceed with safest defaults, mark assumptions as needing validation later.
+
+### Cost-Aware Execution
+
+Before asking a question, estimate:
+- **Cost of asking**: Additional tokens, waiting for user response
+- **Cost of guessing**: Potential rework, architecture mistakes, security risks, breaking changes
+
+Ask questions only when: `Cost(guessing) > Cost(asking)`. Otherwise proceed.
+
+---
+
+## No Keepalive / No Tool Spam (All Roles, All Vendors — added 2026-07-30)
+
+**Incident:** agents in WAIT (or after EXIT) burned large volumes of tokens by issuing empty shell commands (`exit 0`, noops, tight sleep loops) every fraction of a second to "stay alive" instead of ending the turn and sleeping only via the Role Work Loop's scheduled interval.
+
+**Hard rule — vendor-neutral (Claude, Grok, Codex, Cursor, Gemini, …):**
+
+1. After reporting **WAIT** or **EXIT** (or any "nothing to do right now" status), **end the turn with zero further tool calls**.
+2. Never use tools as a heartbeat: empty commands, `exit 0`, `echo`/`Write-Host` noops, tight sleep loops, or repeated status commands that do not change decisions.
+3. WAIT sleep is one scheduled/blocking wait for the configured interval (`Agent role.md` § Role Work Loop), then a real re-read of the work list — not continuous tool chatter between ticks.
+4. EXIT cancels scheduled polls for that role; do not re-arm until new work exists or the user re-inits.
+5. Canonical detail lives in `Agent role.md` §"Role Work Loop" → **"No keepalive / no tool spam while WAIT or after EXIT"**. This section is the global pointer so every init load hits the rule even before the full loop text is re-applied.
+
+This complements Cost-Aware Execution: wasted tool turns have the same cost profile as wasted clarification rounds.
+
+---
+
+## Skill: Generic Status Command (All Roles)
+
+**Trigger phrases**: "status", "update", "tell me the status", "what's the status", "give me an update", or close variants — from any user message, to **any agent regardless of role** (Architect, QA, Dev, Designer, Tester, Implementer).
+
+When triggered, respond immediately without re-running the full init sequence (you should already be initialized into a project). Do the following:
+
+1. **Scan** the current project's `tickets/` directory with `Get-ChildItem -Force` (brackets in filenames break globs without `-Force`/`-LiteralPath`).
+2. **Filter to pending tickets only** — i.e., everything **except** `[DONE]`, `[CANCELLED]`, and `[REVERTED]`. Pending statuses include (across both lifecycles): `[DRAFT]` (Architect/Designer or Composer design-in-progress), `[APPROVED]`, `[READY_FOR_DEV]`, `[READY_FOR_IMPL]`, `[IN_PROGRESS]`, `[CANNOT_QA]`, `[CANNOT_DEV]`, `[CANNOT_TEST]`, `[CANNOT_IMPL]`, `[DEFER]`, `[HOLD]`. A `[DRAFT]` ticket is pending (not done) but belongs to the Architect/Designer/Composer — QA/Dev must not pick it up.
+3. **Never dump full ticket bodies.** For each pending ticket, output only:
+   - The ticket filename (status prefix + ticket number + short name)
+   - A **2-3 line summary**: what the ticket is about, what stage/status it is currently in, and (if applicable) what is blocking it or what the next action/owner is.
+4. If there are **no pending tickets**, say so in one line (e.g., "No pending tickets — project is stable.").
+5. Do not take any action beyond reporting (no renames, no edits, no auto-proceed) — a status request is read-only.
+
+This behavior is project-agnostic and role-agnostic: it applies to whichever project/role the agent is currently initialized into, using that project's own `tickets/` directory.
+
+---
+
+## Skill: Long-Running Commands (Gradle / rtest / assembleDebug) — Don't Block the User
+
+**Problem:** When an agent runs `.\gradlew.bat ...`, `.\rtest.bat`, `assembleDebug`, or any command that takes 30s–10min **synchronously** via a single bash tool call, the tool call blocks until the command finishes. During that time the agent **cannot send any message to the user** — it appears frozen/unresponsive. If the command throws a huge Java stack trace, output-capture/processing adds further latency on top of the build time itself. Users have reported 10-minute silences this way.
+
+**Rule: Any command expected to take more than ~30 seconds MUST be run in the background** with output redirected to a temp file, then polled in short subsequent tool calls. This keeps each individual bash call short (seconds, not minutes) so the agent regains control frequently and can update the user between polls.
+
+### Background-launch pattern (Windows PowerShell)
+
+```powershell
+# 1. Launch in background, redirect output to a temp file, return immediately
+$logFile = "$env:TEMP\opencode\gradle_build.log"
+$errFile = "$env:TEMP\opencode\gradle_build.err"
+$doneFile = "$env:TEMP\opencode\gradle_build.done"
+
+# Clean any prior done-marker
+Remove-Item -LiteralPath $doneFile -ErrorAction SilentlyContinue
+
+Start-Process -FilePath ".\gradlew.bat" `
+  -ArgumentList "compileDebugUnitTestKotlin","--console=plain" `
+  -NoNewWindow -RedirectStandardOutput $logFile -RedirectStandardError $errFile `
+  -PassThru | ForEach-Object { 
+    # When the process exits, write a done-marker. Register a background job.
+    Register-ObjectEvent -InputObject $_ -EventName Exited -Action { 
+      Set-Content -LiteralPath $doneFile -Value $EventArgs.SourceEventArgs.Id 
+    } | Out-Null
+  }
+
+Write-Host "Launched gradle in background. Poll with: Test-Path $doneFile"
+```
+
+### Poll pattern (short calls, run between other work)
+
+```powershell
+# 2. Poll — returns instantly either way
+if (Test-Path -LiteralPath $doneFile) {
+  Write-Host "DONE. Exit status recorded. Tail of output:"
+  Get-Content -LiteralPath $logFile -Tail 40
+  Get-Content -LiteralPath $errFile -Tail 20 -ErrorAction SilentlyContinue
+} else {
+  Write-Host "Still running. Current tail:"
+  Get-Content -LiteralPath $logFile -Tail 5 -ErrorAction SilentlyContinue
+}
+```
+
+### Output trimming (mandatory for large outputs)
+
+Even when reading the final output, **always trim** with `Select-Object -Last N` or `Get-Content -Tail N` (e.g. last 40 lines). Never dump a raw Java stack trace — those run 200+ lines and the tool's output-handling adds significant latency. The useful signal (BUILD SUCCESSFUL / FAILED + the actual error line) is always in the last ~40 lines for gradle, and the report file path is on the final line.
+
+### When to use background vs. foreground
+
+| Command | Expected duration | Mode |
+|---|---|---|
+| `git status`, `git fetch`, `git log`, `Move-Item`, file reads/edits | <5s | Foreground (single call) |
+| `.\gradlew.bat compileDebugUnitTestKotlin` (incremental, warm cache) | 20–90s | Background if >30s expected; foreground ok if warm |
+| `.\rtest.bat --tests "..."` (targeted, 1–3 classes) | 30–120s | Background |
+| `.\rtest.bat` (incremental full suite, no clean) | 2–5min | **Always background** |
+| `.\rtest.bat --full-cold` (clean + no cache) | 5–15min | **Always background** |
+| `.\gradlew.bat clean assembleDebug` | 2–5min | **Always background** |
+
+### Communication contract while background jobs run
+
+- After launching a background job, **immediately tell the user**: "Launched `<cmd>` in the background. I'll report when it finishes." Then end the turn — do not spin in a poll loop within one turn (that re-creates the blocking problem).
+- On the next turn (user prompt or your own continuation), poll once. If still running, say so in one line and end the turn. If done, report the trimmed result and proceed.
+- Never run more than one background gradle/rtest job at a time on the same project — they share the Gradle daemon and build cache and will conflict.
+
+### Temp directory
+
+Use `<TEMP_DIR>\` (pre-approved for external access) for all background-job log/err/done files. Clean up old markers before launching a new job with the same name.
+
+---
+
+## Global Rule: Git Workflow for All Coding Projects
+
+This applies only to projects that **already have an initialized Git repository** (a `.git/` directory at the project root). Not every project in `antigravity\` is git-ified yet. Before running any `git` command (this section, the Pre-Work Sync Check, or the role profile's own Git steps), check first — e.g. `git status` from inside `<project-folder>/`, or check for a `.git` directory. If the project has no repository, **skip all git steps silently** (no fetch/pull/commit/push) and proceed with the rest of the workflow (ticket renames, file edits, rtest) exactly as normal — git is a delivery/sync mechanism layered on top of the file-based ticket protocol, not a prerequisite for it. Re-check on each new init, since a project may be git-ified between sessions.
+
+> **HARD RULES:** `skills/agent-symphony/SKILL.md` §"Role Discipline & Repo Safety" (added 2026-07-05) is binding for every git operation below: scope lock (touch only ticket-listed files), one ticket = one commit, preserve UTF-8/CRLF encodings (never PowerShell `>` onto source files), STOP on any index error or 0-byte source blob, delete scratch files before staging, and the post-commit zero-byte integrity check before every push. Read it before your first commit of the session.
+
+### Mandatory Pre-Work Sync Check (All Roles, Every Init)
+
+(Applies only when the project has a Git repository — see above.)
+
+The "one agent at a time" rule prevents *simultaneous* edits, but it does not protect against a session that committed locally and then died (power outage, crash, container restart, manual kill) **before** its `git push` ran. That leaves a commit stranded in one local checkout while `origin` stays behind it. If a later session — on the same or a different checkout — starts from `origin` without checking for this, it can redo the same work and push a sibling commit, silently diverging the branch. This is not hypothetical: it has already happened on this workspace (two sessions independently resolved the same WD-116 `[CANNOT_DEV]` from the same base; one session's commit never reached `origin` before the next session started, and `git status` only revealed "have diverged" when a later session noticed).
+
+**Before doing anything else** (before the role-specific `git pull` step below, before claiming any ticket), every role must:
+0. **Clear a stale lock first (QA/Dev — added 2026-07-05, per the single-agent guarantee).** The user guarantees only **one agent operates at a time**, so any `<project>/.git/index.lock` present at session start is a **stale** leftover from a crashed/killed session — never a live operation. **Before** `git fetch` / `git pull` / any git command, check for `<project>/.git/index.lock`; if it exists, remove it (`del .git\index.lock` on Windows, `rm -f .git/index.lock` elsewhere), then proceed to fetch/pull. This **supersedes** the old "STOP on stale `index.lock`" for the lock case: under the single-agent guarantee, clearing the stale lock and continuing is correct. (Still STOP for genuine index *corruption* — `unknown index entry format` / `bad index` — or a tree dirty with files outside your ticket's scope; a lock file is neither of those.)
+1. `git fetch`
+2. `git status` — check specifically for "Your branch is ahead of 'origin/main'" (unpushed local commits) or "have diverged" (both ahead and behind). **If `git status` itself errors (index corruption, stale `index.lock`) or the tree is dirty with files outside your ticket's scope: STOP and report — do not commit, do not clean up other agents' files, do not delete `.git` contents without confirming no git process is running.**
+3. **If ahead only:** push immediately (`git push`) before proceeding — do not let local commits sit unshared while you start new work.
+4. **If diverged:** stop and reconcile before claiming any ticket. Diff the two tips (`git diff <local> <origin>`) to understand what each side actually changed. If one side's content is a strict superset/continuation of the other (same files, same diffs, one just further along — as in the WD-116 case), merge and keep the more-advanced version; do not blindly force-push over the other side without checking content first. If the two sides made genuinely conflicting changes, treat it like a `[CANNOT]` escalation — stop and surface it rather than guessing.
+
+This check is in addition to, not a replacement for, the existing `git pull` step already required at the start of QA/Dev/Tester/Implementer workflows below.
+
+### QA Agent — After Test Authoring
+
+After writing failing tests and promoting the ticket from `[APPROVED]` to `[READY_FOR_DEV]`:
+1. Stage all changed files (tests + renamed ticket):
+   ```bash
+   git add .
+   ```
+2. Commit with the ticket file name **minus the status prefix** as the commit message:
+   ```bash
+   git commit -m "WD-XXX_description_of_ticket.md"
+   ```
+3. Push to the remote repository:
+   ```bash
+   git push
+   ```
+
+### Dev Agent — After Implementation
+
+After implementing the solution, running all tests to green, and promoting the ticket from `[IN_PROGRESS]` to `[DONE]`:
+1. Pull latest changes first (before claiming a ticket):
+   ```bash
+   git pull
+   ```
+2. Stage all changes (production code + renamed `[DONE]` ticket):
+   ```bash
+   git add .
+   ```
+3. Combine all commits for this ticket (QA test commit + all Dev commits) into **one single commit** using squash/amend. The commit message must be the ticket file name minus the status prefix:
+   ```bash
+   git commit --amend --no-edit
+   ```
+   (Or use interactive rebase `git rebase -i HEAD~N` if needed.)
+4. Retrieve the final commit hash:
+   ```bash
+   git rev-parse HEAD
+   ```
+5. Append the commit hash to the `[DONE]_<ticket_name>.md` ticket file.
+6. Stage the updated ticket and amend the commit:
+   ```bash
+   git add tickets/[DONE]_<ticket_name>.md
+   git commit --amend --no-edit
+   ```
+7. Push the single combined commit:
+   ```bash
+   git push --force-with-lease
+   ```
+
+---
+
+## Terminology Preference
+
+1. **Project root**: The active workspace directory (e.g., `project1/`). All project work happens here.
+2. **Tickets**: Markdown files in `tickets/` with status prefixes like `[APPROVED]`, `[READY_FOR_DEV]`, etc.
+3. **rtest**: The regression test suite (project-specific command lives in `<project-folder>/SKILL.md`).
+4. **Symphony Protocol**: The file-based multi-agent coordination system described in `agent-symphony/SKILL.md`.
+
+---
+
+## Project1 Project Specifics
+
+- **Primary active project**: `<SYMPHONY_ROOT>\project1/`
+- `MEMORY.md` in the above folder is the source of truth for architecture decisions, core philosophy ("Project1 is a memory..."), model invariants, and recent ticket status.
+- On **every** Architect initialization, you **must** re-read the Fundamental Definition + Core Model Invariants sections from `MEMORY.md`.
+- Real tickets use the prefix style `[APPROVED]_WD-078_brief_description.md`, `[READY_FOR_DEV]_...`, `[DONE]_...`.
+- There is no dual-mode or trivial exception for the Architect. All app modifications require tickets.
+- The meta folder `antigravity\` contains cross-project profiles, skills, and the universal `Agent role.md`. The canonical profile for each role is under `.agent_profiles\<role>_profile.md`.
+
+---
+
+## Antigravity Context Resolution Order (All Agents)
+
+To ensure synchronization across different agents in this workspace, all agents must load rules in this order before acting:
+1. `Agent role.md` (universal entry)
+2. Your role profile (`.agent_profiles/<role>_profile.md`)
+3. `skills/global-skill/SKILL.md` (this file)
+4. `skills/agent-symphony/SKILL.md` (protocol)
+5. Project `MEMORY.md` (live state)
+6. Project `SKILL.md` (technical conventions)
+7. `skills/ticket-management/SKILL.md` (if creating tickets)
+8. `skills/rtest/SKILL.md` (if touching tests)
+9. `skills/blocker-resolution/SKILL.md` (if touching tests — same condition as step 8)
+10. Active tickets in `tickets/` (current work state)
+
+Always prefer the antigravity common versions for protocol consistency.
+
+---
+
+## Vendor Neutrality Rule (2026-07-05 — permanent)
+
+The Symphony Protocol is vendor-independent by design: any agent (Claude, Gemini, Grok, GPT, Cursor, Codex, …) must be able to participate using ONLY the vendor-neutral files: `Agent role.md`, `skills/*`, `.agent_profiles/*`, and each project's `MEMORY.md` / `SKILL.md` / `ARCHITECTURE.md` / `AGENTS.md` / `tickets/`.
+
+Hard rules:
+1. **No protocol content may live exclusively in a vendor-specific file** (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.github/copilot-instructions.md`, etc.). Those files are convenience mirrors/pointers for tools that auto-load them — nothing more.
+2. **Change order:** protocol/rule/lifecycle changes are written to the vendor-neutral files FIRST, then mirrored (Architect's responsibility). A mirror that is ahead of the canonical files is a defect — fix immediately.
+3. **On conflict, vendor-neutral files win.** Every mirror must carry a notice saying so.
+4. Each project root carries an `AGENTS.md` (the cross-vendor convention many tools auto-read) that points new agents at `Agent role.md` and lists the source-of-truth hierarchy.
+5. Skills and profiles never move into vendor-specific directories (e.g., `.claude/`, `.gemini/`) — they stay in the shared `skills/` and `.agent_profiles/` trees.

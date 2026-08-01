@@ -1,0 +1,12 @@
+# Symphony is a protocol, not an app - almost nothing should be ignored.
+# Keep tickets, MEMORY.md and ticketorder.md tracked: they ARE the state.
+
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.idea/
+.vscode/
+
+# Vendor-specific mirrors are conveniences, never sources of truth.
+# Track them if you use them; they must never hold protocol content.

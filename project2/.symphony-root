@@ -1,0 +1,5 @@
+project=project2
+canonical_path=<SYMPHONY_ROOT>/project2/
+# SYMPHONY PATH-INTEGRITY MARKER - DO NOT COPY, MOVE, OR RECREATE THIS FILE.
+# Agents: verify this file exists at your Active Workspace and that
+# project= matches your init command BEFORE your first write of a session.
