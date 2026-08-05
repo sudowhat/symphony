@@ -22,7 +22,7 @@ Follow this sequence exactly. Do not read source, list dirs, or change anything 
 | project1 | project1 | dev | architect, qa, dev, srtl, orchestrator |
 | project2 | project2 | content | composer, critic, designer, tester, implementer, srtl, orchestrator |
 
-**Add your own projects here, one row each.** The folder sits directly under `<SYMPHONY_ROOT>` and holds a `.symphony-root` marker. Unknown short name → ask the user.
+**Add your own projects here, one row each.** The folder sits directly under `<SYMPHONY_ROOT>` and holds a `.symphony-root` marker. Unknown short name → ask the user; **never invent a registry entry mid-init** — projects join only via `add project` (below).
 
 ### 2. Resolve the role (Role Registry)
 
@@ -50,6 +50,22 @@ Finally, everyone: **verify path integrity** — `<project>\.symphony-root` exis
 ### 4. Report readiness, then auto-proceed
 
 Report: your boundaries · active tickets (`[APPROVED]`/`[READY_FOR_DEV]`/`[IN_PROGRESS]`/`[CANNOT]`/`[DRAFT]`, full filenames) · project philosophy in your words · "I am ready." Then immediately run your work loop below — never wait to be told what to do.
+
+---
+
+## The `add project` command
+
+```
+add project <project-folder>
+```
+
+Not a role, not a ticket — a one-time, whole-folder operation that makes an existing folder `init`-able. **Follow `<SYMPHONY_ROOT>\skills\project-onboarding\SKILL.md`.**
+
+In outline: five hard stops (folder must already exist · no existing/mismatched `.symphony-root` · short name not already registered · no look-alike folder) → derive short name, type, roles, ticket prefix, remote and branch by pattern rather than asking → create `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md` + `tickets/.claims/` and `requests/` → check ticket 0 → add the Registry row and lifecycle entry here → commit, set remote, push → verify from disk → hand back `init <short-name> <role>`.
+
+Two rules that surprise agents: **this skill is the only authorized creator of `.symphony-root`** (the marker's "never create it yourself" binds role agents mid-work, not the onboarding moment); and **"never `mkdir` a project folder" still has no exception** — folder absent → STOP.
+
+Onboarding **records** problems, never fixes them: a stale file reference, a bootstrap ticket missing a target, a host that can't certify a platform all go into `MEMORY.md` known gaps and the report. Fixing them is Architect work, after init.
 
 ---
 
