@@ -55,7 +55,7 @@ State every derived value in one assumptions block in your report.
 
 `ticketorder.md` — line 1 is the format legend, forever. Line 2+ is the **living batch note**: this batch's intent, the order rationale, deliberate gates, what waits on a human. Then route lines, `<ticket>-<Role>`, in dispatch order. Seed from existing tickets *respecting status*: a `[READY_FOR_DEV]` ticket gets only a `-Dev` line; an `[APPROVED]` one gets `-QA` then `-Dev`. A route line for a role that can't start yet is correct — that role will classify WAIT, which is the head rule working.
 
-**4. Support dirs.** `tickets/`, `tickets/.claims/`, `requests/`. Git doesn't track empty dirs — put a short README in each.
+**4. Support dirs.** `tickets/` and `tickets/.claims/`. Git doesn't track empty dirs — put a short README in `.claims/` (what a claim marker is; an orphaned claim means resume, never route around). **Don't create `requests/`**: the Architect's request-intake path reads it, but an absent directory just means no requests — create it when the project actually starts using intake, not before.
 
 **5. Ticket 0 check.** The bootstrap ticket must establish the project's full target structure in the first commit (see the Architect profile's commit-0 obligation). Already correct → record it. Wrong or silent → **don't edit it**; record in `MEMORY.md` known gaps and flag it as the Architect's first job. Absent → note that ticket 0 must establish it before any product ticket is designed.
 

@@ -61,7 +61,7 @@ add project <project-folder>
 
 Not a role, not a ticket — a one-time, whole-folder operation that makes an existing folder `init`-able. **Follow `<SYMPHONY_ROOT>\skills\project-onboarding\SKILL.md`.**
 
-In outline: five hard stops (folder must already exist · no existing/mismatched `.symphony-root` · short name not already registered · no look-alike folder) → derive short name, type, roles, ticket prefix, remote and branch by pattern rather than asking → create `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md` + `tickets/.claims/` and `requests/` → check ticket 0 → add the Registry row and lifecycle entry here → commit, set remote, push → verify from disk → hand back `init <short-name> <role>`.
+In outline: five hard stops (folder must already exist · no existing/mismatched `.symphony-root` · short name not already registered · no look-alike folder) → derive short name, type, roles, ticket prefix, remote and branch by pattern rather than asking → create `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md` + `tickets/.claims/` → check ticket 0 → add the Registry row and lifecycle entry here → commit, set remote, push → verify from disk → hand back `init <short-name> <role>`.
 
 Two rules that surprise agents: **this skill is the only authorized creator of `.symphony-root`** (the marker's "never create it yourself" binds role agents mid-work, not the onboarding moment); and **"never `mkdir` a project folder" still has no exception** — folder absent → STOP.
 
