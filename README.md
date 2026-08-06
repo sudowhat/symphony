@@ -53,7 +53,7 @@ loop: while (true) {
     2. read:    <project>/ticketorder.md
     3. exit:    no open line for MY role anywhere?    -> print "<role>|exit" ; STOP
     4. take:    top open line is mine AND gate open?  -> do it ; mark it ; continue (no sleep)
-    5. wait:    print "<role>|waiting on <ticket>" ; sleep 300 ; continue
+    5. wait:    print "<role>|waiting on <ticket>" ; sleep 300 ; continue    <- or a silent watcher; see mantra 3
 }
 ```
 
@@ -145,7 +145,7 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 ## Getting started
 
 1. **Clone this repo.** It becomes your `<SYMPHONY_ROOT>` — the paths inside the protocol files are written as `<SYMPHONY_ROOT>`; replace them with your absolute path, or keep the placeholder if your agent resolves relative paths reliably.
-2. **Copy `project1/` (dev) or `project2/` (content)** and rename it to your project.
+2. **Add your project** — say `add project <your-folder>` to any agent and it writes the files, registers the project and verifies the result (see [Adding your own project](#adding-your-own-project) below). Prefer to do it by hand? Copy `project1/` (dev) or `project2/` (content), rename it, and do steps 3–4 yourself.
 3. **Add a row to the Project Registry** in `Agent role.md`.
 4. **Edit three files in your new folder:**
    - `.symphony-root` — set `project=` and `canonical_path=`
@@ -154,6 +154,31 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 5. **Open an agent and type:** `init <yourproject> architect`
 
 The Architect turns your request into tickets. Then open a second agent: `init <yourproject> qa`, and a third: `init <yourproject> dev`. They will not talk to each other, and that is the point.
+
+---
+
+## Adding your own project
+
+Hand-copying a sample folder works, but the repo ships a skill that does it properly. Point any agent at a folder that **already exists** and say:
+
+```
+add project <project-folder>
+```
+
+The agent reads `skills/project-onboarding/SKILL.md` and runs a fixed procedure: survey read-only, clear five hard stops, derive every default, write the files, register the project, commit, verify from disk, and hand back the `init` command that now works.
+
+**It refuses rather than improvises.** Five conditions stop it cold: the folder doesn't exist, a `.symphony-root` is already there, the short name is taken, a look-alike folder exists elsewhere, or the folder's purpose is undeterminable. Everything else — missing docs, no git, odd ticket names — is recorded as a finding in `MEMORY.md`, never silently repaired.
+
+**It never creates the project directory.** If the folder isn't there, it stops and tells you. No `mkdir`, no clone, no reconstructing a project from git objects or memory — that rule has no exception, not even here.
+
+**It derives; it doesn't interrogate you.** Short name from the folder (`foo-folder` → `foo`), role set from the project type, ticket prefix from whatever tickets already exist, remote and branch from convention. Every default it chose is listed in one assumptions block in the final report, so you can correct it in one pass instead of answering a questionnaire up front.
+
+**What lands:** `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md`, plus `tickets/` and `tickets/.claims/`. Two things about that set are worth knowing:
+
+- `.symphony-root` is the path-integrity marker, and **onboarding is the only moment it is ever legitimate to create one.** Every other rule in the protocol says a role agent that finds it missing is lost and must stop.
+- The registry row appended to `Agent role.md` is **the step that actually makes the project real.** Until that edit lands, `init <short-name> <role>` cannot resolve, no matter how complete the folder looks.
+
+Onboarding does not start work. It ends by handing you `init <short-name> <role>`, and the Architect's own init takes it from there.
 
 ---
 
