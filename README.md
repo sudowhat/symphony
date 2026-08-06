@@ -61,9 +61,11 @@ Three mantras:
 
 1. **Never exit while I still have an open line in the batch.** Blocked is not finished.
 2. **Exit the moment nothing on the list is mine.** Don't linger, don't "check in case".
-3. **Sleep is a real 300-second blocking sleep in this session.** Not a cloud job, not a new agent, not a poll storm.
+3. **Sleep must resume *this* session with its context intact.** Not a cloud job, not a new agent, not a fresh `init`, not a poll storm. A 300-second blocking sleep qualifies; so does a background watcher that stays silent until there's work.
 
 A loop that burns tokens waiting is a broken loop even if it breaks no rule.
+
+**You pay per model turn, not per poll.** A sleep *inside* the agent still costs a full turn every tick (~$0.06 at 80K context) — the model has to reload everything just to learn nothing changed — while the same wait handed to a silent background shell loop costs nothing at all, and still honours mantra 3: it wakes *this* session, context intact.
 
 `ticketorder.md` is the queue — one line per unit of work, top-to-bottom:
 
