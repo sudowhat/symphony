@@ -1,86 +1,205 @@
 ---
 name: project-onboarding
-description: The `add project <project-folder>` command — how a new project joins the Symphony. Registry row, path marker, MEMORY/SKILL/ticketorder, git, verification.
+description: Add a new project to the Symphony Protocol. Implements the `add project <project-folder>` command — registry row, path-integrity marker, MEMORY.md / SKILL.md / ticketorder.md, support directories, git, and verification. Vendor-neutral: any agent of any brand can execute it.
 ---
 
-# Project Onboarding
+# Project Onboarding Skill
 
-Turns a folder that *contains* a project into one the Symphony can `init` into. One-time, whole-folder. Not a role, not a ticket.
+Onboarding turns a folder that merely *contains* a project into a folder the Symphony can `init` into. It is a one-time, whole-folder operation — not a role, not a ticket, and never part of normal ticket work.
 
-**Command:** `add project <project-folder>` (also "onboard X to symphony"). **Reference:** an already-onboarded project shows the finished shape; this skill states the rules. Shape from the reference, rules from here.
+**Command:** `add project <project-folder>` (case-insensitive). Also triggered by "onboard X to symphony", "add this project to the symphony protocol", or equivalent.
 
-## Authority
+**Canonical reference:** `whatdate-folder/` is the reference implementation. Open its `.symphony-root`, `MEMORY.md`, `SKILL.md` and `ticketorder.md` and mirror their shape. This skill states the rules; whatdate shows the finished article. When the two disagree, whatdate's *shape* wins and this skill's *rules* win.
 
-- **This skill is the only authorized creator of `.symphony-root`.** The marker's own "NEVER create it yourself" binds role agents mid-work, where a missing marker means you are lost. Onboarding is the one legitimate moment it is written.
-- **"Never `mkdir` a project folder" has no exception, not even here.** Folder absent → STOP and tell the user.
+---
 
-## Five hard stops — all five before the first write
+## 1. Authority and its limits
 
-| Condition | Action |
-|---|---|
-| Folder does not exist | **STOP.** Never create it. |
-| `.symphony-root` already present | Matching `project=` → already onboarded, report and stop. Different → radioactive, **STOP**. |
-| Short name already in the Registry | **STOP** — `init` would be ambiguous. |
-| Look-alike folder elsewhere | **STOP** and report. Don't read, merge, or delete. |
-| Folder unreadable / purpose undeterminable | **STOP** and ask. |
+This skill is the **single authorized exception** to one hard rule, and no exception at all to another:
 
-Everything else — missing docs, no code, no git, odd ticket names — is a **finding to record, not a stop**.
+- **`.symphony-root` says "NEVER create it yourself."** That rule binds role agents during ticket work, where a missing marker means you are lost. Onboarding is the one legitimate moment the marker is created. Create exactly one, for a folder that already exists.
+- **"Never create project directories" stands absolutely.** If the target folder does not exist, **STOP** and tell the user. Do not `mkdir`, do not clone, do not "restore" a project from git objects or memory. A missing folder is never a licence to make one.
 
-## Defaults — derive, don't ask
+## 2. Five hard stops — check all five before the first write
 
-State every derived value in one assumptions block in your report.
+| # | Condition | Action |
+|---|---|---|
+| 1 | Target folder does not exist under the Symphony root | **STOP.** Never create it. |
+| 2 | `.symphony-root` already present | Read it. `project=` matches → already onboarded; report and stop. `project=` differs → radioactive; **STOP** and report. |
+| 3 | Short name already in the Project Registry | **STOP.** Two projects cannot share a short name — `init` would be ambiguous. |
+| 4 | A look-alike folder exists elsewhere (similar name or contents) | **STOP** and report. Do not read further, do not merge, do not delete. This is the June-2026 fork incident's prevention rule. |
+| 5 | Folder unreadable, or its purpose genuinely undeterminable | **STOP** and ask. |
+
+Anything else — missing docs, no code, no git, odd ticket names — is a finding to record, not a stop.
+
+## 3. Defaults — derive, do not ask
+
+State every derived value in one assumptions block in your final report. Ask nothing unless a hard stop fires.
 
 | Value | Default |
 |---|---|
-| Short name | Folder name minus a trailing `-folder`. Lowercase, no spaces. |
-| Type + roles | Dev type → architect · qa · dev · srtl · orchestrator. Content type → composer · critic · designer · tester · implementer · srtl · orchestrator. A fresh project usually holds only a few Markdown docs and no build files, so **don't try to detect the type from contents** — take it from the workspace's standing convention. |
-| Ticket prefix | Read off existing tickets if any (`P1-0` → `P1`); else an abbreviation of the short name. **Never renumber or re-prefix existing tickets.** |
-| Remote / branch | The workspace's remote pattern + short name. `main` for a repo with no commits; keep the existing branch if it has history — never rename a branch with history. |
-| Remote repo exists? | Never assume, never ask. Set it, attempt the push, hand the user the exact command if it fails. |
-| Existing tickets | Bodies stay **exactly** as found. Onboarding seeds route lines and reports anomalies; editing/splitting/renumbering is Architect work, after init. |
+| Short name | Folder name minus a trailing `-folder` (`dbmeter-folder` → `dbmeter`). Lowercase, no spaces. |
+| Project type | **`kmp-mobile` — always, for every new project.** See §4. |
+| Role set | From the type: `kmp-mobile` / `android-dev` → architect · qa · dev · srtl · orchestrator. `content-web` → composer · critic · designer · tester · implementer · srtl · orchestrator. |
+| Ticket prefix | Read it off existing tickets if any exist (`DBM-0` → `DBM`). Otherwise an uppercase abbreviation of the short name. Never renumber or re-prefix tickets that already exist. |
+| Git remote | `https://github.com/sudowhat/<short-name>.git` |
+| Branch | `main` for a repo with no commits. If commits already exist, keep whatever branch they are on — never rename a branch that has history. |
+| Repo exists on GitHub? | Never assume, never ask. Set the remote, attempt the push, and if it fails hand the user the exact push command. |
+| Existing tickets | Leave the bodies **exactly** as found. Onboarding seeds route lines and reports anomalies; it never edits, renumbers or splits a ticket. That is Architect work, after init. |
 
-## Procedure
+## 4. The cross-platform mandate (standing user ruling, 2026-08-05)
 
-**1. Survey, read-only.** Force-list the folder (dot-dirs hide). Identify which documents are *authoritative* (requirements/architecture/spec) vs incidental. Force-list `tickets/` (brackets break globs). Get all four of `git remote -v`, `git log --oneline -1`, `git status --short`, current branch — a repo with no commits behaves differently from one with history.
+> **Every new project is multi-platform from commit 0.** Kotlin Multiplatform + Compose Multiplatform, Android **and** iOS targets present in the first commit, shared business logic, platform code confined to thin adapters.
 
-**2. Resolve identity,** then run the five hard stops.
+The reason is economic: retrofitting iOS onto a finished Android app costs a rewrite; carrying an empty iOS target from day one costs almost nothing. So the type default is `kmp-mobile` and there is nothing to detect — a fresh project usually holds only a few Markdown documents and maybe a ticket or two, with no build files to inspect.
 
-**3. Create four files at the project root** — never inside a vendor dir (`.claude/`, `.cursor/`, …); the Symphony is vendor-neutral by design.
+**Enforce it at ticket 0.** During onboarding, look at the project's bootstrap ticket (the lowest-numbered one, typically `<PREFIX>-0`):
 
-`.symphony-root` — verbatim from the reference project, only `project=` and `canonical_path=` change.
+- If it exists and already mandates KMP + both targets + a shared source set from the first commit — record that it does, and move on.
+- If it exists but is Android-only, or silent on iOS — **do not edit it.** Record it in `MEMORY.md` under known gaps and flag it in your report as the first thing the Architect must fix.
+- If no bootstrap ticket exists yet — note in `MEMORY.md` and in your report that ticket 0 must establish the multiplatform structure before any product ticket is designed.
 
-`MEMORY.md` — the live memory, deliberately short: (1) a line saying detail lives in tickets and canon; (2) **where truth lives** table; (3) **document precedence** — which wins, and that a real contradiction is an escalation, not a judgement call; (4) **core philosophy** — one-line identity + standing rulings, written from the authoritative docs in plain language; (5) **current state**, dated, with the ticket table and route; (6) **known gaps** — every anomaly the survey found; (7) **lessons** — empty at onboarding.
+A single-platform bootstrap is the one defect that gets exponentially more expensive with every subsequent ticket. Never let it pass unremarked.
 
-`SKILL.md` — technical conventions, with frontmatter: type + roles · authoritative docs ranked, with the precedence rule · locked technical baseline (what no agent may change without a user-approved ticket) · build commands — **if the build doesn't exist yet, say so and mark the table as the contract ticket 0 must satisfy**, plus an instruction to correct it once ticket 0 lands; a command table silently describing a non-existent build is a trap · the `rtest` contract (append-only, no agent weakens a gate, minimum phases, and how a phase this host can't run is reported — `HOST_SKIPPED`, never PASS) · key source locations + placement rules · architecture principles, short, pointing at canon · git workflow incl. what to do when push fails · artifact rule, stating which platforms were actually verified · environment notes · references.
+## 5. The procedure
 
-`ticketorder.md` — line 1 is the format legend, forever. Line 2+ is the **living batch note**: this batch's intent, the order rationale, deliberate gates, what waits on a human. Then route lines, `<ticket>-<Role>`, in dispatch order. Seed from existing tickets *respecting status*: a `[READY_FOR_DEV]` ticket gets only a `-Dev` line; an `[APPROVED]` one gets `-QA` then `-Dev`. A route line for a role that can't start yet is correct — that role will classify WAIT, which is the head rule working.
+### Step 1 — Survey, read-only
 
-**4. Support dirs.** `tickets/` and `tickets/.claims/`. Git doesn't track empty dirs — put a short README in `.claims/` (what a claim marker is; an orphaned claim means resume, never route around). **Don't create `requests/`**: the Architect's request-intake path reads it, but an absent directory just means no requests — create it when the project actually starts using intake, not before.
+Force-list the folder (dot-directories hide from ordinary listing tools: `Get-ChildItem -Force`). Establish, without writing anything:
 
-**5. Ticket 0 check.** The bootstrap ticket must establish the project's full target structure in the first commit (see the Architect profile's commit-0 obligation). Already correct → record it. Wrong or silent → **don't edit it**; record in `MEMORY.md` known gaps and flag it as the Architect's first job. Absent → note that ticket 0 must establish it before any product ticket is designed.
+- what documents exist, and which are **authoritative** (requirements / architecture / spec) versus incidental;
+- whether `tickets/` exists and what is in it (force-list — bracketed names break globs);
+- git state: `git remote -v`, `git log --oneline -1`, `git status --short`, current branch. All four; a repo with no commits behaves differently from one with history.
 
-**6. Register** in `Agent role.md`: a Project Registry row, and the project added to its lifecycle list. Until this lands, `init` cannot resolve — it's the step that makes the project real.
+### Step 2 — Resolve identity
 
-**7. Git** (skip silently if no `.git`). Set identity → point `HEAD` at `main` if there are no commits → one commit → add the remote → attempt the push. **A push failing on credentials or a missing remote repo is expected, not something to work around**: never force, never switch remotes, never invent a workaround. Report the state and hand over the exact command.
+Fix the short name, folder, type, role set, ticket prefix, remote and branch per §3. Run the five hard stops from §2 now, before any write.
 
-**8. Verify from disk.** Registry row resolves · `.symphony-root` matches · four files + both dirs exist · route lines reference tickets that exist · no duplicate ticket numbers (`ls tickets | grep -oE "<PREFIX>-[0-9]+" | sort | uniq -d` → empty) · no look-alike folder · git clean and the push either done or reported pending.
+### Step 3 — Create the four files
 
-**9. Report:** registry row · files created · git state incl. any pending push command · every defaulted assumption · every known gap · the `init <short-name> <role>` command that now works.
+Mirror `whatdate-folder/`. All four live at the **project root** — never inside a vendor directory (`.claude/`, `.cursor/`, `.gemini/`, …), because any agent of any brand must be able to read them.
 
-## Findings, not fixes
+**`.symphony-root`** — verbatim, only the first two lines change:
 
-Onboarding **records** problems; it never repairs them. Into `MEMORY.md` known gaps and into the report:
+```
+project=<short-name>
+canonical_path=C:\Users\pooji\Documents\symphony\<project-folder>\
+# SYMPHONY PATH-INTEGRITY MARKER — DO NOT COPY, MOVE, OR RECREATE THIS FILE.
+# Agents: verify this file exists at your Active Workspace and that
+# project= matches your init command BEFORE your first write of a session.
+# If it is missing, STOP and report to the user. NEVER create it yourself,
+# NEVER create a project directory, NEVER work in a look-alike folder.
+```
 
-- **A ticket referencing a file that doesn't exist** (a mockup archive, a spec version, a renamed module) — exactly what the supersession check catches. Whoever executes that ticket must stop, not adapt a stale plan.
-- **A bootstrap ticket missing a target platform** — the expensive one; cost multiplies with every ticket built on it.
-- **A ticket bundling an entire product** into one unit — legitimate as a first baseline, but the Architect should decide that deliberately rather than inherit it.
-- **A host that can't certify a target** (no macOS for iOS, no device for hardware paths) → a `HOST_SKIPPED` obligation in `SKILL.md`, and `MEMORY.md` stating plainly that skipped is not passed.
-- **Temporary identifiers** (package/bundle IDs) that must be frozen before release.
+**`MEMORY.md`** — the project's live memory. Deliberately short; detail belongs in tickets and canon. Required sections:
 
-## Environment traps
+1. A one-line statement that the file is deliberately short and where detail actually lives.
+2. **Where truth lives** — a table mapping questions to files (spec, architecture, tickets, build, route, protocol).
+3. **Document precedence** — which document wins when two disagree, and that a real contradiction is an escalation rather than a judgement call.
+4. **Core philosophy** — the project's one-sentence identity, then standing rulings as bullets. Write these from the authoritative documents, in plain language. This is what every agent re-reads on every init.
+5. **Current state** — dated. Onboarding facts, the ticket table with statuses, the route.
+6. **Known gaps** — every anomaly the survey found (see §6). Nothing swept under the rug.
+7. **Lessons worth keeping** — empty at onboarding; incidents get compressed into it later.
 
-Bracketed filenames break globs — force-list, rename with `Move-Item -LiteralPath` / `cmd /c ren`. Dot-dirs need `-Force`. Empty dirs vanish through git — seed a README. **Restricted mounts:** some sandboxes allow create/write but not delete, so git leaves `.git/index.lock` and `tmp_obj_*` behind and the *next* git command dies with "Another git process seems to be running" — clear them before continuing, and if you can't, say so loudly: it blocks every future git operation on that machine.
+**`SKILL.md`** — project-specific technical conventions, with YAML frontmatter (`name: <short-name>-skill`, one-line `description`). Required sections:
 
-## After
+1. Project type and role set.
+2. **Authoritative documents**, ranked, with the precedence rule restated.
+3. **Locked technical baseline** — the decisions no agent may deviate from without a user-approved ticket.
+4. **Build system and commands.** If the build does not exist yet, say so plainly and mark the table as the contract ticket 0 must satisfy, plus an instruction to correct it once ticket 0 lands. A command table that silently describes a non-existent build is a trap.
+5. **The `rtest` contract** — the single regression entry point: append-only, no agent may weaken a gate, what its minimum phases are, and how it reports a phase this host cannot run (`HOST_SKIPPED`, which is never PASS).
+6. **Key source locations** — a path table, plus the placement rules (what belongs in shared code versus platform adapters).
+7. **Architecture principles**, short form, pointing at canon.
+8. **Git workflow** — repo, remote, branch, commit-message convention, and what to do when a push fails.
+9. **Artifact build rule** — version bump, release notes, where the artifact lands, and an explicit statement of which platforms were actually verified.
+10. **Environment notes** — OS, dot-directory listing, bracketed-filename renames (`Move-Item -LiteralPath` / `cmd /c ren`, never plain `Rename-Item`), full literal paths.
+11. **References.**
 
-Onboarding does not begin work. It ends by handing over `init <short-name> <role>`.
+**`ticketorder.md`** — the dispatch route:
+
+- **Line 1** is the format legend, and stays a legend forever.
+- **Line 2 onward (before the route lines)** is the living batch note: this batch's intent, why the order is what it is, which gates are deliberate, what is waiting on a human. Rewrite it on every batch change — a later reader must not have to reconstruct intent.
+- Then one route line per unit of work, `<ticket>-<Role>`, top-to-bottom in dispatch order. Absence of `:DONE` is the only "open" signal.
+- Seed lines from the tickets that already exist, respecting their status: a ticket sitting at `[READY_FOR_DEV]` gets only a `-Dev` line; an `[APPROVED]` one gets `-QA` then `-Dev`.
+- A route line for a role that cannot start yet is correct, not broken. Roles polling it will classify WAIT — that is the head rule working.
+
+### Step 4 — Support directories
+
+Create `tickets/` (if absent) and `tickets/.claims/`. Git does not track empty directories, so put a short `README.md` in `.claims/` explaining what a claim marker is and that an orphaned claim means resume, never route around.
+
+**Do not create `requests/`.** The Architect's request-intake path (`Agent role.md`, Architect step 4) reads `<project>/requests/` for `[NEW]_REQ-*.md`, but an absent directory simply means no requests — it is not an error, and every live project runs without one. Create it only when the project actually starts using Orchestrator intake.
+
+### Step 5 — Ticket 0 check
+
+Apply §4. Record the outcome; never edit the ticket.
+
+### Step 6 — Register in `Agent role.md`
+
+Two edits to `C:\Users\pooji\Documents\symphony\Agent role.md`:
+
+1. Append a row to the **Project Registry** table: `| <short-name> | <project-folder> | <type> | <roles> |`.
+2. Add the project to its **lifecycle** list under "Two Main Lifecycles". If the type is new to that lifecycle, add one bracketed sentence saying what differs — for `kmp-mobile`, that "builds and passes" means both platforms, and that a non-macOS host reports the iOS phase as `HOST_SKIPPED`, which is never PASS.
+
+Until this edit lands, `init <short-name> <role>` cannot resolve. It is the step that actually makes the project real.
+
+### Step 7 — Git
+
+Skip this entire step, silently, if the folder has no `.git` — the file protocol works without git.
+
+1. Ensure `user.name` / `user.email` are set on the repo (match the other projects).
+2. Fresh repo → point `HEAD` at `main` before the first commit. Repo with history → leave the branch alone.
+3. Stage everything and make one commit: `Onboard <name> to Symphony Protocol + <what else is in this commit>`.
+4. Add the remote per §3.
+5. Attempt the push. **If it fails on credentials or a missing remote repo, that is expected, not an error to work around.** Do not force, do not invent a workaround, do not switch remotes. Report the state and hand the user the exact command.
+
+### Step 8 — Verify from disk
+
+Re-read everything you wrote, freshly, and confirm:
+
+- the registry row is present and the short name resolves to the right folder;
+- `.symphony-root` exists and its `project=` matches;
+- all four files plus both support directories exist at the project root;
+- route lines parse and reference tickets that actually exist on disk;
+- no duplicate ticket numbers (`ls tickets | grep -oE "<PREFIX>-[0-9]+" | sort | uniq -d` → empty);
+- no look-alike folder anywhere under the Symphony root;
+- git is clean, the commit exists, and the push either succeeded or is reported as pending.
+
+### Step 9 — Report
+
+Give the user: the registry row, the files created, the git state (including the push command if pending), every assumption you defaulted, every known gap recorded, and the exact `init <short-name> <role>` command that now works.
+
+---
+
+## 6. Findings, not fixes
+
+Onboarding **records** problems; it does not repair them. Anything you find goes into `MEMORY.md` under known gaps and into your report — never into a silent edit.
+
+The ones that recur:
+
+- **A ticket references a file that does not exist** (a mockup zip, a spec version, a renamed module). This is exactly what the Ticket Integrity Rules' supersession check catches. Record it. The agent that later executes that ticket must stop rather than adapt a stale plan on the fly.
+- **A bootstrap ticket that is single-platform.** See §4 — the expensive one.
+- **A ticket that bundles an entire product** into one unit of work. Legitimate as a first baseline ticket; note it so the Architect makes a deliberate decision rather than inheriting it by accident.
+- **This host cannot certify one target** (no macOS for iOS, no device for hardware paths). Record it as a `HOST_SKIPPED` obligation in `SKILL.md`, and state plainly in `MEMORY.md` that skipped is not passed.
+- **Temporary identifiers** (package name, bundle ID, applicationId) that must be frozen before a store release.
+
+## 7. Environment traps
+
+- **Bracketed filenames** (`[APPROVED]_…`) break shell globs. Force-list to see them; rename only with `Move-Item -LiteralPath` or `cmd /c ren`.
+- **Dot-directories hide** from ordinary listing tools. `Get-ChildItem -Force`, always.
+- **Empty directories vanish through git.** Always seed a README.
+- **Restricted mounts.** Some sandboxes permit create-and-write but not delete. Git then leaves `.git/index.lock` and `tmp_obj_*` files behind, and the *next* git command fails with "Another git process seems to be running". Remove the leftovers — request delete permission from the host if the sandbox refuses — before continuing, and never leave a lock file in the user's repo. If you cannot remove it, say so loudly: it blocks every future git operation on that machine.
+- **Never write into a vendor directory.** `.claude/`, `.cursor/`, `.gemini/` and friends are invisible to other vendors' agents, and the Symphony is vendor-neutral by design.
+- **Full literal paths only.** The Symphony root is `C:\Users\pooji\Documents\symphony\`.
+
+## 8. After onboarding
+
+Onboarding does not begin work. It ends by handing the user `init <short-name> <role>` — and the Architect's own init sequence takes it from there.
+
+## References
+
+- `Agent role.md` — the `add project` command, the Project Registry, the Path Integrity Protocol, the Ticket Integrity Rules
+- `whatdate-folder/` — the reference implementation of all four files
+- `skills/agent-symphony/SKILL.md` — ticket lifecycle and agent boundaries
+- `skills/ticket-management/SKILL.md` — ticket naming and templates
+- `skills/global-skill/SKILL.md` — git workflow, live-state rule
+- `.agent_profiles/architect_profile.md` — §"Standing Expectation: Multi-Platform From Commit 0"

@@ -10,3 +10,28 @@ Thumbs.db
 
 # Vendor-specific mirrors are conveniences, never sources of truth.
 # Track them if you use them; they must never hold protocol content.
+
+# Project worktrees live beside Symphony but belong to their own repositories.
+/*-folder/
+/agitated-curie/
+/cipher-board-game/
+/whatdate-portal/
+/whatdate.app_portal/
+
+# This root is the Symphony protocol repository, not a general Documents workspace.
+# New shared assets must be explicitly allowlisted below before they can be committed.
+/*
+!/.gitignore
+!/LICENSE
+!/README.md
+!/Agent role.md
+!/orchestrator model map.md
+!/taskagent.md
+!/.agent_profiles/
+!/.agent_profiles/**
+!/skills/
+!/skills/**
+!/project1/
+!/project1/**
+!/project2/
+!/project2/**

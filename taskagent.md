@@ -1,5 +1,7 @@
-# Model rotation rings — `role: slugA, slugB, …` (leftmost = next; the Orchestrator moves head→tail after each dispatch, so this file never grows). Slugs are defined in `orchestrator model map.md`.
-# Tune per batch: put a stronger model first for migration/lock-heavy work, a cheaper one first for spec-following UI work. Keep a backup of the previous rings when you retune.
+# role: model-ring   (task → agent/model rotation; leftmost = next; Orchestrator moves head → tail after each dispatch; size never grows)
+# Tuned 2026-07-27 for the POSTURE/DURATION batch (260-270): FOUR schema migrations (265,267,268,269) + one large UI ticket (270).
+# Rationale: migrations and lock-bearing tests are where a cheap model costs more than it saves; UI-lane work is spec-following.
+# Restore the previous rings from taskagent.prev-batch.bak once this batch is [DONE].
 architect: opus4.8-max, fable5-high
 qa: sonnet5-high, grok-medium
 dev: sonnet5-high, sonnet5-max
