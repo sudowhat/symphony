@@ -49,6 +49,7 @@ Every non-Architect role runs exactly this:
 
 ```
 loop: while (true) {
+    0. sync:    clean tree + fetch + fast-forward update? -> otherwise report user ; STOP
     1. resume:  any half-finished ticket of MY role?  -> take it
     2. read:    <project>/ticketorder.md
     3. exit:    no open line for MY role anywhere?    -> print "<role>|exit" ; STOP
@@ -62,6 +63,8 @@ Three mantras:
 1. **Never exit while I still have an open line in the batch.** Blocked is not finished.
 2. **Exit the moment nothing on the list is mine.** Don't linger, don't "check in case".
 3. **Sleep must resume *this* session with its context intact.** Not a cloud job, not a new agent, not a fresh `init`, not a poll storm. A 300-second blocking sleep qualifies; so does a background watcher that stays silent until there's work.
+
+For a Git project, the sync step runs before every real work entry: init, handoff re-entry, post-wake poll, and bare continuation. It first checks for **any** tracked or untracked worktree change. A dirty tree is reported to the user and stops the agent; it is never stashed, reset, cleaned, or pulled over. A clean tree updates only by fetch plus fast-forward pull. The canonical detail is in `skills/global-skill/SKILL.md`.
 
 A loop that burns tokens waiting is a broken loop even if it breaks no rule.
 
