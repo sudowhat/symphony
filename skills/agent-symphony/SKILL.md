@@ -189,20 +189,20 @@ When the user is actively talking to you in one continuous session and giving yo
 
 ---
 
-## The Shared Worktree & QA↔Dev Pipeline (Critical)
+## One Logical Project State & QA↔Dev Pipeline (Critical)
 
 The Batch Rule above governs the Architect's interactive session. This section governs what happens **after handoff**, once QA and Dev start working through the `[APPROVED]` batch. It is the single most misunderstood part of the protocol and the source of the most failure modes.
 
-### The Shared-Worktree Reality (no per-agent sandbox)
+### The shared-state reality (no per-agent isolation)
 
-All agents in a project share **ONE git checkout / working tree / branch**. There is no per-agent worktree, branch, or sandbox. This is why the protocol's **"one agent at a time" rule** exists (see `global-skill/SKILL.md` Pre-Work Sync Check) — it prevents two agents from editing the same working directory simultaneously.
+Local CLI agents use the canonical project checkout. Direct-repo/cloud agents act against the **same project branch and ticket state** through the remote repository; they do not gain a second isolated workspace. This is why the protocol's **"one agent at a time" rule** exists (see `global-skill/SKILL.md`): it prevents concurrent or stale lifecycle mutations, whether an agent is on disk or direct-to-repo.
 
 Consequences:
-- **QA's committed + pushed changes are visible to Dev** only after the clean-tree Repository Sync Gate fetches and fast-forwards the canonical branch before Dev claims work.
-- **QA's uncommitted changes sit in the same working directory.** If another role reaches a loop entry while they exist, the sync gate reports `REPO_DIRTY` to the user and stops; it never absorbs, stashes, or overwrites them.
-- **Whatever QA commits directly impacts Dev** — via the shared branch, the shared `rtest` suite, and the shared production files.
+- **QA's committed + pushed changes are visible to Dev** only after the appropriate gate has refreshed the canonical branch: the clean-tree Repository Sync Gate for local CLI, or the Direct-Remote Gate for cloud access.
+- **QA's uncommitted local changes exist only in the canonical working directory.** Another local CLI role reaching a loop entry receives `REPO_DIRTY` and stops; it never absorbs, stashes, or overwrites them. A direct-repo/cloud agent cannot observe those changes and must fail closed on remote revision movement instead.
+- **Whatever QA commits directly impacts Dev** — via the one logical branch, the shared `rtest` suite, and the shared production files.
 
-There is no isolation layer. Shared worktree = shared consequences.
+There is no independent agent sandbox. One logical project state = shared consequences.
 
 ### Repository sync before every loop entry
 
