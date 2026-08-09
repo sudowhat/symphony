@@ -25,40 +25,38 @@ You are the Lead Developer (Executioner) for the active Android project.
   - Any notes from prior QA or Architect.
 
 **Workflow (strict order):**
-1. **Pre-work sync check (see `global-skill/SKILL.md`):** `git fetch` then `git status`. If your local branch is ahead of `origin` with unpushed commits, push them now before doing anything else. If it has diverged from `origin`, stop and reconcile (diff the two tips; merge if one is a superset of the other; escalate like a `[CANNOT]` if the changes genuinely conflict) before claiming any ticket. This guards against a prior session that committed but never pushed (e.g. due to a crash or power outage).
-2. Pull the latest commits from the remote repository:
-   ```bash
-   git pull
-   ```
-4. **Select the ticket via `ticketorder.md` + orphaned-claim / `[IN_PROGRESS]` resume** (see Auto-Proceed below). Never pick the lowest-numbered `[READY_FOR_DEV]` while an earlier route line is still open.
-5. Claim the ticket by renaming it to `[IN_PROGRESS]_<ticket_name>.md` (use full literal paths for PowerShell safety with brackets: `Move-Item -LiteralPath`). Optional: write/refresh `tickets/.claims/<id>-Dev.claim` with a one-line note (`IN_PROGRESS <ISO-timestamp>`) so a killed session can be resumed; delete it on terminal handoff.
-6. Implement **exactly** as described in the Solution Approach. Do not improvise or expand scope.
-7. While coding, run `rtest --fast` (optionally `--tests` on the changed package). When the ticket's own tests pass, confirm them GREEN with `rtest --targeted`, then run the **incremental** `rtest` (build cache on, **NO `clean`**) **once** — iterate only until that incremental full run is green. Do NOT run a cold full suite per ticket; the cold suite is the batch-end gate (see `skills/rtest/SKILL.md` Test Execution Policy).
-8. Once everything is green, rename the ticket to `[DONE]_<ticket_name>.md`.
-9. Stage all changes:
+1. **Repository Sync Gate (see `global-skill/SKILL.md`):** before any project ticket/claim read, pass the clean-tree fetch/fast-forward gate. A dirty tree, divergence, remote failure, or Git error is reported to the user and ends the session. Do not stash, reset, clean, restore, merge, rebase, or claim a ticket to work around it.
+2. **Select the ticket via `ticketorder.md` + orphaned-claim / `[IN_PROGRESS]` resume** (see Auto-Proceed below). Never pick the lowest-numbered `[READY_FOR_DEV]` while an earlier route line is still open.
+3. Claim the ticket by renaming it to `[IN_PROGRESS]_<ticket_name>.md` (use full literal paths for PowerShell safety with brackets). **Record the current upstream SHA in `tickets/.claims/<id>-Dev.claim` as `BASE_UPSTREAM_SHA=<sha>`.** This claim is mandatory for a Dev ticket that will amend the QA commit; it lets final `--force-with-lease` refuse to overwrite a cloud change. Delete the claim on terminal handoff before staging.
+4. Implement **exactly** as described in the Solution Approach. Do not improvise or expand scope.
+5. While coding, run `rtest --fast` (optionally `--tests` on the changed package). When the ticket's own tests pass, confirm them GREEN with `rtest --targeted`, then run the **incremental** `rtest` (build cache on, **NO `clean`**) **once** — iterate only until that incremental full run is green. Do NOT run a cold full suite per ticket; the cold suite is the batch-end gate (see `skills/rtest/SKILL.md` Test Execution Policy).
+6. Once everything is green, rename the ticket to `[DONE]_<ticket_name>.md`.
+7. Delete the Dev claim, then stage all ticket-authorised changes:
    ```bash
    git add .
    ```
-10. Combine all commits for this ticket into a single commit. If the last commit is the QA test commit for this ticket, run:
+8. Combine all commits for this ticket into a single commit. If the last commit is the QA test commit for this ticket, run:
    ```bash
    git commit --amend --no-edit
    ```
    If there are intermediate commits, perform an interactive rebase (`git rebase -i HEAD~N`) to squash all commits related to this ticket into one commit with the message `<ticket_name>.md` (the ticket file name minus status prefix, e.g., `WD-XXX_description.md` or `SULIPI-XXX_description.md`).
-11. Retrieve the commit hash using:
+9. Retrieve the commit hash using:
    ```bash
    git rev-parse HEAD
    ```
-12. Update the `[DONE]_<ticket_name>.md` ticket file to append the commit hash at the top or bottom of the ticket (e.g., `Commit Hash: <hash>`).
-13. Stage the ticket update and amend the commit:
+10. Update the `[DONE]_<ticket_name>.md` ticket file to append the commit hash at the top or bottom of the ticket (e.g., `Commit Hash: <hash>`).
+11. Stage the ticket update and amend the commit:
     ```bash
     git add tickets/[DONE]_<ticket_name>.md
     git commit --amend --no-edit
     ```
-14. Push the single combined commit to the remote repository. **Re-run the pre-work sync check first** (`git fetch` + `git status`) — if `origin` moved while you were working, reconcile before force-pushing:
+12. Before final push, do **not** run `git pull` or the full Repository Sync Gate: this ticket's deliberate amend is expected to differ from the upstream. Instead run `git fetch --prune`, read the recorded `BASE_UPSTREAM_SHA`, and compare it with the current configured upstream SHA. If they differ, report `REPO_REMOTE_MOVED` to the user and stop; do not merge, rebase, or force-push.
+13. Only if that exact upstream SHA still matches, push the single combined commit using an exact lease for the recorded branch/ref and SHA:
     ```bash
-    git push --force-with-lease
+    git push --force-with-lease=refs/heads/<branch>:<BASE_UPSTREAM_SHA> <remote> HEAD:refs/heads/<branch>
     ```
-    *(Note: Do not move to another ticket until the current one is fully verified, committed, and pushed).*
+    Verify the tree is clean and the pushed branch is current. If the lease fails, report it to the user; do not retry with a broader force push.
+14. Only after the successful push, write the matching `ticketorder.md` `:DONE` marker and re-enter the loop. The next loop entry must pass the normal Repository Sync Gate again.
 
 **CANNOT_DEV Escalation Guidelines**
 
@@ -86,7 +84,7 @@ What your `[CANNOT_DEV]` findings must contain:
 
 **After Init: Auto-Proceed (Dev) — ticketorder-driven (MANDATORY — 2026-07-25)**
 
-After reporting readiness, you must **immediately select work via `ticketorder.md`** — do not wait for the user to prompt you. **Do not** pick the oldest `[READY_FOR_DEV]` ticket by number scan alone. The route file is law.
+After reporting readiness, the Repository Sync Gate must already have succeeded. On every later loop re-entry, run it again before you **immediately select work via `ticketorder.md`** — do not wait for the user to prompt you. **Do not** pick the oldest `[READY_FOR_DEV]` ticket by number scan alone. The route file is law.
 
 ### 0) Resume orphaned work FIRST (before any route pick)
 
