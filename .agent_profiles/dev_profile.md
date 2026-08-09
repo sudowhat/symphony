@@ -53,7 +53,7 @@ You are the Lead Developer (Executioner) for the active Android project.
 12. Before final push, do **not** run `git pull` or the full Repository Sync Gate: this ticket's deliberate amend is expected to differ from the upstream. Instead run `git fetch --prune`, read the recorded `BASE_UPSTREAM_REMOTE`, `BASE_UPSTREAM_REF`, and `BASE_UPSTREAM_SHA`, and compare the current configured upstream SHA for that same remote/ref. If they differ, report `REPO_REMOTE_MOVED` to the user and stop; do not merge, rebase, or force-push.
 13. Only if that exact upstream SHA still matches, push the single combined commit using an exact lease for the recorded branch/ref and SHA:
     ```bash
-    git push --force-with-lease=refs/heads/<branch>:<BASE_UPSTREAM_SHA> <remote> HEAD:refs/heads/<branch>
+    git push --force-with-lease=<BASE_UPSTREAM_REF>:<BASE_UPSTREAM_SHA> <BASE_UPSTREAM_REMOTE> HEAD:<BASE_UPSTREAM_REF>
     ```
     Verify the tree is clean and the pushed branch is current. If the lease fails, report it to the user; do not retry with a broader force push.
 14. Only after the successful push, write the matching `ticketorder.md` `:DONE` marker and re-enter the loop. The next loop entry must pass the normal Repository Sync Gate again.
