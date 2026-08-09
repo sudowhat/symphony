@@ -210,24 +210,53 @@ Use `C:\Users\pooji\AppData\Local\Temp\opencode\` (pre-approved for external acc
 
 ## Global Rule: Git Workflow for All Coding Projects
 
-This applies only to projects that **already have an initialized Git repository** (a `.git/` directory at the project root). Not every project in `Symphony\` is git-ified yet. Before running any `git` command (this section, the Pre-Work Sync Check, or the role profile's own Git steps), check first — e.g. `git status` from inside `<project-folder>/`, or check for a `.git` directory. If the project has no repository, **skip all git steps silently** (no fetch/pull/commit/push) and proceed with the rest of the workflow (ticket renames, file edits, rtest) exactly as normal — git is a delivery/sync mechanism layered on top of the file-based ticket protocol, not a prerequisite for it. Re-check on each new init, since a project may be git-ified between sessions.
+This applies only to projects that **already have an initialized Git repository** (a `.git/` directory at the project root). Not every project in `Symphony\` is git-ified yet. Before running any `git` command (this section, the Repository Sync Gate, or the role profile's own Git steps), check first — e.g. `git status` from inside `<project-folder>/`, or check for a `.git` directory. If the project has no repository, **skip all git steps silently** (no fetch/pull/commit/push) and proceed with the rest of the workflow (ticket renames, file edits, rtest) exactly as normal — git is a delivery/sync mechanism layered on top of the file-based ticket protocol, not a prerequisite for it. Re-check on each new init, since a project may be git-ified between sessions.
 
 > **HARD RULES:** `skills/agent-symphony/SKILL.md` §"Role Discipline & Repo Safety" (added 2026-07-05) is binding for every git operation below: scope lock (touch only ticket-listed files), one ticket = one commit, preserve UTF-8/CRLF encodings (never PowerShell `>` onto source files), STOP on any index error or 0-byte source blob, delete scratch files before staging, and the post-commit zero-byte integrity check before every push. Read it before your first commit of the session.
 
-### Mandatory Pre-Work Sync Check (All Roles, Every Init)
+### Mandatory Pre-Loop Repository Sync Gate (All Roles, Every Loop Entry)
 
 (Applies only when the project has a Git repository — see above.)
 
-The "one agent at a time" rule prevents *simultaneous* edits, but it does not protect against a session that committed locally and then died (power outage, crash, container restart, manual kill) **before** its `git push` ran. That leaves a commit stranded in one local checkout while `origin` stays behind it. If a later session — on the same or a different checkout — starts from `origin` without checking for this, it can redo the same work and push a sibling commit, silently diverging the branch. This is not hypothetical: it has already happened on this workspace (two sessions independently resolved the same WD-116 `[CANNOT_DEV]` from the same base; one session's commit never reached `origin` before the next session started, and `git status` only revealed "have diverged" when a later session noticed).
+Cloud-based Architects and other authorised contributors can advance the remote branch while a CLI agent is idle or between sessions. A local worktree is therefore not current merely because it exists. **The clean, updated repository is the admission gate to every new unit of work.**
 
-**Before doing anything else** (before the role-specific `git pull` step below, before claiming any ticket), every role must:
-0. **Clear a stale lock first (QA/Dev — added 2026-07-05, per the single-agent guarantee).** The user guarantees only **one agent operates at a time**, so any `<project>/.git/index.lock` present at session start is a **stale** leftover from a crashed/killed session — never a live operation. **Before** `git fetch` / `git pull` / any git command, check for `<project>/.git/index.lock`; if it exists, remove it (`del .git\index.lock` on Windows, `rm -f .git/index.lock` elsewhere), then proceed to fetch/pull. This **supersedes** the old "STOP on stale `index.lock`" for the lock case: under the single-agent guarantee, clearing the stale lock and continuing is correct. (Still STOP for genuine index *corruption* — `unknown index entry format` / `bad index` — or a tree dirty with files outside your ticket's scope; a lock file is neither of those.)
-1. `git fetch`
-2. `git status` — check specifically for "Your branch is ahead of 'origin/main'" (unpushed local commits) or "have diverged" (both ahead and behind). **If `git status` itself errors (index corruption, stale `index.lock`) or the tree is dirty with files outside your ticket's scope: STOP and report — do not commit, do not clean up other agents' files, do not delete `.git` contents without confirming no git process is running.**
-3. **If ahead only:** push immediately (`git push`) before proceeding — do not let local commits sit unshared while you start new work.
-4. **If diverged:** stop and reconcile before claiming any ticket. Diff the two tips (`git diff <local> <origin>`) to understand what each side actually changed. If one side's content is a strict superset/continuation of the other (same files, same diffs, one just further along — as in the WD-116 case), merge and keep the more-advanced version; do not blindly force-push over the other side without checking content first. If the two sides made genuinely conflicting changes, treat it like a `[CANNOT]` escalation — stop and surface it rather than guessing.
+Run this gate from the canonical project root **after Path Integrity succeeds and before** reading any project-specific `MEMORY.md`, `SKILL.md`, ticket, claim, source file, build artifact, or queue entry:
 
-This check is in addition to, not a replacement for, the existing `git pull` step already required at the start of QA/Dev/Tester/Implementer workflows below.
+- once during `init`;
+- on every re-entry to Auto-Proceed after a terminal handoff;
+- after each real 300-second WAIT wake, before re-reading the queue; and
+- before a bare `proceed` / `next` / `continue` resumes work.
+
+Do **not** run the gate while actively executing a claimed ticket: the worktree is expected to become dirty during that work. The ticket must reach its normal committed-and-pushed terminal handoff first; the next loop entry then uses this gate.
+
+### Gate procedure
+
+1. Confirm the current directory is the canonical project Git root. If Git cannot identify a worktree, report `REPO_SYNC_BLOCKED` and stop; never search for or create another checkout.
+2. If Git reports an `index.lock`, index corruption, missing upstream, detached/unknown branch, or any other repository-state error, report `REPO_SYNC_BLOCKED` to the user and stop. Do not remove locks, repair the index, or rewrite Git metadata in this gate.
+3. **Before any fetch or pull**, run:
+   ```powershell
+   git status --porcelain=v1 --untracked-files=all
+   ```
+   Any output — modified, staged, deleted, renamed, conflicted, or untracked files — is a dirty worktree. Report it to the user and stop immediately:
+   ```text
+   REPO_DIRTY: <project> (<branch>)
+   <verbatim porcelain status>
+   No repository update or ticket loop was started.
+   ```
+   Do not stash, reset, restore, clean, checkout, commit, stage, discard, or otherwise alter those files. Do not claim a ticket or enter the loop.
+4. With a clean tree only, run `git fetch --prune`. A fetch failure is `REPO_SYNC_BLOCKED`: report the command failure and stop.
+5. Compare `HEAD` with its configured upstream:
+   - **behind only** → run `git pull --ff-only`;
+   - **up to date** → continue;
+   - **ahead only** → push the already committed local work with ordinary `git push`, then verify it is current;
+   - **diverged** → report `REPO_DIVERGED` with branch/upstream and ahead/behind counts, then stop. Do not merge, rebase, force-push, or choose a side.
+6. After any pull or push, re-run the porcelain check and verify `HEAD` equals its upstream. Any failure, remaining dirtiness, or non-fast-forward condition is `REPO_SYNC_BLOCKED`: report it and stop.
+
+The gate is deliberately conservative. It updates only a clean worktree by fast-forward pull, and it never hides another person's local changes. A successful gate is the only condition under which the agent may inspect current project state or proceed to the role loop.
+
+### Dev amend exception
+
+Dev may intentionally amend the QA commit for its **currently active** ticket, which temporarily makes its local branch differ from the remote. That is not a new loop entry. Record the upstream SHA at claim time in the Dev claim, fetch immediately before the final push, and use `git push --force-with-lease=<branch>:<recorded-upstream-sha>`. If the remote SHA changed, the lease must fail and Dev reports the conflict to the user; it must never overwrite a cloud Architect commit. Once that push succeeds and the tree is clean/current again, the next loop entry runs the normal gate.
 
 ### QA Agent — After Test Authoring
 
@@ -247,12 +276,10 @@ After writing failing tests and promoting the ticket from `[APPROVED]` to `[READ
 
 ### Dev Agent — After Implementation
 
+The Repository Sync Gate has already fast-forwarded the clean worktree before Dev claims a ticket. Do not run `git pull` again while the active ticket has uncommitted work or an intentional amended commit.
+
 After implementing the solution, running all tests to green, and promoting the ticket from `[IN_PROGRESS]` to `[DONE]`:
-1. Pull latest changes first (before claiming a ticket):
-   ```bash
-   git pull
-   ```
-2. Stage all changes (production code + renamed `[DONE]` ticket):
+1. Stage all changes (production code + renamed `[DONE]` ticket):
    ```bash
    git add .
    ```
@@ -271,10 +298,11 @@ After implementing the solution, running all tests to green, and promoting the t
    git add tickets/[DONE]_<ticket_name>.md
    git commit --amend --no-edit
    ```
-7. Push the single combined commit:
+7. Before final push, fetch only (`git fetch --prune`) and compare the configured upstream SHA with the SHA recorded when this ticket was claimed. If it changed, stop and report; do not pull, merge, rebase, or force-push over it. If unchanged, push the single combined commit with the exact lease:
    ```bash
-   git push --force-with-lease
+   git push --force-with-lease=<branch>:<recorded-upstream-sha>
    ```
+   Verify the tree is clean and the branch is current after push. The next ticket starts only through the Repository Sync Gate.
 
 ---
 
