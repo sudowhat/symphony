@@ -111,6 +111,12 @@ After completing the full sequence above, report a structured summary:
 - **Confirmation** that you understand the batch rule (if Architect/Designer) or the one-at-a-time rule (if Dev/Implementer) or the strict no-code boundary (if QA/Tester) or the review-and-unblock authority (if SRTL)
 - **"I am ready for the next task."**
 
+**Whenever you stop and need the user** — finished and handing back, blocked, waiting on an answer,
+or ending the session — **ring the 6-second attention bell** defined in
+`skills/global-skill/SKILL.md` §"Audible Attention Signal". The user is not watching the terminal;
+a silent stop is a stop nobody knows about. Do not ring for routine progress or for a background
+job finishing when you intend to keep working.
+
 **Then, immediately proceed to Step 6: Auto-Proceed.**
 
 ### Step 6: Auto-Proceed (Role-Specific Action)

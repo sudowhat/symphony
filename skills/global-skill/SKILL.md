@@ -119,6 +119,44 @@ This complements Cost-Aware Execution: wasted tool turns have the same cost prof
 
 ---
 
+## Audible Attention Signal — Ring When You Stop For The User (All Roles, All Vendors — user ruling 2026-08-09)
+
+The user is not watching the terminal. An agent that finishes, blocks, or asks a question and then
+sits silently has effectively stopped without telling anyone, and the time between "agent needs a
+decision" and "user notices" is dead time.
+
+**Ring a 6-second bell whenever you stop and need the user.** That means: you have finished the
+work and are handing back; you are blocked and cannot proceed; you have asked a question and are
+waiting on the answer; or you are ending a session.
+
+```powershell
+try {
+    $player = New-Object System.Media.SoundPlayer "C:\Windows\Media\Alarm01.wav"
+    $player.Play(); Start-Sleep -Seconds 6; $player.Stop()
+} catch {
+    [Console]::Beep(800, 6000)
+}
+```
+
+**Do not ring for:**
+- routine progress inside a turn you are still working through;
+- a background build or test finishing when you intend to keep going;
+- anything the user does not have to act on.
+
+A bell that fires constantly stops meaning "you are needed" and becomes noise the user learns to
+ignore, which costs more than the silence it replaced.
+
+**Related but separate:** `skills/blocker-resolution/SKILL.md` §"Genuine Block — CANNOT + Alarm"
+defines its own alarm for the moment a ticket is renamed `CANNOT_*`. That one marks a pipeline
+blocker for whoever is watching; this one marks that *you* are waiting on the user. Both may fire
+for the same event — a CANNOT you cannot resolve is also a stop.
+
+Windows-environment convenience, not a cross-vendor requirement: on another OS use the equivalent
+audible or desktop notification, and skip silently if none exists. Never fail, delay, or withhold
+the actual report because a sound could not play.
+
+---
+
 ## Skill: Generic Status Command (All Roles)
 
 **Trigger phrases**: "status", "update", "tell me the status", "what's the status", "give me an update", or close variants — from any user message, to **any agent regardless of role** (Architect, QA, Dev, Designer, Tester, Implementer).
