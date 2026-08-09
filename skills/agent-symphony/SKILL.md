@@ -121,7 +121,7 @@ If the user then replies **"continue"** — meaning "yes, go do your next QA-app
 When resuming from "proceed" / "next" / "continue", every agent must:
 
 1. **Never re-offer or silently take an action outside its own role's boundary**, even if the agent itself suggested that action moments earlier. If the prior turn's question crossed a boundary, that question itself was the mistake — fix it by not following through, not by asking again.
-2. **Resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop) — for **QA/Dev**: resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others: re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches — Architect is exempt from the three-state loop; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there.
+2. **Pass the Repository Sync Gate, then resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop). A dirty/diverged/unavailable repository is reported to the user and ends the session. After a successful gate: for **QA/Dev**, resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others, re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches — Architect is exempt from the three-state loop; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there.
 3. **If genuinely ambiguous** whether "continue" refers to resuming in-role work or something else, ask — do not guess toward the role-crossing interpretation.
 
 ### Why this matters
@@ -198,11 +198,21 @@ The Batch Rule above governs the Architect's interactive session. This section g
 All agents in a project share **ONE git checkout / working tree / branch**. There is no per-agent worktree, branch, or sandbox. This is why the protocol's **"one agent at a time" rule** exists (see `global-skill/SKILL.md` Pre-Work Sync Check) — it prevents two agents from editing the same working directory simultaneously.
 
 Consequences:
-- **QA's committed + pushed changes are visible to Dev** via `git pull` (and the sync check forces Dev to pull before claiming any ticket).
-- **QA's uncommitted changes sit in the same working directory.** If Dev sat down at the same machine mid-QA-session, they would see them. The one-at-a-time rule is what prevents this.
+- **QA's committed + pushed changes are visible to Dev** only after the clean-tree Repository Sync Gate fetches and fast-forwards the canonical branch before Dev claims work.
+- **QA's uncommitted changes sit in the same working directory.** If another role reaches a loop entry while they exist, the sync gate reports `REPO_DIRTY` to the user and stops; it never absorbs, stashes, or overwrites them.
 - **Whatever QA commits directly impacts Dev** — via the shared branch, the shared `rtest` suite, and the shared production files.
 
 There is no isolation layer. Shared worktree = shared consequences.
+
+### Repository sync before every loop entry
+
+The canonical procedure is `global-skill/SKILL.md` §“Mandatory Pre-Loop Repository Sync Gate”. Every role, including Architect, must pass it before reading claims, tickets, project memory, source, or queue state on init, after a terminal handoff, after a real WAIT wake, and on a bare continuation.
+
+- A dirty worktree is a **user-visible hard stop**, regardless of whether the paths appear related to the next ticket.
+- A clean tree is updated only by fetch plus fast-forward pull. Branch divergence, remote failure, index errors, or missing upstream are hard stops reported to the user.
+- Never stash, reset, restore, clean, checkout, rebase, merge, or force-push merely to enter a loop.
+- An active Dev ticket is the narrow exception: its intentional amend/force-with-lease happens *inside* that ticket, using the upstream SHA captured at claim time. It must finish its normal committed-and-pushed handoff before any new loop entry.
+
 
 ### Pipeline, Not Parallel (the rule) — driven by `ticketorder.md` (2026-07-25)
 
@@ -217,15 +227,16 @@ There is no isolation layer. Shared worktree = shared consequences.
 244-Dev          # direct-to-Dev / UI-lane — no QA line
 ```
 
-**QA and Dev selection law (both roles) — Role Work Loop (2026-07-25; Architect exempt):**
+**QA and Dev selection law (both roles) — Role Work Loop (2026-08-09; Architect exempt):**
 
-Canonical three-state loop is in `Agent role.md` §"Role Work Loop". Summary for route roles:
+Canonical loop is in `Agent role.md` §"Role Work Loop". Summary for route roles:
 
+0. Pass the Repository Sync Gate **before any** claim, ticket, or route read. Failure reports to the user and stops the session.
 1. Resume any orphaned claim / `[IN_PROGRESS]` for **your** role first (**TAKE**).
 2. Read `ticketorder.md`. **Head** = first line **not** already ending in `:DONE`. Scan all open lines for **your** role token.
 3. **EXIT** if **no** open `*-<YourRole>` lines remain on the list. Stop looping / cancel scheduled polls for this role. **End the turn — no keepalive tools.**
-4. **WAIT** if open lines for you exist **but** head is not your role (or gate closed). Keep the loop alive via **one** scheduled sleep, then re-read; do **not** skip down the file. **After the status line, end the turn — no empty shell noops, no tight tool loops** (see `Agent role.md` § Role Work Loop "No keepalive / no tool spam"; also `skills/global-skill/SKILL.md` §"No Keepalive / No Tool Spam"). Vendor-neutral: Claude/Grok/Codex/etc. all obey the same ban.
-5. **TAKE** if head **is** your role and gate-open (`[APPROVED]` for QA, `[READY_FOR_DEV]`/`[IN_PROGRESS]` for Dev). On successful handoff (commit+push): rewrite that one line to `<id>-<Role>:DONE`, then **immediately re-enter the loop** (chain consecutive same-role heads in the same session — do **not** stop after one ticket).
+4. **WAIT** if open lines for you exist **but** head is not your role (or gate closed). Keep the loop alive via **one** scheduled sleep, then pass the Repository Sync Gate before re-reading; do **not** skip down the file. **After the status line, no empty shell noops or tight tool loops.** Vendor-neutral: Claude/Grok/Codex/etc. all obey the same ban.
+5. **TAKE** if head **is** your role and gate-open (`[APPROVED]` for QA, `[READY_FOR_DEV]`/`[IN_PROGRESS]` for Dev). On successful handoff (commit+push): rewrite that one line to `<id>-<Role>:DONE`, then **immediately re-enter the loop through the sync gate** (chain consecutive same-role heads in the same session — do **not** stop after one ticket).
 6. Never mark `:DONE` on a CANNOT terminal state — the open line keeps the route blocked.
 
 This **replaces** “pick lowest-numbered `[APPROVED]` / `[READY_FOR_DEV]`” and **supersedes** the old “orchestrator-spawned stops after one ticket” rule (2026-07-25). Architect-written interleaving (QA→Dev→QA→Dev or direct-to-Dev) is followed exactly; QA cannot race ahead of a Dev line that is still the head; Dev chains UI-lane `*-Dev` heads when they become head.
@@ -278,7 +289,7 @@ If `ticketorder.md` is **absent** (legacy project), fall back to: QA picks lowes
 When multiple tickets in a batch edit the **same production file** (e.g., `AddEditActivity.kt`, `MainActivity.kt`, `DetailActivity.kt`), they must **never** be in Dev simultaneously — two Dev changes to the same file conflict at `git merge`/`pull` time and one overwrites the other. The Architect must:
 1. Identify shared-file hotspots when handing off the batch.
 2. Publish a required Dev order for those tickets (e.g., "WD-123 first → then WD-125/126/127/129, never in parallel with each other").
-3. Ensure every Dev claim starts with `git pull` so the prior ticket's edits to the shared file are present.
+3. Ensure every Dev claim starts only after the Repository Sync Gate fast-forwards the clean worktree, so the prior ticket's edits to the shared file are present.
 4. Never release a dependent ticket to QA before its prerequisite is `[DONE]` (else QA writes tests against code/views that don't exist yet).
 
 ### Fallback: Targeted `rtest` Runs
@@ -406,7 +417,7 @@ These rules exist because of real damage: a combined multi-ticket commit made th
 
 ### 5. Working-directory hygiene
 - Verify your current directory before EVERY script or bulk file operation. The `app/app/` nested-duplicate directory in whatdate-folder was created by an agent running with the wrong cwd — never create paths like that; if your op would create a directory that mirrors an existing tree, your cwd is wrong.
-- If the worktree is already dirty at session start with files outside your ticket's scope: do NOT absorb them into your commit and do NOT revert them. Report the dirty state and wait for direction. (Exception: the pipeline's expected state — the previous ticket's committed-and-pushed work — is clean by definition.)
+- If the worktree is dirty at **any session or loop entry**, regardless of whether paths appear inside your ticket's scope: do NOT absorb, stage, commit, revert, stash, or overwrite it. Report the exact dirty status to the user and stop before claim/queue work. The pipeline's expected terminal state is clean by definition.
 
 ### 6. Berserk brake (self-check)
 Ask yourself before every commit: "Can I name the ticket line item that authorizes each file in `git status`?" If the answer is no for any file — you have gone off-script. Stop, revert the unauthorized changes, escalate what you learned. An agent that follows a wrong plan slowly is recoverable; an agent that improvises quickly is not.
@@ -467,7 +478,7 @@ Before the artifact build, the closing agent runs the full suite and confirms **
 
 A first-class role invoked per project like any other (`init <project> orchestrator`) that automates today's manual role invocation. Cross-project orchestration = one instance per project, parallel by construction. Dumb-by-design: it follows the Architect's route and Symphony's status gates; it never reasons technically, never writes tickets/code/tests, never weakens guards.
 
-**The three-file contract:** `<project>/ticketorder.md` (Architect-authored route: `<ticket>-<role>` per line, top-down; **Architect authors/reorders/prunes lines; QA and Dev may only append `:DONE` to the single line they just completed**) + `taskagent.md` (constant-size model rotation rings; Orchestrator rotates head→tail atomically before each spawn) + `orchestrator model map.md` (static slug legend). Route says WHAT next, ticket status says WHEN (gate), ring says on WHICH model. **QA/Dev themselves also read `ticketorder.md` on every init** (not only the Orchestrator) so manual pure-Grok/Claude seats follow the same order.
+**The three-file contract:** `<project>/ticketorder.md` (Architect-authored route: `<ticket>-<role>` per line, top-down; **Architect authors/reorders/prunes lines; QA and Dev may only append `:DONE` to the single line they just completed**) + `taskagent.md` (constant-size model rotation rings; Orchestrator rotates head→tail atomically before each spawn) + `orchestrator model map.md` (static slug legend). Route says WHAT next, ticket status says WHEN (gate), ring says on WHICH model. **QA/Dev themselves read `ticketorder.md` only after passing the Repository Sync Gate on every loop entry** (not only the Orchestrator), so manual pure-Grok/Claude seats follow the same current order.
 
 **Role Work Loop (2026-07-25 — all roles except Architect):** EXIT if no open work for your role remains on the list; WAIT if your work exists but is not the head; TAKE when head is yours and **repeat** (chain same-role heads). On WAIT/EXIT: **no keepalive tool spam** — end the turn after one status line (`Agent role.md` + `global-skill` §"No Keepalive"). Canonical text: `Agent role.md` §"Role Work Loop". Supersedes "orchestrator-spawned stops after one ticket."
 
