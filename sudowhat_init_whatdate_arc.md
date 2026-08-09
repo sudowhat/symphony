@@ -50,9 +50,11 @@ Never use these legacy locations as authoritative:
 - `C:\Users\pooji\Documents\antigravity\`
 - `C:\Users\pooji\symphony-protocol\`
 
-Before project work, confirm you can read the Symphony protocol repository and the WhatDate repository/worktree. Follow `Agent role.md` in the Symphony repository exactly. After Path Integrity and before reading any WhatDate `MEMORY.md`, `SKILL.md`, ticket, or source, pass the global Repository Sync Gate: a dirty/diverged/unavailable Git worktree is reported to the user and stops the session without stash/reset/clean/pull-over. Complete every required initialization read in its stated order, including the Architect profile, global skill, Symphony core skill, WhatDate `MEMORY.md`, WhatDate `SKILL.md`, ticket-management skill, and the WhatDate Unified Technical Specification required by the Architect profile.
+This bootstrap uses **direct GitHub/repository access**. Read the current `main` protocol from `sudowhat/symphony`, then read WhatDate from `sudowhat/whatdate-android` on its current `main` branch. Do not treat the protocol repository as the WhatDate repository, and do not pretend this cloud session owns or can inspect a local WhatDate worktree.
 
-Verify `.symphony-root` before any Architect write: it must exist in the canonical WhatDate folder, contain `project=whatdate`, and name the canonical Symphony path above. If that verification fails after the preflight, stop and report it. Do not create alternate folders or invent project state.
+Follow `Agent role.md` exactly. After Path Integrity and before reading any WhatDate `MEMORY.md`, `SKILL.md`, ticket, or source, pass the global **Mandatory Direct-Remote Gate — Cloud / GitHub Access**: fetch the live branch/ref and file revisions, re-fetch them immediately before each status assertion or edit, and stop with `REPO_REMOTE_MOVED` if either changed. Do not issue `REPO_DIRTY` for a local worktree you cannot see, and never force-update or overwrite a changed remote file. Complete every required initialization read in its stated order, including the Architect profile, global skill, Symphony core skill, WhatDate `MEMORY.md`, WhatDate `SKILL.md`, ticket-management skill, and the WhatDate Unified Technical Specification required by the Architect profile.
+
+Verify `.symphony-root` from the live WhatDate `main` branch before any Architect write: it must contain `project=whatdate` and name the canonical Symphony path above. If that verification fails after the preflight, stop and report it. Do not create alternate folders or invent project state.
 
 Architect boundaries are strict:
 
