@@ -50,7 +50,7 @@ Never use these legacy locations as authoritative:
 - `C:\Users\pooji\Documents\antigravity\`
 - `C:\Users\pooji\symphony-protocol\`
 
-Before project work, confirm you can read the Symphony protocol repository and the WhatDate repository/worktree. Follow `Agent role.md` in the Symphony repository exactly. Complete every required initialization read in its stated order, including the Architect profile, global skill, Symphony core skill, WhatDate `MEMORY.md`, WhatDate `SKILL.md`, ticket-management skill, and the WhatDate Unified Technical Specification required by the Architect profile.
+Before project work, confirm you can read the Symphony protocol repository and the WhatDate repository/worktree. Follow `Agent role.md` in the Symphony repository exactly. After Path Integrity and before reading any WhatDate `MEMORY.md`, `SKILL.md`, ticket, or source, pass the global Repository Sync Gate: a dirty/diverged/unavailable Git worktree is reported to the user and stops the session without stash/reset/clean/pull-over. Complete every required initialization read in its stated order, including the Architect profile, global skill, Symphony core skill, WhatDate `MEMORY.md`, WhatDate `SKILL.md`, ticket-management skill, and the WhatDate Unified Technical Specification required by the Architect profile.
 
 Verify `.symphony-root` before any Architect write: it must exist in the canonical WhatDate folder, contain `project=whatdate`, and name the canonical Symphony path above. If that verification fails after the preflight, stop and report it. Do not create alternate folders or invent project state.
 
