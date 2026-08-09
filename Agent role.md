@@ -15,6 +15,15 @@ C:\Users\pooji\Documents\symphony\
 
 All project folders, profiles, and skills live under this root.
 
+### Project topology and access modes
+
+The Symphony root is the coordination folder, and `sudowhat/symphony` is the repository for the protocol, profiles, and shared skills. It is **not** a Git monorepo that contains project history. Each Project Registry entry resolves to a separate project repository/worktree under this folder when a local CLI is used. For example, `whatdate` → `whatdate-folder` → project repository `sudowhat/whatdate-android`. The project folder is inside the Symphony filesystem hierarchy, but it is not a Git repository nested inside the Symphony protocol repository.
+
+Every role works against the same logical project branch and ticket state through one of two access modes:
+- **Local CLI / disk:** use the canonical project worktree. The local Repository Sync Gate owns detection and reporting of `REPO_DIRTY`.
+- **Direct-repo / cloud:** read the current Symphony protocol ref and the registered project repository's live target ref directly. There is no local project worktree to inspect, so use the Direct-Remote Gate in `global-skill/SKILL.md`; never claim a local `REPO_DIRTY` you cannot observe.
+Both modes obey the same role boundaries, ticket lifecycle, ticket order, and one-at-a-time logical project flow. Never substitute `sudowhat/symphony` for a project's own repository or fabricate a second project folder/repository.
+
 ---
 
 ## The `init` Command (Your Entry Point)
@@ -76,14 +85,20 @@ Read these files and perform the gate in this exact order. After each read or ch
 2. **Your role profile** (from Step 3) — this defines your identity, boundaries, and specific workflow.
 3. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\global-skill\\SKILL.md`** — global behavior rules, the mandatory Repository Sync Gate, and Git workflow.
 4. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\agent-symphony\\SKILL.md`** — the core protocol (ticket lifecycle, agent boundaries, one-at-a-time rules).
-5. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** — confirm the file `.symphony-root` exists at `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\.symphony-root` and that its `project=` line matches your init command. If it is missing or mismatched, STOP immediately and report to the user. Do not create the file, do not create any directory, do not search for or accept an alternative folder.
-6. **Repository Sync Gate (MANDATORY for a Git project)** — before reading project-local state, complete the clean-tree, fetch, and fast-forward-only gate in `global-skill/SKILL.md`. A dirty tree, divergence, unavailable remote, or Git error is a hard STOP: report it to the user; do not stash, reset, clean, restore, pull, claim a ticket, or start the loop.
-7. **Project `MEMORY.md`**: `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\MEMORY.md` — project state, architecture decisions, philosophy, recent ticket status. This is your live memory and is read only after the repository is current.
-8. **Project `SKILL.md`**: `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\SKILL.md` — project-specific technical conventions (build commands, rtest command, key file paths, architecture notes).
+5. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** —
+   - **Local CLI:** confirm `.symphony-root` exists at `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\.symphony-root` and its `project=` line matches the init command.
+   - **Direct-repo/cloud:** fetch `.symphony-root` from the selected project's live target branch; its `project=` line must match the init command and its `canonical_path=` must name the canonical Symphony folder.
+   If the marker is missing or mismatched, STOP immediately and report to the user. Do not create it, create a directory, or search for/accept an alternative project.
+6. **Synchronize the project source (MANDATORY for a Git project)** —
+   - **Local CLI:** complete the clean-tree, fetch, and fast-forward-only **Repository Sync Gate** in `global-skill/SKILL.md`.
+   - **Direct-repo/cloud:** complete the **Direct-Remote Gate** in that same skill against the selected project's target branch.
+   A dirty local tree (CLI only), divergence, remote movement, unavailable remote, or Git error is a hard STOP: report it to the user; do not stash, reset, clean, restore, pull-over, claim a ticket, or start the loop.
+7. **Project `MEMORY.md`** — project state, architecture decisions, philosophy, and recent ticket status. A local CLI reads `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\MEMORY.md`; a direct-repo/cloud agent fetches the same path live from the selected project branch. Read it only after Step 6 succeeds.
+8. **Project `SKILL.md`** — project-specific technical conventions (build commands, rtest command, key file paths, architecture notes). A local CLI reads the canonical project folder; a direct-repo/cloud agent fetches the same path live from the selected project branch.
 9. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\ticket-management\\SKILL.md`** — if your role creates tickets (Architect, Designer). Skip if your role does not create tickets.
 10. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\rtest\\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer). Skip otherwise.
 11. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\blocker-resolution\\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer; same condition as step 10). Skip otherwise. Governs when a role-boundary block is a straightforward, ticket-traceable fix you make yourself (logged) versus a genuine design conflict that escalates to `CANNOT` with an audible alarm.
-12. **Discover current work state** — list the `tickets/` directory inside the project folder using terminal commands. Use PowerShell `Get-ChildItem -Path "C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\tickets" -Force` to see all files (including bracket-prefixed ones). Identify active tickets by their status prefix.
+12. **Discover current work state** — a local CLI lists `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\tickets` (including bracket-prefixed files) from the canonical disk. A direct-repo/cloud agent lists the same `tickets/` path live from the selected project branch. Identify active tickets by their status prefix.
 
 The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, and source: cloud-authored changes must be visible before an agent reasons about or takes work.
 
