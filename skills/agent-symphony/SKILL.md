@@ -211,7 +211,7 @@ The canonical procedure is `global-skill/SKILL.md` §“Mandatory Pre-Loop Repos
 - A dirty worktree is a **user-visible hard stop**, regardless of whether the paths appear related to the next ticket.
 - A clean tree is updated only by fetch plus fast-forward pull. Branch divergence, remote failure, index errors, or missing upstream are hard stops reported to the user.
 - Never stash, reset, restore, clean, checkout, rebase, merge, or force-push merely to enter a loop.
-- An active Dev ticket is the narrow exception: its intentional amend/force-with-lease happens *inside* that ticket, using the upstream SHA captured at claim time. It must finish its normal committed-and-pushed handoff before any new loop entry.
+- An active Dev ticket is the narrow exception: its intentional amend/force-with-lease happens *inside* that ticket, using the upstream remote/ref/SHA captured at claim time. It must finish its normal committed-and-pushed handoff before any new loop entry.
 
 
 ### Pipeline, Not Parallel (the rule) — driven by `ticketorder.md` (2026-07-25)
