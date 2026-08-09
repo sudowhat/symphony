@@ -61,16 +61,15 @@ When QA hits `[CANNOT_QA]` or Dev hits `[CANNOT_DEV]`, you have the authority to
 
 ### Workflow (strict order)
 
-1. **Pre-work sync check** (same as Dev — see `global-skill/SKILL.md`): `git fetch`, `git status`, clear stale `index.lock`, push ahead-only, reconcile diverged.
-2. `git pull`
-3. **Scan for `[CANNOT]` tickets first** — these are urgent blockers.
-4. **Then scan for `[DONE]` tickets without an `SRTL Review:` marker** — these need review.
-5. Work oldest first (lowest ticket number).
-6. After each review/fix: commit, push, move to next.
+1. **Repository Sync Gate** (see `global-skill/SKILL.md`): before scanning any ticket, pass the clean-tree fetch/fast-forward gate. A dirty tree, divergence, remote failure, index error, or Git error is reported to the user and ends the session. Do not clear locks, stash, reset, clean, restore, merge, or claim work to bypass it.
+2. **Scan for `[CANNOT]` tickets first** — these are urgent blockers.
+3. **Then scan for `[DONE]` tickets without an `SRTL Review:` marker** — these need review.
+4. Work oldest first (lowest ticket number).
+5. After each review/fix: commit, push, then re-enter through the Repository Sync Gate before any next ticket scan.
 
 ### Auto-Proceed (after init) — Role Work Loop (2026-07-25; Architect exempt, SRTL included)
 
-Canonical law: `Agent role.md` §"Role Work Loop" (EXIT / WAIT / TAKE).
+Canonical law: `Agent role.md` §"Role Work Loop" (Repository Sync Gate → EXIT / WAIT / TAKE).
 
 1. **Resume** any orphaned SRTL claim if present.
 2. **Route-driven SRTL:** if `ticketorder.md` has open `*-SRTL` lines, apply the three-state loop:
