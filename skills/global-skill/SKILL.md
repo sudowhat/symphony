@@ -256,7 +256,7 @@ The gate is deliberately conservative. It updates only a clean worktree by fast-
 
 ### Dev amend exception
 
-Dev may intentionally amend the QA commit for its **currently active** ticket, which temporarily makes its local branch differ from the remote. That is not a new loop entry. Record the upstream SHA at claim time in the Dev claim, fetch immediately before the final push, and use `git push --force-with-lease=<branch>:<recorded-upstream-sha>`. If the remote SHA changed, the lease must fail and Dev reports the conflict to the user; it must never overwrite a cloud Architect commit. Once that push succeeds and the tree is clean/current again, the next loop entry runs the normal gate.
+Dev may intentionally amend the QA commit for its **currently active** ticket, which temporarily makes its local branch differ from the remote. That is not a new loop entry. Record the upstream remote, remote ref, and SHA at claim time in the Dev claim, fetch immediately before the final push, and use `git push --force-with-lease=<recorded-remote-ref>:<recorded-upstream-sha>` against that recorded remote. If the remote SHA changed, the lease must fail and Dev reports the conflict to the user; it must never overwrite a cloud Architect commit. Once that push succeeds and the tree is clean/current again, the next loop entry runs the normal gate.
 
 ### QA Agent — After Test Authoring
 
