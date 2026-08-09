@@ -47,15 +47,15 @@ This mantra is vendor-neutral and applies to every project under `Symphony/`. Mi
 
 ---
 
-## Read Live State Directly From Disk (All Agents — added 2026-07-05)
+## Read Live State From the Authoritative Project Source (All Agents — clarified 2026-08-09)
 
-Symphony is multi-agent and stateless: ticket filenames/statuses, `MEMORY.md`, git state, and the built APK change **constantly and externally** — another agent, or the user on their own machine, can change them mid-session. Any sandboxed, mounted, or cached filesystem view an agent holds may be a **point-in-time snapshot that does not refresh** when files change externally. Reading volatile state from such a cache yields stale, wrong conclusions (a wrong ticket status, a stale APK build date).
+Symphony is multi-agent and stateless: ticket filenames/statuses, `MEMORY.md`, Git state, and built artifacts can change **constantly and externally**. A local filesystem mount can be stale, and a cloud agent can be stale if it relies on a previously fetched GitHub file. Reading either as current truth yields wrong ticket state, branch state, or artifact claims.
 
-**Hard rule — read volatile state fresh from the real project disk, never from a sandbox/cache; re-read immediately before asserting anything about current state:**
-1. **Ticket listings / statuses / filenames and any file contents** (`MEMORY.md`, ticket bodies, source): read from the actual on-disk project path at the moment you need truth — not from an earlier in-session listing, from conversational memory, or from a sandbox mount. If your toolset exposes both a direct file reader/lister and a separate shell/sandbox, use the **direct file reader** for these reads (it hits the live disk; the sandbox may be a snapshot).
-2. **Git state** (status, ahead/behind, branch, `index.lock`): the live repository is the source of truth. If your environment cannot read live git reliably, **do not assert git state from a cached view** — re-read the real repo or defer to the user.
-3. **APK / build-artifact freshness (timestamps):** never claim a build's age from a cached mount. A direct file reader returns contents, not `mtime`; if you cannot stat the real file, ask the user rather than reporting a possibly-stale timestamp.
-4. **Re-read before you assert:** whenever time has passed or another agent may have acted, re-read the file/directory from disk right before making any claim about its current status. Do not repeat an earlier in-session read as if it were still current.
+**Hard rule — re-read volatile state from its authoritative source immediately before asserting it:**
+1. **Project files** (`MEMORY.md`, ticket bodies/listings, claims, source): a **local CLI** reads the canonical on-disk project path; a **direct-repo/cloud agent** fetches the exact path from the target project's current remote branch/ref. Neither may rely on conversational memory, an earlier listing, or a sandbox/cache snapshot.
+2. **Git state:** a local CLI reads the live worktree (`status`, branch, upstream, `index.lock`). A direct-repo/cloud agent reads the live target ref/commit and the returned revision of every file it will assert or edit. A cloud agent cannot see uncommitted local disk work and must never invent a `REPO_DIRTY` report for it.
+3. **APK / build-artifact freshness (timestamps):** never claim a build's age from a cached mount. A direct file reader returns contents, not `mtime`; if the authoritative host cannot stat the real file, ask the user rather than reporting a possibly-stale timestamp.
+4. **Re-read before you assert:** whenever time has passed or another agent may have acted, re-read the relevant disk path or remote ref/file immediately before making a claim. Do not repeat an earlier in-session read as if it were current.
 
 ## Skill: Clarify Before Acting (Token-Efficient Mode)
 
@@ -210,11 +210,11 @@ Use `C:\Users\pooji\AppData\Local\Temp\opencode\` (pre-approved for external acc
 
 ## Global Rule: Git Workflow for All Coding Projects
 
-This applies only to projects that **already have an initialized Git repository** (a `.git/` directory at the project root). Not every project in `Symphony\` is git-ified yet. Before running any `git` command (this section, the Repository Sync Gate, or the role profile's own Git steps), check first — e.g. `git status` from inside `<project-folder>/`, or check for a `.git` directory. If the project has no repository, **skip all git steps silently** (no fetch/pull/commit/push) and proceed with the rest of the workflow (ticket renames, file edits, rtest) exactly as normal — git is a delivery/sync mechanism layered on top of the file-based ticket protocol, not a prerequisite for it. Re-check on each new init, since a project may be git-ified between sessions.
+This applies only to projects that **already have an initialized Git repository**. A local CLI verifies that through a `.git/` directory at the canonical project root; a direct-repo/cloud agent verifies it by reading the selected project repository and its target ref. Not every project in `Symphony\` is git-ified yet. If the project has no repository, **skip all Git steps silently** (no fetch/pull/commit/push) and proceed with the rest of the workflow (ticket renames, file edits, rtest) exactly as normal — Git is a delivery/sync mechanism layered on top of the file-based ticket protocol, not a prerequisite for it. Re-check on each new init, since a project may be Git-ified between sessions.
 
 > **HARD RULES:** `skills/agent-symphony/SKILL.md` §"Role Discipline & Repo Safety" (added 2026-07-05) is binding for every git operation below: scope lock (touch only ticket-listed files), one ticket = one commit, preserve UTF-8/CRLF encodings (never PowerShell `>` onto source files), STOP on any index error or 0-byte source blob, delete scratch files before staging, and the post-commit zero-byte integrity check before every push. Read it before your first commit of the session.
 
-### Mandatory Pre-Loop Repository Sync Gate (All Roles, Every Loop Entry)
+### Mandatory Pre-Loop Repository Sync Gate — Local CLI (All Roles, Every Loop Entry)
 
 (Applies only when the project has a Git repository — see above.)
 
@@ -252,7 +252,25 @@ Do **not** run the gate while actively executing a claimed ticket: the worktree 
    - **diverged** → report `REPO_DIVERGED` with branch/upstream and ahead/behind counts, then stop. Do not merge, rebase, force-push, or choose a side.
 6. After any pull or push, re-run the porcelain check and verify `HEAD` equals its upstream. Any failure, remaining dirtiness, or non-fast-forward condition is `REPO_SYNC_BLOCKED`: report it and stop.
 
-The gate is deliberately conservative. It updates only a clean worktree by fast-forward pull, and it never hides another person's local changes. A successful gate is the only condition under which the agent may inspect current project state or proceed to the role loop.
+The gate is deliberately conservative. It updates only a clean worktree by fast-forward pull, and it never hides another person's local changes. A successful gate is the only condition under which the local CLI agent may inspect current project state or proceed to the role loop.
+
+### Mandatory Direct-Remote Gate — Cloud / GitHub Access (All Roles, Every Loop Entry)
+
+A direct-repo/cloud agent has no local project worktree. It does **not** run local-only `git status`, `git pull`, or a dirty-tree check against a nonexistent checkout. It instead treats the selected project's live target branch as its workspace and must complete this gate at the same entry points as the local CLI gate: during `init`, after a terminal handoff, after a real WAIT wake, and before `proceed` / `next` / `continue`.
+
+1. Confirm the target repository and target branch/ref from the project bootstrap or the project's registered remote. Never use `sudowhat/symphony` as the project repository.
+2. Fetch the current target ref/commit live, then fetch `.symphony-root`, `MEMORY.md`, `SKILL.md`, the active ticket/claim, `tickets/`, `ticketorder.md`, and any source file needed for the current decision from that same live branch. Retain the returned file revision/SHA for every file intended for edit.
+3. Immediately before a claim, a current-state assertion, or a ticket/document/source edit, re-read the target ref and relevant file revisions. If the ref or relevant file revision has moved, stop and report:
+   ```text
+   REPO_REMOTE_MOVED: <project> (<target-ref>)
+   Expected <recorded-ref-or-file-sha>; now <current-sha>.
+   No claim, overwrite, or ticket-loop action was made.
+   ```
+   Do not attempt to merge, rebase, force-update, or silently replay the change.
+4. Write only through an optimistic-concurrency operation that supplies the fetched file SHA/revision and/or advances the expected target ref without force. A revision mismatch or non-fast-forward failure is the same `REPO_REMOTE_MOVED` hard stop. Never use a blind overwrite or force ref update.
+5. After a successful write, fetch the target ref and changed file(s) again and verify that the intended commit/content is present before reporting the handoff.
+
+The direct-remote gate is the cloud equivalent of the local CLI gate. It cannot diagnose local uncommitted changes; only the CLI agent that can inspect the canonical worktree can issue `REPO_DIRTY`. Both modes fail closed before fresh work and follow the same ticket lifecycle.
 
 ### Dev amend exception
 
