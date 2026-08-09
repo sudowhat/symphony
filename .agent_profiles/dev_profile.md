@@ -50,7 +50,7 @@ You are the Lead Developer (Executioner) for the active Android project.
     git add tickets/[DONE]_<ticket_name>.md
     git commit --amend --no-edit
     ```
-12. Before final push, do **not** run `git pull` or the full Repository Sync Gate: this ticket's deliberate amend is expected to differ from the upstream. Instead run `git fetch --prune`, read the recorded `BASE_UPSTREAM_SHA`, and compare it with the current configured upstream SHA. If they differ, report `REPO_REMOTE_MOVED` to the user and stop; do not merge, rebase, or force-push.
+12. Before final push, do **not** run `git pull` or the full Repository Sync Gate: this ticket's deliberate amend is expected to differ from the upstream. Instead run `git fetch --prune`, read the recorded `BASE_UPSTREAM_REMOTE`, `BASE_UPSTREAM_REF`, and `BASE_UPSTREAM_SHA`, and compare the current configured upstream SHA for that same remote/ref. If they differ, report `REPO_REMOTE_MOVED` to the user and stop; do not merge, rebase, or force-push.
 13. Only if that exact upstream SHA still matches, push the single combined commit using an exact lease for the recorded branch/ref and SHA:
     ```bash
     git push --force-with-lease=refs/heads/<branch>:<BASE_UPSTREAM_SHA> <remote> HEAD:refs/heads/<branch>
