@@ -68,21 +68,24 @@ Use the **Role Registry** below to find your profile and the skills you need:
 | tester | `C:\Users\pooji\Documents\symphony\.agent_profiles\tester_profile.md` | global-skill, agent-symphony, rtest |
 | implementer | `C:\Users\pooji\Documents\symphony\.agent_profiles\implementer_profile.md` | global-skill, agent-symphony, rtest |
 
-### Step 4: Load Context (EXACT ORDER — do not skip)
+### Step 4: Load Context and Synchronize (EXACT ORDER — do not skip)
 
-Read these files in this exact order. After each read, internalize its content before moving to the next.
+Read these files and perform the gate in this exact order. After each read or check, internalize its result before moving on.
 
 1. **This file** (`Agent role.md`) — you are already reading it.
 2. **Your role profile** (from Step 3) — this defines your identity, boundaries, and specific workflow.
-3. **`C:\Users\pooji\Documents\symphony\skills\global-skill\SKILL.md`** — global behavior rules, ambiguity resolution, Git workflow, terminology.
-4. **`C:\Users\pooji\Documents\symphony\skills\agent-symphony\SKILL.md`** — the core protocol (ticket lifecycle, agent boundaries, one-at-a-time rules).
-5. **Project `MEMORY.md`**: `C:\Users\pooji\Documents\symphony\<project-folder>\MEMORY.md` — project state, architecture decisions, philosophy, recent ticket status. This is your live memory.
-6. **Project `SKILL.md`**: `C:\Users\pooji\Documents\symphony\<project-folder>\SKILL.md` — project-specific technical conventions (build commands, rtest command, key file paths, architecture notes).
-7. **`C:\Users\pooji\Documents\symphony\skills\ticket-management\SKILL.md`** — if your role creates tickets (Architect, Designer). Skip if your role does not create tickets.
-8. **`C:\Users\pooji\Documents\symphony\skills\rtest\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer). Skip otherwise.
-9. **`C:\Users\pooji\Documents\symphony\skills\blocker-resolution\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer; same condition as step 8). Skip otherwise. Governs when a role-boundary block is a straightforward, ticket-traceable fix you make yourself (logged) versus a genuine design conflict that escalates to `CANNOT` with an audible alarm.
-10. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** — confirm the file `.symphony-root` exists at `C:\Users\pooji\Documents\symphony\<project-folder>\.symphony-root` and that its `project=` line matches your init command. If it is missing or mismatched, STOP immediately and report to the user. Do not create the file, do not create any directory, do not search for or accept an alternative folder.
-11. **Discover current work state** — list the `tickets/` directory inside the project folder using terminal commands. Use PowerShell `Get-ChildItem -Path "C:\Users\pooji\Documents\symphony\<project-folder>\tickets" -Force` to see all files (including bracket-prefixed ones). Identify active tickets by their status prefix.
+3. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\global-skill\\SKILL.md`** — global behavior rules, the mandatory Repository Sync Gate, and Git workflow.
+4. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\agent-symphony\\SKILL.md`** — the core protocol (ticket lifecycle, agent boundaries, one-at-a-time rules).
+5. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** — confirm the file `.symphony-root` exists at `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\.symphony-root` and that its `project=` line matches your init command. If it is missing or mismatched, STOP immediately and report to the user. Do not create the file, do not create any directory, do not search for or accept an alternative folder.
+6. **Repository Sync Gate (MANDATORY for a Git project)** — before reading project-local state, complete the clean-tree, fetch, and fast-forward-only gate in `global-skill/SKILL.md`. A dirty tree, divergence, unavailable remote, or Git error is a hard STOP: report it to the user; do not stash, reset, clean, restore, pull, claim a ticket, or start the loop.
+7. **Project `MEMORY.md`**: `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\MEMORY.md` — project state, architecture decisions, philosophy, recent ticket status. This is your live memory and is read only after the repository is current.
+8. **Project `SKILL.md`**: `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\SKILL.md` — project-specific technical conventions (build commands, rtest command, key file paths, architecture notes).
+9. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\ticket-management\\SKILL.md`** — if your role creates tickets (Architect, Designer). Skip if your role does not create tickets.
+10. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\rtest\\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer). Skip otherwise.
+11. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\blocker-resolution\\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer; same condition as step 10). Skip otherwise. Governs when a role-boundary block is a straightforward, ticket-traceable fix you make yourself (logged) versus a genuine design conflict that escalates to `CANNOT` with an audible alarm.
+12. **Discover current work state** — list the `tickets/` directory inside the project folder using terminal commands. Use PowerShell `Get-ChildItem -Path "C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\tickets" -Force` to see all files (including bracket-prefixed ones). Identify active tickets by their status prefix.
+
+The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, and source: cloud-authored changes must be visible before an agent reasons about or takes work.
 
 ### Step 5: Report Readiness + Auto-Proceed to Next Task
 
@@ -103,12 +106,13 @@ After reporting readiness, you must **automatically** scan for work applicable t
 
 **Architect is exempt.** Architect keeps its own interactive/batch auto-proceed below and does **not** use this loop.
 
-Every other role (QA, Dev, SRTL, Orchestrator, Composer, Critic, Designer, Tester, Implementer — and any future non-Architect role) runs this loop after init, after each handoff, and on every scheduled poll — same law whether user-spawned, orchestrator-spawned, or timed. Purpose: continuously process the work list in strict order, taking only what's yours, until nothing is left.
+Every other role (QA, Dev, SRTL, Orchestrator, Composer, Critic, Designer, Tester, Implementer — and any future non-Architect role) runs this loop after init, after each handoff, and on every scheduled poll — same law whether user-spawned, orchestrator-spawned, or timed. Every such entry begins with the Repository Sync Gate. Purpose: continuously process the work list in strict order, taking only what's yours, until nothing is left.
 
 ### The loop, in full (this is the whole thing — read it once, obey it exactly)
 
 ```
 loop: while (true) {
+    0. sync:    clean tree + fetch + fast-forward update? -> otherwise report user ; STOP
     1. resume:  any half-finished ticket of MY role?  -> take it
     2. read:    <project>/ticketorder.md
     3. exit:    no open line for MY role anywhere?    -> print "<role>|exit" ; STOP
@@ -122,9 +126,10 @@ loop: while (true) {
 2. **Exit the moment nothing on the list is mine.** Don't linger, don't "check in case".
 3. **Sleep is a real 300s blocking sleep in this same session.** Not a cloud job, not a new agent, not a fresh `init`, not a tight poll.
 
-**Token efficiency is the point of this loop, not just discipline.** One line of status per state change. No tool calls while waiting. A loop that burns tokens waiting is a broken loop even if it never breaks a rule.
+**Token efficiency is the point of this loop, not just discipline.** One line of status per state change. No tool calls while waiting. The required Repository Sync Gate after a real wake is work, not a keepalive. A loop that burns tokens waiting is a broken loop even if it never breaks a rule.
 
 **Definitions (no interpretation needed):**
+- *sync* = the clean-tree Repository Sync Gate in `global-skill/SKILL.md`; it runs before every fresh queue/claim read, never mid-ticket.
 - *open line* = a line with no `:DONE` on its own role token.
 - *top* = the first open line in the file, reading down. Only the top may be taken.
 - *mine* = the line's role token equals my role.
@@ -143,9 +148,9 @@ loop: while (true) {
 
 Nothing below may contradict the five-line loop. If it appears to, the loop wins and the text below is the defect — report it.
 
-**1. Start loop.** Repeat until EXIT.
+**1. Synchronize before reading work.** Run the Repository Sync Gate from `global-skill/SKILL.md`. If it reports `REPO_DIRTY`, `REPO_DIVERGED`, or `REPO_SYNC_BLOCKED`, report the finding to the user and STOP. Do not inspect claims, tickets, or source from a stale/dirty tree.
 
-**2. Resume orphaned work first.** Before reading the list at all: any `tickets/.claims/*-<YourRole>.claim`, a claim marked `IN_PROGRESS`, or a ticket already in your role's in-flight status (e.g. `[IN_PROGRESS]_*` for Dev) means a previous instance of *you* died mid-ticket. That is always TAKE, ahead of everything below — never route around it for a fresher item (the single-agent-per-role guarantee means an orphan is a corpse, never a live peer; see agent-symphony/SKILL.md §"One Agent per Role per Project" for the incident this rule exists for).
+**2. Resume orphaned work first.** Only after a successful sync: any `tickets/.claims/*-<YourRole>.claim`, a claim marked `IN_PROGRESS`, or a ticket already in your role's in-flight status (e.g. `[IN_PROGRESS]_*` for Dev) means a previous instance of *you* died mid-ticket. That is always TAKE, ahead of everything below — never route around it for a fresher item (the single-agent-per-role guarantee means an orphan is a corpse, never a live peer; see agent-symphony/SKILL.md §"One Agent per Role per Project" for the incident this rule exists for).
 
 **3. Read the work list.** Route roles (QA, Dev, SRTL): `<project>/ticketorder.md`, top-to-bottom, one entry per line, `<ticket_id>-<Role>[:DONE]`. Content-web roles (Composer, Critic, Designer, Tester, Implementer): your role's file-status queue instead — see the per-role bullets below for exactly which glob.
 
@@ -156,24 +161,24 @@ Nothing below may contradict the five-line loop. If it appears to, the loop wins
 - **Nothing open for your role remains anywhere on the list** → **EXIT.** Log `LOOP_EXIT: no work remaining for <role>`. Stop looping, cancel any scheduled poll, do not re-arm.
 - **The head isn't your role, OR it is your role but the gate isn't open yet** (e.g. head is `121-Dev` but the ticket is still `[APPROVED]`, not `[READY_FOR_DEV]`) → **WAIT.** Log `LOOP_WAIT: head is <entry>; N open <role> line(s) remain`. Sleep for the configured duration (see below), then go back to step 3. Never skip the head to grab a later line that is yours.
 - **The head is your role and the gate is open** (or step 2 already found an orphan) → **TAKE.** Claim it, execute to a terminal handoff, then:
-  - **`[DONE]` (or equivalent):** append `:DONE` to that one line only — touch nothing else in the file — and **immediately go back to step 3, no sleep.** This is what lets TAKE chain consecutive same-role heads in one session (`121-Dev` → `122-Dev` → `123-Dev`…).
+  - **`[DONE]` (or equivalent):** append `:DONE` to that one line only — touch nothing else in the file — and **immediately go back to step 1, no sleep.** This is what lets TAKE chain consecutive same-role heads in one session (`121-Dev` → `122-Dev` → `123-Dev`…).
   - **Genuine `CANNOT_*`** (per `skills/blocker-resolution/SKILL.md` — a straightforward, ticket-traceable fix is not a CANNOT, see that skill first): leave the line open, sound the alarm (same skill), then treat yourself as WAIT — sleep and re-poll. The next orphan-resume check (step 2) picks the same ticket back up automatically once it's cleared. Do not grab other work meanwhile.
   - **SRTL exception:** a CANNOT ticket is SRTL's own TAKE directly — no pre-existing `*-SRTL` route line required (see "If SRTL" below). This is what makes step 4's WAIT-on-CANNOT actually resolve on its own for everyone else.
 
-**What "sleep" concretely means:** nothing more than *sleep → wake → go back to step 3*. Do nothing for the configured duration (`300s` / 5 minutes unless a project states otherwise), then wake and re-read the list fresh from disk. No cloud deployment, no separate agent, no new session, no fresh `init` — whatever primitive your environment gives you for "pause, then come back to **this same session** with everything already loaded" (a timer, a scheduled wake, a cron-style re-entry, a literal blocking sleep in a shell) all count equally. The one invariant: it must resume this session, never spawn a new one — if your environment's only scheduling primitive spins up an independent/stateless run instead, don't use it for polling; fall back to a plain blocking wait. This is pre-authorized by accepting `init <project> <role>` in the first place — never stop to ask "should I keep polling?"; your host environment may still separately gate the *actions* a TAKE performs (e.g. approval before a commit/push), but that's an environment permission boundary, not a cue to second-guess the polling itself.
+**What "sleep" concretely means:** nothing more than *sleep → wake → run the Repository Sync Gate → go back to step 3*. Do nothing for the configured duration (`300s` / 5 minutes unless a project states otherwise), then wake and re-read the list fresh from disk. No cloud deployment, no separate agent, no new session, no fresh `init` — whatever primitive your environment gives you for "pause, then come back to **this same session** with everything already loaded" (a timer, a scheduled wake, a cron-style re-entry, a literal blocking sleep in a shell) all count equally. The one invariant: it must resume this session, never spawn a new one — if your environment's only scheduling primitive spins up an independent/stateless run instead, don't use it for polling; fall back to a plain blocking wait. This is pre-authorized by accepting `init <project> <role>` in the first place — never stop to ask "should I keep polling?"; your host environment may still separately gate the *actions* a TAKE performs (e.g. approval before a commit/push), but that's an environment permission boundary, not a cue to second-guess the polling itself.
 
 **No keepalive / no tool spam while WAIT or after EXIT (HARD RULE — all vendors, all roles that use this loop; amended 2026-08-01 to remove the false "end before sleep" reading):**
 
 After you classify **WAIT** or **EXIT** (and after any short status line you emit for that classification):
 
-1. **WAIT means sleep, then continue.** After printing `LOOP_WAIT`, execute exactly one real 300s sleep in this same session (`Start-Sleep -Seconds 300` or an equivalent same-session timer). When it wakes, immediately re-read the work list and classify again. Do not end the turn before the sleep unless the host has a true same-session scheduled wake primitive.
+1. **WAIT means sleep, then continue.** After printing `LOOP_WAIT`, execute exactly one real 300s sleep in this same session (`Start-Sleep -Seconds 300` or an equivalent same-session timer). When it wakes, run the Repository Sync Gate, then re-read the work list and classify again. Do not end the turn before the sleep unless the host has a true same-session scheduled wake primitive.
 2. **EXIT means end.** After printing `LOOP_EXIT`, end the turn. Cancel any scheduled poll for this role; do not re-arm; do not keep polling "in case." New work arrives only via a later user `init` / "status" / "continue" or a new open line on the list.
 3. **Forbidden as keepalive (non-exhaustive):** empty commands; `exit 0` / `echo` / `Write-Host` noops; tight short sleep loops; repeated no-op `git status` / list-dir when nothing changed; any tool call whose only purpose is to produce another model turn without advancing work.
 4. **WAIT sleep is not keepalive spam.** One blocking 300s sleep is the loop's required wait primitive. A storm of intermediate tool calls is forbidden.
 5. **Status text stays cheap.** One line is enough (`LOOP_WAIT: head is …` or `LOOP_EXIT: …`). Do not re-narrate identical WAIT on every micro-tick; identical WAIT after a real 300s sleep may be one line or silent.
 6. **Applies to every frontend equally** (Claude, Grok, Codex, Cursor, Gemini, …). No vendor is exempt. Vendor-specific session rename / TUI commands are not a reason to run keepalive tools.
 
-This rule is about **token and attention waste**, not about skipping real TAKE work or skipping a genuine disk re-read when a scheduled poll or the user asks for status.
+This rule is about **token and attention waste**, not about skipping real TAKE work, the required Repository Sync Gate after a real wait, or a genuine disk re-read when a scheduled poll or the user asks for status.
 
 **Worked example.** Starting state:
 ```
@@ -200,13 +205,15 @@ Dev polls: head `121-Dev`, matches Dev, gate open → **TAKE.** Implements, push
 - Strict ordering — only the head may ever be taken, however far down a matching entry sits.
 - Role isolation — you only take entries matching your own role token.
 - TAKE chains — same-role heads are taken back-to-back in one session, no sleep, no stopping "for the orchestrator to re-dispatch."
-- Orphan resume always precedes the list scan.
+- A successful Repository Sync Gate precedes orphan resume and every list scan.
 - CANNOT anywhere open means WAIT, not EXIT, except for SRTL, who takes it directly.
 - Single-agent-per-role is assumed — this is what makes append-only `:DONE` writes and orphan-resume safe without locking.
 - **No keepalive tool spam on WAIT/EXIT** — see hard rule above. WAIT performs one real 300s same-session sleep before re-reading; EXIT ends the turn after one status line.
 - The user may still override order/scope with explicit instructions; without that, this loop is law.
 
 ---
+
+**Every role, including Architect, starts any new Auto-Proceed scan reached after init, a continuation, or a completed handoff with the Repository Sync Gate.** A failed gate ends the session before any ticket/claim scan.
 
 **If Architect:** *(exempt from Role Work Loop — interactive design role)*
 1. Check for `[CANNOT_QA]` or `[CANNOT_DEV]` tickets first. If any exist, **stop** and report: *"Found [CANNOT] tickets that require Architect review. Here are the findings..."* — then wait for the user's direction on which resolution path to take.
@@ -271,7 +278,7 @@ Only SRTL writes `:REVIEWED` or any `<id>-SRTL` line. No role ever removes them.
 1. EXIT if none. TAKE oldest FIX_FAILS first, then VERIFIED; after handoff **repeat**.
 
 **If Orchestrator** (per-project, like every role — `init <project> orchestrator`):
-1. Verify `.symphony-root` for YOUR project (standard Step 9); mismatch → STOP.
+1. Verify `.symphony-root` for YOUR project (the mandatory Path Integrity step); mismatch → STOP.
 2. Scan your project's `tickets/` (names only) for CANNOT/STALE (priority), open `.claims/` (resume in-flight), then `ticketorder.md` for the next runnable line. Report findings, then begin the dispatch loop per `orchestrator_profile.md`. Cross-project orchestration = one orchestrator instance per project, running in parallel.
 3. Orchestrator's own dispatch loop already polls; it spawns specialists who themselves obey the Role Work Loop (TAKE chains same-role heads in one specialist session when consecutive).
 
@@ -455,7 +462,7 @@ through. Rules:
 1. Open a fresh CLI session with any AI agent (any brand/model).
 2. Provide this file as the system prompt (or paste it into the first message).
 3. Say: `init whatdate architect` (or any `<project> <role>` combination).
-4. The agent follows the exact 5-step initialization sequence above.
+4. The agent follows the exact initialization sequence above, including the Repository Sync Gate before it reads project-local state.
 5. The agent reports readiness. Work begins.
 
 No other files need to be manually provided. The agent discovers everything from the filesystem using the registries and paths in this file.
