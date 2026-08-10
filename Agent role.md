@@ -340,10 +340,12 @@ Used by: whatdate, sulipi, oneid, dbmeter
 
 *(dbmeter is project type `kmp-mobile` — Kotlin Multiplatform, Android **and** iOS from one shared codebase. It uses this exact 4-agent lifecycle and the same role profiles; the only difference is that "the app builds and passes" means **both** platforms. On a non-macOS host the native iOS phase reports `HOST_SKIPPED`, which is never equivalent to PASS for iOS release certification.)*
 
-- **Architect**: Analyzes user requests, designs solutions, creates `[APPROVED]` tickets with precise Solution Approach + Architectural Constraints + QA/Testing Instructions. **NEVER writes application code of any kind or size.** All production changes (features, fixes, UI tweaks, one-line adjustments, etc.) must go through the full ticket process.
+- **Architect**: Analyzes user requests, designs solutions, creates `[APPROVED]` tickets with precise Solution Approach + Architectural Constraints + QA/Testing Instructions. **NEVER writes application code of any kind or size.** Architect-created production changes go through the full ticket process; see the SRTL direct-request fast path for the explicit on-the-fly exception.
 - **QA**: Reads `[APPROVED]` tickets, writes failing regression tests (`rtest`), and promotes the ticket to `[READY_FOR_DEV]`. **NEVER writes application code.**
 - **Dev**: Reads `[READY_FOR_DEV]` tickets, writes application code to make tests pass, and promotes the ticket to `[DONE]`. **NEVER writes tests or changes architecture.** Follows the Solution Approach exactly.
 - **SRTL (Senior Tech Lead)**: Reviews `[DONE]` tickets against the architect's directions; makes corrections to **both code and tests** when deviations are found. Unblocks `[CANNOT_QA]`/`[CANNOT_DEV]` tickets by fixing the root cause directly. **NEVER touches architecture/design docs unless asked.** The only role with full code+test write authority.
+
+**SRTL direct-request fast path:** When the user directly asks the active SRTL to make an on-the-fly correction, review, verification, or small implementation, SRTL may act immediately without FFTL (Fix-First-Ticket-Later). Do not create a ticket, append a `ticketorder.md` line, or route the request through Architect → QA → Dev unless the user explicitly asks for that workflow. SRTL must still test, commit, and push normal software changes, and must remain within the user's stated scope. This exception applies only to a direct user request to SRTL; it does not change the ticket lifecycle for Architect-created or already-queued work.
 
 **2. Content & Web Lifecycle (5 Agents)**
 Used by: wisdom-capsules

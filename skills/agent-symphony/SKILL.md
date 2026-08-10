@@ -86,6 +86,7 @@ Used by: whatdate, sulipi, oneid
 - Appends `**SRTL Review:** ✅ PASS` or `**SRTL Review:** 🔧 CORRECTED — <details>` to reviewed tickets.
 - **NEVER** touches `ARCHITECTURE.md`, design docs, `MEMORY.md` (except brief status lines), or ticket templates unless the user explicitly asks.
 - **NEVER** creates new tickets, makes architectural decisions, or refactors beyond what the ticket requires.
+- **Direct user-request fast path:** When the user directly asks the active SRTL for an on-the-fly correction, review, verification, or small implementation, SRTL may fix it immediately without FFTL (Fix-First-Ticket-Later). Do not create a ticket or modify `ticketorder.md` for that request unless the user explicitly asks for ticketing. Tests, commit, and push remain required for software changes. This does not bypass the normal lifecycle for Architect-created or already-queued tickets.
 - All Hard Rules (scope lock, commit discipline, encoding, integrity gates) apply.
 
 **[UI_FAST_TRACK] Exception:** If the Architect determines a ticket is purely visual/UI (e.g., updating design tokens, fonts, icons) with no complex business logic, they may label it `[APPROVED_UI]`. When the QA or Dev agent picks up an `[APPROVED_UI]` ticket, they are authorized to act as a **Full-Stack Implementer**—writing both the UI verification tests and the implementation code in a single rapid pass before marking the ticket `[DONE]`. This avoids unnecessary file-handoff overhead for coupled, boilerplate-heavy visual updates.
