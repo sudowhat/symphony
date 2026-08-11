@@ -90,6 +90,12 @@ bytes are consumed as a gate, not read as prose. The same rule extends to *any* 
 output or exit semantics are used programmatically as a gate, unless equivalence has been explicitly
 proven and recorded.
 
+This is demonstrated, not precautionary. On a **clean** tree the raw gate emits **zero bytes** — the
+pass condition the gate tests for — while `rtk git status` emits the prose line
+`clean — nothing to commit`. Since the gate treats *any* output as a dirty worktree, substituting
+the compact form inverts it: every clean tree would report `REPO_DIRTY`. Compact status is a
+human summary, never a gate contract.
+
 ## CLASS B — compressible
 
 High-volume, repetitive, diagnostic, reconstructible, and not itself an integrity contract:
@@ -181,6 +187,11 @@ identify the relevant file and range
 exact read before any decision or edit
 ```
 
+Some compressed search commands shell out to external binaries (`rtk grep` requires `grep` on
+`PATH`) and simply fail on hosts that lack them — Windows/PowerShell hosts typically do. A failed
+compressed search is not a fallback signal to investigate; use the host's native search
+(`rg`, `Select-String`, indexed search) and move on.
+
 Never substitute a structural or signature-level summary for an authoritative read when following a
 ticket, implementing, reviewing, reading protocol rules, verifying exact behavior, or writing based
 on the file. This reinforces token-discipline §"Read discipline": start narrow, expand when evidence
@@ -239,3 +250,16 @@ and output tokens.
 If measuring, record per representative command: raw size, compressed size, reduction %, whether any
 essential evidence was lost, and whether raw recovery was needed. A reduction that forced a raw
 re-read is not a saving. The objective is useful-context reduction, not a marketing percentage.
+
+Observed baseline (RTK 0.45.0, Windows x86_64, bytes of captured output):
+
+| Command | Raw | Compressed | Reduction |
+|---|---|---|---|
+| `git log -n 30` | 9,156 | 3,090 | 66% |
+| `git diff HEAD~1` | 15,336 | 8,187 | 47% |
+| `gradlew --version` | 455 | 47 | 90% |
+| `git status` (illustrative — gate stays raw) | 104 | 49 | 53% |
+
+Real-world Git reduction sits nearer 50–65% than the headline figure. Exit-code propagation was
+verified empirically across `rtk err` / `rtk test` / `rtk proxy` (7→7, 3→3, 5→5, 0→0). A full Gradle
+build/test measurement has not been taken; `rtk grep` is unavailable on this host class (see above).
