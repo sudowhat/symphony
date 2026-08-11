@@ -101,6 +101,8 @@ canonical_path=C:\Users\pooji\Documents\symphony\<project-folder>\
 6. **Known gaps** — every anomaly the survey found (see §6). Nothing swept under the rug.
 7. **Lessons worth keeping** — empty at onboarding; incidents get compressed into it later.
 
+Do not create a routine ticket-history archive inside `MEMORY.md`. Completed detail remains canonical in tickets/docs/Git. An optional semantic-memory provider may later index approved history, but the project must initialize and operate completely without it.
+
 **`SKILL.md`** — project-specific technical conventions, with YAML frontmatter (`name: <short-name>-skill`, one-line `description`). Required sections:
 
 1. Project type and role set.
@@ -202,5 +204,6 @@ Onboarding does not begin work. It ends by handing the user `init <short-name> <
 - `skills/ticket-management/SKILL.md` — ticket naming and templates
 - `skills/global-skill/SKILL.md` — global rules, repository gates, and live-state freshness
 - `skills/token-discipline/SKILL.md` — mandatory targeted retrieval, terse output, and lossless durable-artifact rules for every role
+- `skills/semantic-memory/SKILL.md` — optional provider-neutral historical locator; never authoritative or required
 - `skills/agent-symphony/SKILL.md` — lifecycle, boundaries, and execution protocol
 - `.agent_profiles/architect_profile.md` — §"Standing Expectation: Multi-Platform From Commit 0"
