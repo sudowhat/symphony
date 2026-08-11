@@ -39,7 +39,9 @@ The filename prefix **is** the state machine. A ticket moves `[APPROVED]` → `[
 | Reviewing what an agent did | Trust the transcript | `git diff` |
 | Onboarding a new model | Port the SDK | Point it at one Markdown file |
 
-**Token efficiency is the design goal, not a side effect.** Agents never pass context to each other — the ticket *is* the context. A specialist receives nothing in-band, ever. It reads the file, does the work, and stops. An agent does not need to know the whole architect to implement a PR or a CR as with solution approach clearly outlined by the architect in the ticket itself.
+**Token efficiency is the design goal, not a side effect.** Agents never pass context to each other — the ticket *is* the context. A specialist receives nothing in-band: it reads the durable ticket, does the work, and stops. It does not need the Architect's conversation when the ticket already contains the complete solution approach, constraints, tests, and evidence requirements.
+
+Every role, including future roles, loads the same mandatory core in order: `global-skill` → `token-discipline` → `agent-symphony`. Token discipline searches before broad exploration, reads targeted ranges after mandatory context is loaded, avoids stable rereads, and keeps progress terse. It never compresses away correctness, security/privacy, repository or live-state gates, role boundaries, ticket completeness, code, tests, exact errors, diffs, or evidence.
 
 ---
 
@@ -126,8 +128,9 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 │   ├── orchestrator_profile.md
 │   └── composer_ critic_ designer_ tester_ implementer_profile.md
 ├── skills/                        # shared behaviour, loaded by every agent
+│   ├── global-skill/              #   global rules, repository gates, live-state freshness
+│   ├── token-discipline/          #   mandatory lossless input/output token discipline
 │   ├── agent-symphony/            #   the core protocol: lifecycle, boundaries, hard rules
-│   ├── global-skill/              #   git workflow, clarification policy, no-keepalive rule
 │   ├── ticket-management/         #   ticket naming and templates
 │   ├── rtest/                     #   test tiers and TDD conventions
 │   ├── blocker-resolution/        #   self-fix vs escalate triage
