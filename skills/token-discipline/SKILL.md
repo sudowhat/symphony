@@ -1,144 +1,173 @@
 ---
 name: token-discipline
-description: Vendor-neutral token-efficiency rules for every Symphony agent. Compress conversational overhead and repeated context while preserving durable engineering artifacts and evidence.
+description: Vendor-neutral token-efficiency rules for every Symphony agent. Reduce retrieved context and conversational overhead while preserving complete engineering artifacts, required evidence, live-state freshness, gates, and role boundaries.
 ---
 
 # Symphony Token Discipline
 
-This is a **Symphony-native, vendor-independent** skill. It applies identically to every model, CLI, IDE agent, cloud agent, and future vendor participating in Symphony.
+This is a mandatory, Symphony-native, vendor-independent skill for every current and future role.
 
-No Symphony workflow may depend on Caveman, Claude Code hooks, Codex configuration, Cursor rules, or any other vendor-specific runtime. External token-saving plugins may additionally be used, but this file is canonical.
+No Symphony workflow may depend on an external optimizer, vendor hook, vendor configuration file, IDE rule, plugin, or installation. Vendor-specific helpers may be optional accelerators only; the vendor-neutral Symphony files remain canonical.
 
 ## Prime directive
 
 > **Small mouth, full brain. Compress chatter; preserve engineering signal.**
 
-Token reduction must never reduce correctness, reproducibility, test evidence, architecture fidelity, security/privacy requirements, or information required by the next role.
+Token discipline reduces unnecessary retrieval and observable verbosity. It never reduces the reasoning, exact evidence, or durable detail needed to execute, review, reproduce, secure, or maintain the work.
+
+## Non-negotiable safety floor
+
+Token optimization NEVER overrides:
+
+1. user instructions;
+2. correctness, security, privacy, data integrity, or architecture fidelity;
+3. the Repository Sync Gate, Direct-Remote Gate, optimistic concurrency, or live-state freshness;
+4. Symphony role boundaries, ticket lifecycle, scope locks, or exact Role Work Loop behavior;
+5. ticket, design, and durable-artifact completeness;
+6. required code, tests, commands, exact errors, diffs, logs, assertions, reproduction steps, and execution/review evidence.
+
+If saving tokens would weaken any item above, spend the tokens.
+
+## Relationship to existing Symphony rules
+
+This skill complements existing rules; it does not restate or supersede their semantics:
+
+- `global-skill` Cost-Aware Execution owns ask-versus-assume decisions.
+- `global-skill` and `Agent role.md` No Keepalive / No Tool Spam own WAIT and EXIT behavior.
+- `Agent role.md` owns the exact one-line Role Work Loop status strings.
+- `global-skill` owns Repository Sync, Direct-Remote, and live-state reread gates.
+- `agent-symphony`, role profiles, and active tickets own boundaries, lifecycle, scope, and completeness.
+
+When this skill and a governing rule appear to differ, follow the governing rule and report the documentation conflict.
 
 ## Compress aggressively
 
 Keep these terse and information-dense:
-- progress/status messages;
+
+- progress and routine status messages;
 - tool-call narration;
-- readiness/WAIT/EXIT output;
+- readiness, WAIT, EXIT, and handoff output;
 - routine success commentary;
-- explanations already evident from a diff/test result;
-- handoff summaries;
+- explanations already evident from an exact diff or test result;
 - repeated restatement of ticket requirements or persisted decisions;
-- repeated summaries of files already available to the next agent.
+- repeated summaries of files already available to the next role.
 
 Prefer identifiers, paths, commands, facts, and short fragments over prose when unambiguous.
 
 Bad:
-`I have completed my detailed review and found that the resolver appears to use today's date rather than the date selected by the user.`
+
+`I completed my detailed review and found that the resolver appears to use today's date rather than the date selected by the user.`
 
 Good:
+
 `Bug: resolver uses today, not selected date.`
 
 ## Preserve losslessly
 
-Do not compress away or paraphrase information whose exact form matters:
-- source code;
-- required commands;
-- paths and filenames;
-- symbols, APIs, schemas, fields, IDs and status prefixes;
-- diagnostically relevant error text;
-- meaningful failing assertions/test evidence;
-- patches/diffs when exact changes matter;
-- acceptance criteria;
-- architectural decisions and constraints;
+Do not compress away or loosely paraphrase information whose exact form matters:
+
+- source code and patches;
+- required commands, paths, filenames, symbols, APIs, schemas, fields, IDs, and status prefixes;
+- diagnostically relevant errors, failing assertions, and test evidence;
+- meaningful diffs and review evidence;
+- acceptance criteria, architectural decisions, constraints, and authoritative user wording;
 - security/privacy requirements;
 - reproduction steps where omission changes behavior;
-- authoritative user wording;
-- anything another agent needs to execute without guessing.
+- anything another role needs to execute without guessing.
 
-Trim irrelevant log noise, not the signal. Prefer targeted excerpts/tails over entire logs.
+Trim irrelevant noise, not signal. Prefer a targeted excerpt or bounded tail when it contains all required evidence.
 
 ## Durable artifact rule
 
-**Tickets, project MEMORY/SKILL/architecture docs, code and tests are durable engineering state, not conversational chatter.**
+Tickets, project `MEMORY.md`/`SKILL.md`, architecture documents, code, tests, and exact evidence are durable engineering state—not conversational chatter.
 
-Do not shorten a durable artifact merely to save tokens when doing so would remove useful engineering detail. Instead:
-1. write the full required information once to the canonical artifact;
-2. thereafter reference the artifact/path/section instead of restating it;
-3. do not duplicate the same explanation into multiple handoff files unless the protocol explicitly requires it.
+1. Write the complete required information once to the canonical artifact.
+2. Afterwards, reference its path/section/status instead of restating it in chat or another handoff.
+3. Do not duplicate the same explanation across files unless the protocol requires it.
+4. Never shorten a durable artifact merely to reduce tokens when that would remove execution, review, or maintenance value.
 
-This is the Symphony adaptation of the Caveman idea: **Caveman conversation; lossless engineering artifacts.**
+Lossless artifacts are the compression boundary: terse conversation, complete engineering state.
 
 ## Read discipline — reduce input tokens too
 
-Before reading, ask what fact is needed for the current decision.
+Before reading, name the fact needed for the current decision.
 
-Rules:
-1. Prefer targeted search/grep/find over opening many files wholesale.
-2. Read only the relevant range when the host supports ranged reads.
-3. Do not reread stable files during the same unit of work unless required by Symphony's live-state/remote-movement gates.
-4. Volatile state MUST still be reread whenever `global-skill` or the Direct-Remote/Repository Sync Gate requires it. Token saving never overrides freshness/integrity rules.
-5. Do not recursively dump directories, full logs, generated trees, lockfiles, binaries, or unrelated source merely for orientation.
-6. Start narrow; expand only when evidence requires it.
-7. Reuse canonical persisted decisions instead of rebuilding context from conversation.
+1. Fully read every file that the init sequence, role profile, active ticket, or governing skill explicitly requires in full. Ranged reads are not a substitute for completing a mandatory context load.
+2. After mandatory context is loaded, inspect the ticket/architecture for named paths, symbols, and constraints before exploring the repository.
+3. Prefer targeted search (`rg`/`grep`/indexed search/`find`) before directory surveys or opening many files.
+4. Read the smallest relevant range when the host supports ranged reads; expand only when surrounding context is required.
+5. Reuse stable information during the same unit of work. Keep the path/revision and resolved fact; do not reread merely for reassurance.
+6. Re-read volatile state whenever `global-skill`, Repository Sync, Direct-Remote, a real WAIT wake, elapsed time, or possible external movement requires freshness. Stable-read reuse never overrides a live-state gate.
+7. Do not recursively dump directories, complete logs, generated trees, lockfiles, binaries, or unrelated source for orientation.
+8. Reuse canonical persisted decisions instead of reconstructing them from conversation.
 
 ## Tool discipline
 
-Every tool call should answer a concrete question or perform a required action.
+Every tool call must answer a concrete question, verify a required condition, or perform an authorized action.
 
 Avoid:
-- no-op/heartbeat calls;
-- repeated status/list commands without a state-change reason;
-- huge raw command output when a filtered query answers the question;
-- reading the same file through multiple tools merely to confirm identical content;
-- broad repository scans before the ticket/architecture points to the likely area.
 
-Never suppress a mandatory Symphony gate to save tokens.
+- no-op or heartbeat calls;
+- repeated status/list calls without a state-change reason;
+- huge raw output when a filtered query is sufficient;
+- reading the same stable file through multiple tools;
+- broad repository scans before ticket-directed search;
+- rerunning successful checks without a freshness, mutation, or gate reason.
+
+Never suppress or narrow a mandatory Symphony gate to save tokens.
 
 ## Conversation discipline
 
-During work, report only meaningful state changes or useful findings. Do not narrate every file open, grep, edit, or test command.
+Report only meaningful state changes, decisions, blockers, or evidence. Do not narrate every read, search, edit, or test command.
 
-Default work update:
+When `Agent role.md` defines an exact Role Work Loop line, print it verbatim—for example:
+
+- `<role>|exit`
+- `<role>|waiting on <ticket>`
+- `<role>|blocked on <ticket> — needs SRTL`
+
+Do not replace those strings with generic labels or explanatory paragraphs.
+
+Outside an exact loop status, default to:
+
 `<role>|<state> — <essential fact>`
-
-Examples:
-- `QA|TAKE WD-346 — reproducing active-occurrence omission.`
-- `Dev|TEST — targeted regression now green.`
-- `SRTL|BLOCK — ticket approach conflicts with persisted invariant.`
 
 If nothing materially changed, say nothing.
 
 ## Handoff discipline
 
-Do not re-explain the ticket to the next role. The ticket is the API.
+The ticket is the inter-role API. Do not re-explain information already persisted there.
 
-A normal conversational handoff should contain only what is not already obvious/persisted, usually:
+A normal conversational handoff contains only non-obvious execution facts:
 
 ```text
 DONE: <ticket/status>
 CHANGED: <key paths or one-line scope>
-TESTED: <command/result>
+TESTED: <exact command/result>
 ISSUES: <only if any>
 ```
 
-Omit empty sections. If all detail already lives in the ticket/commit, a one-line handoff is enough.
+Omit empty sections. If all detail and evidence already live in the ticket/commit, a one-line handoff is enough.
 
 ## Reasoning/output separation
 
-Agents must still reason thoroughly enough for correctness. Token discipline targets **observable verbosity and unnecessary retrieved context**, not the quality of internal analysis.
+Reason thoroughly enough for correctness. Token discipline targets unnecessary retrieved context and observable verbosity—not analysis quality.
 
-Never replace analysis with guessing just to be short.
+Never replace verification with guessing, or omit evidence to appear concise.
 
 ## Priority order
 
-When rules conflict, use this order:
-1. user instruction;
-2. correctness/security/data integrity;
-3. Symphony role boundaries, gates and lifecycle;
-4. durable artifact completeness;
-5. token efficiency.
+When rules conflict:
 
-Token saving is an optimization, never permission to violate a higher rule.
+1. user instruction;
+2. correctness, security, privacy, and data integrity;
+3. live-state/repository gates and optimistic concurrency;
+4. role boundaries, lifecycle, and scope;
+5. durable artifact and ticket completeness;
+6. token efficiency.
 
 ## Vendor neutrality
 
-Examples may mention generic shell/file operations, but no requirement in this skill may require a specific AI vendor or agent product.
+All requirements in this skill are implementable through ordinary file reads, searches, edits, commands, and the repository access mode already authorized by Symphony.
 
-Vendor-specific mirrors/plugins are optional accelerators only. On conflict, this Symphony skill wins.
+Vendor-specific mirrors may point to this skill but may not contain exclusive protocol content. On conflict, the vendor-neutral Symphony files win.
