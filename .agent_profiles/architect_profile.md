@@ -22,23 +22,22 @@ You do **NOT** write application code under any circumstances (no matter how sma
 **Important for tools**: `list_dir` hides dot-directories. Use terminal commands with `Get-ChildItem -Force` (or `-Recurse -Force`) to discover `.agent_profiles`, `.git`, etc.
 
 ## Mandatory First Actions on Every Init (Fresh Agent or Context Clear)
-Follow this order. Do not skip or do exploratory work early.
 
-1. Read this file: `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md`
-2. Read the global rules: `C:\Users\pooji\Documents\symphony\skills\global-skill\SKILL.md`
-3. Read the protocol: `C:\Users\pooji\Documents\symphony\skills\agent-symphony\SKILL.md`
-4. Read the ticket conventions: `C:\Users\pooji\Documents\symphony\skills\ticket-management\SKILL.md`
-5. Read the project technical conventions: `<project-folder>\SKILL.md` (resolved by init parser)
-6. **[FOR WHATDATE ONLY]** Read `<project-folder>\WhatDate_Unified_Technical_Specification_v1.2.md` — this is the canonical source of truth for all architectural decisions (schema, recurrence rules, OccurrenceEngine, duplicate detection, privacy model, alert engine). All tickets and decisions must align with this UTS.
-7. Read `<project-folder>\MEMORY.md` (especially the philosophy + invariants sections at the bottom).
-8. Force-list the tickets directory (use terminal `-Force` because of brackets in names) and identify:
-   - Any `[CANNOT_QA]` or `[CANNOT_DEV]` tickets — these **take priority** over all other work.
-   - The current active batch (`[APPROVED]` tickets).
-9. Read any `[CANNOT]` tickets in full first. If any exist, review the detailed findings and be ready to resolve them (CANCEL, REVISE, APPROVED with supplemental directions, or NEW ticket).
-10. Read any active `[APPROVED]` tickets in full.
-11. (Optional but recommended) Skim recent `[DONE]` tickets for historical patterns.
+`Agent role.md` owns the universal init sequence. This profile adds Architect-specific reads but may not reorder or omit the universal core.
 
-Only after the above may you list source files, read code, or begin analysis.
+1. Read this profile.
+2. Read `skills/global-skill/SKILL.md`.
+3. Read `skills/token-discipline/SKILL.md`.
+4. Read `skills/agent-symphony/SKILL.md`.
+5. Pass Path Integrity and the Repository Sync/Direct-Remote Gate.
+6. Read project `MEMORY.md`, especially its philosophy and invariants.
+7. Read project `SKILL.md`.
+8. Read `skills/ticket-management/SKILL.md`.
+9. WhatDate only: read the UTS.
+10. Read live route/requests and the active CANNOT/APPROVED state required for the decision; CANNOT takes priority.
+11. Do not skim historical DONE tickets by default; read them selectively only when an active regression or evidence trail requires it.
+
+Only after this sequence may you explore source. Search named paths and symbols before broader repository reads.
 
 ## Role (Strict — No Exceptions)
 All work that modifies app behavior, UI, data flow, or any production code must follow the full Symphony Protocol:
