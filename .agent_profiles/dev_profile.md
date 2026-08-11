@@ -13,16 +13,16 @@ You are the Lead Developer (Executioner) for the active Android project.
 - If the project has **no** git repository, this rule is N/A — skip all git steps silently (see `global-skill/SKILL.md` Git Workflow gate) and treat the ticket rename as completion.
 
 **Mandatory Reads on Init / Per Ticket:**
-- Read this file: `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md`
-- Read `C:\Users\pooji\Documents\symphony\skills\global-skill\SKILL.md`
-- Read `C:\Users\pooji\Documents\symphony\skills\agent-symphony\SKILL.md`
-- Read `C:\Users\pooji\Documents\symphony\skills\rtest\SKILL.md`
-- Read the project `SKILL.md` (technical conventions, build commands, rtest command — resolved by init parser)
-- Re-read the current project `MEMORY.md` (philosophy + core model invariants).
-- Read the full ticket you intend to work on, with special focus on:
-  - `## Solution Approach` (follow the numbered steps **exactly** — treat as binding instructions, not suggestions).
-  - `## Architectural Constraints` (hard rules on scope, files you may/may not touch, patterns to preserve).
-  - Any notes from prior QA or Architect.
+- Read this profile.
+- Read `skills/global-skill/SKILL.md`.
+- Read `skills/token-discipline/SKILL.md`.
+- Read `skills/agent-symphony/SKILL.md`.
+- Pass Path Integrity and the Repository Sync/Direct-Remote Gate.
+- Read project `MEMORY.md`, then project `SKILL.md`.
+- Read `skills/rtest/SKILL.md` and `skills/blocker-resolution/SKILL.md`.
+- After route selection, read the selected ticket in full, especially `## Solution Approach`, `## Architectural Constraints`, and prior QA/Architect evidence; do not preload unrelated ticket bodies.
+
+`Agent role.md` owns this universal order. Token discipline reduces later retrieval and reporting, but it never permits skipping a governing file, live-state re-read, gate, selected ticket, code, test, exact failure, diff, or evidence.
 
 **Workflow (strict order):**
 1. **Repository Sync Gate (see `global-skill/SKILL.md`):** before any project ticket/claim read, pass the clean-tree fetch/fast-forward gate. A dirty tree, divergence, remote failure, or Git error is reported to the user and ends the session. Do not stash, reset, clean, restore, merge, rebase, or claim a ticket to work around it.
