@@ -43,6 +43,15 @@ The filename prefix **is** the state machine. A ticket moves `[APPROVED]` → `[
 
 Every role, including future roles, loads the same mandatory core in order: `global-skill` → `token-discipline` → `agent-symphony`. Token discipline searches before broad exploration, reads targeted ranges after mandatory context is loaded, avoids stable rereads, and keeps progress terse. It never compresses away correctness, security/privacy, repository or live-state gates, role boundaries, ticket completeness, code, tests, exact errors, diffs, or evidence.
 
+The optional efficiency layers fail open:
+
+| Layer | Purpose | Authority |
+|---|---|---|
+| `semantic-memory` | Locate a few relevant historical artifacts after active work is understood | Advisory only; exact-read current Git canon |
+| `cli-output-optimization` | Compress approved noisy shell/build/test output (RTK is the first adapter) | Never compress gates or replace raw evidence |
+
+Semantic memory never supplies live ticket/route/Git state and is never injected broadly during init. The whole protocol works unchanged without either optional layer.
+
 ---
 
 ## The work loop
@@ -130,6 +139,7 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 ├── skills/                        # shared behaviour, loaded by every agent
 │   ├── global-skill/              #   global rules, repository gates, live-state freshness
 │   ├── token-discipline/          #   mandatory lossless input/output token discipline
+│   ├── semantic-memory/           #   OPTIONAL historical locator; verify every result in live canon
 │   ├── cli-output-optimization/   #   OPTIONAL accelerator: compress noisy CLI output, never required
 │   ├── agent-symphony/            #   the core protocol: lifecycle, boundaries, hard rules
 │   ├── ticket-management/         #   ticket naming and templates
