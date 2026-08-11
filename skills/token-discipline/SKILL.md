@@ -116,6 +116,23 @@ Avoid:
 
 Never suppress or narrow a mandatory Symphony gate to save tokens.
 
+## Optional semantic-memory retrieval
+
+A semantic-memory provider may locate relevant historical engineering artifacts. It is an **optional advisory index**, never a source of truth or dependency. Symphony behaves identically when no provider exists, the host/vendor cannot access it, or a request fails.
+
+Binding regardless of whether you load the detail:
+
+1. Complete canonical init and understand active/live work before any semantic query.
+2. Query only when history would materially help; use one narrow same-project query, 3 results by default and 5 maximum across expansions/scopes.
+3. Require repository/path provenance, exact-read the current canonical source, and resolve revision/supersession from live canon before acting.
+4. Never source route, claim, ticket status, branch/ref, current source, test state, or another volatile fact from semantic memory.
+5. Never inject a broad memory/profile at init or auto-store conversation/tool chatter.
+6. Fail open to normal repository search. Provider absence, timeout, malformed/conflicting output, or missing provenance must not block role execution.
+7. Label cross-project results as analogies and preserve repository/privacy boundaries.
+
+Operational policy, provider contract, ingestion allowlist, role boundaries, verification, and the first reference adapter:
+`skills/semantic-memory/SKILL.md`. Load it on demand only after active context is known.
+
 ## Optional CLI-output compression
 
 An external compressor (currently RTK) may reduce noisy build/test/log output before it enters
