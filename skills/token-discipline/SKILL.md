@@ -116,6 +116,27 @@ Avoid:
 
 Never suppress or narrow a mandatory Symphony gate to save tokens.
 
+## Optional CLI-output compression
+
+An external compressor (currently RTK) may reduce noisy build/test/log output before it enters
+context. It is an **optional accelerator**, never a dependency: Symphony behaves identically when it
+is installed, absent, unsupported by the host, or unavailable to a cloud agent. When it is absent,
+run the native command — no warning, no workflow change.
+
+Binding regardless of whether you load the detail:
+
+1. Never compress a mandatory gate's evidence. `git status --porcelain=v1 --untracked-files=all` and
+   every other command whose exact output or exit status is consumed programmatically stay raw.
+2. Never substitute compressed or structural output for an authoritative read of protocol files,
+   tickets, `MEMORY.md`/`SKILL.md`, or source you are about to modify or review.
+3. Detect by positive identification, never by binary name alone — unrelated tools publish the same
+   name, and one of them writes Git tags.
+4. When compressed output is insufficient, read the persisted raw output. Never rerun an expensive
+   build or test suite merely because output was compressed, and never guess.
+
+Operational detail — command classification, recovery, per-tool guidance, privacy configuration:
+`skills/cli-output-optimization/SKILL.md`. Load it on demand, only after positive detection.
+
 ## Conversation discipline
 
 Report only meaningful state changes, decisions, blockers, or evidence. Do not narrate every read, search, edit, or test command.

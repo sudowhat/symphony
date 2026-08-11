@@ -130,6 +130,7 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 ├── skills/                        # shared behaviour, loaded by every agent
 │   ├── global-skill/              #   global rules, repository gates, live-state freshness
 │   ├── token-discipline/          #   mandatory lossless input/output token discipline
+│   ├── cli-output-optimization/   #   OPTIONAL accelerator: compress noisy CLI output, never required
 │   ├── agent-symphony/            #   the core protocol: lifecycle, boundaries, hard rules
 │   ├── ticket-management/         #   ticket naming and templates
 │   ├── rtest/                     #   test tiers and TDD conventions

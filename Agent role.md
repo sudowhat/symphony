@@ -409,6 +409,7 @@ is unbroken, which catches any renumbering mistake at build time.
 | `skills/project-onboarding/SKILL.md` | The `add project <project-folder>` command: how a new project joins the Symphony |
 | `skills/global-skill/SKILL.md` | Global behavior rules, ambiguity resolution, live-state/repository gates, Git workflow |
 | `skills/token-discipline/SKILL.md` | Mandatory vendor-neutral input/output token discipline; terse conversation with lossless engineering artifacts |
+| `skills/cli-output-optimization/SKILL.md` | **Optional** accelerator policy: which CLI output may be compressed, which must stay raw, how to recover full output. Never required |
 | `skills/agent-symphony/SKILL.md` | Core protocol: ticket lifecycle, agent boundaries, batch rules |
 | `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
 | `skills/rtest/SKILL.md` | Common regression test conventions and TDD principles |
