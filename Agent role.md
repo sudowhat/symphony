@@ -72,6 +72,13 @@ Use the **Role Registry** below to find your profile and role-conditional skills
 
 No role may opt out or reorder this universal set. The table lists only additional role requirements. Adding a future role row automatically inherits all three universal skills without copying them into that row.
 
+**Universal Optional Capabilities — discoverable by every current and future role, but loaded only when applicable:**
+
+- `skills/semantic-memory/SKILL.md` — historical engineering locator; load only after current project/live work is understood and only when prior history would materially help.
+- `skills/cli-output-optimization/SKILL.md` — optional CLI-output accelerator; load only after a supported compressor is positively detected.
+
+Optional capabilities never become init dependencies. Their absence, provider failure, or unsupported host must not change Symphony execution.
+
 | Role | Profile Path | Additional Required Skills |
 |---|---|---|
 | architect | `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md` | ticket-management |
@@ -108,8 +115,9 @@ Read these files and perform the gate in this exact order. Fully read every mand
 11. **`skills/rtest/SKILL.md`** — if the role touches tests (QA, Dev, SRTL, Tester, Implementer). Skip otherwise.
 12. **`skills/blocker-resolution/SKILL.md`** — under the same test-touching condition as Step 11.
 13. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
+14. **Optional historical enrichment** — only after Step 13, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
 
-The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, source, and artifacts. Token discipline never weakens this freshness gate.
+The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, source, and artifacts. Token discipline and semantic memory never weaken this freshness gate.
 
 ### Step 5: Report Readiness + Auto-Proceed to Next Task
 
@@ -409,6 +417,7 @@ is unbroken, which catches any renumbering mistake at build time.
 | `skills/project-onboarding/SKILL.md` | The `add project <project-folder>` command: how a new project joins the Symphony |
 | `skills/global-skill/SKILL.md` | Global behavior rules, ambiguity resolution, live-state/repository gates, Git workflow |
 | `skills/token-discipline/SKILL.md` | Mandatory vendor-neutral input/output token discipline; terse conversation with lossless engineering artifacts |
+| `skills/semantic-memory/SKILL.md` | **Optional** provider-neutral locator for historical engineering knowledge; recalled content is advisory and must be verified against live canon |
 | `skills/cli-output-optimization/SKILL.md` | **Optional** accelerator policy: which CLI output may be compressed, which must stay raw, how to recover full output. Never required |
 | `skills/agent-symphony/SKILL.md` | Core protocol: ticket lifecycle, agent boundaries, batch rules |
 | `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
