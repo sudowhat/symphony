@@ -347,11 +347,16 @@ After the last ticket in the batch is [DONE]:
 
 ## Workspace Hygiene & Memory Maintenance (All Agents)
 
-To prevent `MEMORY.md` from becoming overloaded with stale ticket logs and history, all agents (Architect, QA, Dev) must follow this cleanup rule:
+Keep project `MEMORY.md` compact and authoritative: foundational invariants, critical architecture, long-lived constraints/conventions, current state, and durable lessons whose omission would repeat serious damage. It is not a ticket chronology.
 
-- **When a task is done:** Whenever you complete a batch of tickets, or whenever an active ticket reaches a terminal state (`[DONE]`, `[CANCELLED]`, `[REVERTED]`, `[DEFER]`), you must **move** its status log entry from the active pending section of `MEMORY.md` into a separate `# HISTORY` section at the very bottom of the file.
-- **HISTORY Section:** The `# HISTORY` section should be clearly segregated at the end of `MEMORY.md`.
-- **Do Not Read History Unprompted:** All agents are strictly instructed to **ignore** the `# HISTORY` section during their initialization reads. Only read or summarize the history section if the user explicitly asks you to. The active `MEMORY.md` should only contain the 3-4 most recent ongoing activities.
+- **Terminal work:** remove its status line from the active/current section at batch close or terminal handoff. The terminal ticket, design document, test, commit, and Git history remain the canonical historical record; do not duplicate routine chronology into `MEMORY.md`.
+- **Durable lesson exception:** retain one concise lesson plus its canonical source pointer only when forgetting it would likely cause a serious recurrence.
+- **Existing `# HISTORY`:** preserve it for backward compatibility and do not read it during init unless current work/user explicitly requires history. Do not aggressively shrink or delete existing content as part of ordinary work.
+- **Migration:** any cleanup of historical `MEMORY.md` content is an explicit reviewed change that proves unique invariants are retained and no-provider init remains complete.
+- **Semantic retrieval:** optional `skills/semantic-memory/SKILL.md` may locate canonical history after active work is understood. It never becomes the only place a required invariant or current fact exists.
+
+The active/current section should normally contain only the few ongoing items required to reconstruct live work.
+
 
 ---
 
