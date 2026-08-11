@@ -199,7 +199,6 @@ Onboarding does not begin work. It ends by handing the user `init <short-name> <
 
 - `Agent role.md` — the `add project` command, the Project Registry, the Path Integrity Protocol, the Ticket Integrity Rules
 - `whatdate-folder/` — the reference implementation of all four files
-- `skills/agent-symphony/SKILL.md` — ticket lifecycle and agent boundaries
 - `skills/ticket-management/SKILL.md` — ticket naming and templates
 - `skills/global-skill/SKILL.md` — global rules, repository gates, and live-state freshness
 - `skills/token-discipline/SKILL.md` — mandatory targeted retrieval, terse output, and lossless durable-artifact rules for every role
