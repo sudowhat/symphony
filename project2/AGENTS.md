@@ -18,5 +18,6 @@ Source of truth, in mandatory load order:
 8. `SKILL.md` — project conventions
 9. Load conditional role skills
 10. Read the active route, claim, ticket, capsule, and work state
+11. Optionally load `<SYMPHONY_ROOT>/skills/semantic-memory/SKILL.md` only when verified historical retrieval would materially help
 
-Mandatory governing files are read completely. Token discipline applies to subsequent exploration and reporting; it never permits skipping a gate, fresh state, complete ticket, source, tests, exact errors, diffs, or evidence.
+Mandatory governing files are read completely. Token discipline applies to subsequent exploration and reporting; it never permits skipping a gate, fresh state, complete ticket, source, tests, exact errors, diffs, or evidence. Semantic memory is advisory, query-driven, and fail-open; verify every recalled source against current Git canon.
