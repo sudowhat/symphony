@@ -120,7 +120,7 @@ Never ask "what should I do?" — always state EXIT / WAIT / TAKE and the route 
 
 **Unattended polling on WAIT:** see `Agent role.md` §"Role Work Loop" (rewritten 2026-07-29) for the canonical unattended-poll mechanics (sleep-on-WAIT-only, CANNOT means WAIT not EXIT, cheap live-disk re-checks instead of re-`init`). Do not duplicate that text here — it applies to QA unchanged.
 
-**No keepalive on WAIT/EXIT (all vendors):** after `LOOP_WAIT` or `LOOP_EXIT`, end the turn with **zero** further tool calls. No empty shell noops, no tight sleep loops, no "stay alive" commands. Canonical: `Agent role.md` § Role Work Loop "No keepalive / no tool spam" and `skills/global-skill/SKILL.md` §"No Keepalive / No Tool Spam".
+**No keepalive on WAIT/EXIT (all vendors):** after `LOOP_WAIT`, run exactly one real 300-second same-session sleep, then re-read live route/repository state as required and continue. After `LOOP_EXIT`, end the turn with **zero** further tool calls. No empty shell noops, no tight short-sleep loops, no "stay alive" commands. Canonical: `Agent role.md` § Role Work Loop "No keepalive / no tool spam" and `skills/global-skill/SKILL.md` §"No Keepalive / No Tool Spam".
 
 **CANNOT_QA Escalation Guidelines:**
 
