@@ -136,12 +136,12 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 │   ├── architect_profile.md   qa_profile.md   dev_profile.md   srtl_profile.md
 │   ├── orchestrator_profile.md
 │   └── composer_ critic_ designer_ tester_ implementer_profile.md
-├── skills/                        # shared behaviour, loaded by every agent
-│   ├── global-skill/              #   global rules, repository gates, live-state freshness
+├── skills/                        # shared behaviour; mandatory/conditional as labelled
+│   ├── global-skill/              #   mandatory global rules, repository gates, live-state freshness
 │   ├── token-discipline/          #   mandatory lossless input/output token discipline
+│   ├── agent-symphony/            #   mandatory core protocol: lifecycle, boundaries, hard rules
 │   ├── semantic-memory/           #   OPTIONAL historical locator; verify every result in live canon
 │   ├── cli-output-optimization/   #   OPTIONAL accelerator: compress noisy CLI output, never required
-│   ├── agent-symphony/            #   the core protocol: lifecycle, boundaries, hard rules
 │   ├── ticket-management/         #   ticket naming and templates
 │   ├── rtest/                     #   test tiers and TDD conventions
 │   ├── blocker-resolution/        #   self-fix vs escalate triage
