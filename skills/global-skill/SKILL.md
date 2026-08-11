@@ -395,8 +395,9 @@ To ensure synchronization across different agents, every init loads context in t
 7. Project `SKILL.md` (technical conventions)
 8. Conditional role skills such as `ticket-management`, `rtest`, and `blocker-resolution`
 9. Active route, claim, ticket, and work state
+10. Optional `skills/semantic-memory/SKILL.md` historical enrichment, only when the active work needs it and only after step 9
 
-Mandatory governing files are read completely once during init. Token discipline governs targeted exploration afterwards and never permits partial loading of a required file, stale project state, or a skipped gate.
+Mandatory governing files are read completely once during init. Token discipline governs targeted exploration afterwards and never permits partial loading of a required file, stale project state, or a skipped gate. Semantic memory is query-driven and optional: it locates possible historical sources after live context is known, never injects broad context during init, and never supplies current state or authority.
 
 Always prefer the Symphony common versions for protocol consistency.
 
