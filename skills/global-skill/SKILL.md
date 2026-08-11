@@ -384,17 +384,19 @@ After implementing the solution, running all tests to green, and promoting the t
 
 ## Symphony Context Resolution Order (All Agents)
 
-To ensure synchronization across different agents in this workspace, all agents must load rules in this order before acting:
+To ensure synchronization across different agents, every init loads context in this order before acting:
+
 1. `Agent role.md` (universal entry)
-2. Your role profile (`.agent_profiles/<role>_profile.md`)
-3. `skills/global-skill/SKILL.md` (this file)
-4. `skills/agent-symphony/SKILL.md` (protocol)
-5. Project `MEMORY.md` (live state)
-6. Project `SKILL.md` (technical conventions)
-7. `skills/ticket-management/SKILL.md` (if creating tickets)
-8. `skills/rtest/SKILL.md` (if touching tests)
-9. `skills/blocker-resolution/SKILL.md` (if touching tests — same condition as step 8)
-10. Active tickets in `tickets/` (current work state)
+2. Role profile (`.agent_profiles/<role>_profile.md`)
+3. `skills/global-skill/SKILL.md` (global rules and repository/live-state gates)
+4. `skills/token-discipline/SKILL.md` (mandatory lossless input/output discipline)
+5. `skills/agent-symphony/SKILL.md` (protocol)
+6. Project `MEMORY.md` (live state; only after the repository/direct-remote gate)
+7. Project `SKILL.md` (technical conventions)
+8. Conditional role skills such as `ticket-management`, `rtest`, and `blocker-resolution`
+9. Active route, claim, ticket, and work state
+
+Mandatory governing files are read completely once during init. Token discipline governs targeted exploration afterwards and never permits partial loading of a required file, stale project state, or a skipped gate.
 
 Always prefer the Symphony common versions for protocol consistency.
 
