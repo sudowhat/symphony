@@ -62,45 +62,54 @@ Use the **Project Registry** below to map the short name to the project folder a
 If the project short name is not in the registry, ask the user for clarification before proceeding. **Never invent a registry entry mid-init** — a project joins the registry only through the `add project` command below.
 
 ### Step 3: Resolve the Role
-Use the **Role Registry** below to find your profile and the skills you need:
+Use the **Role Registry** below to find your profile and role-conditional skills.
 
-| Role | Profile Path | Required Skills |
+**Universal Required Skills — inherited by every registered role, including every future role:**
+
+1. `skills/global-skill/SKILL.md`
+2. `skills/token-discipline/SKILL.md`
+3. `skills/agent-symphony/SKILL.md`
+
+No role may opt out or reorder this universal set. The table lists only additional role requirements. Adding a future role row automatically inherits all three universal skills without copying them into that row.
+
+| Role | Profile Path | Additional Required Skills |
 |---|---|---|
-| architect | `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md` | global-skill, agent-symphony, ticket-management |
-| qa | `C:\Users\pooji\Documents\symphony\.agent_profiles\qa_profile.md` | global-skill, agent-symphony, rtest |
-| dev | `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md` | global-skill, agent-symphony, rtest |
-| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | global-skill, agent-symphony, rtest |
-| orchestrator | `C:\Users\pooji\Documents\symphony\.agent_profiles\orchestrator_profile.md` | global-skill, agent-symphony |
-| composer | `C:\Users\pooji\Documents\symphony\.agent_profiles\composer_profile.md` | global-skill, agent-symphony |
-| critic | `C:\Users\pooji\Documents\symphony\.agent_profiles\critic_profile.md` | global-skill, agent-symphony |
-| designer | `C:\Users\pooji\Documents\symphony\.agent_profiles\designer_profile.md` | global-skill, agent-symphony, ticket-management |
-| tester | `C:\Users\pooji\Documents\symphony\.agent_profiles\tester_profile.md` | global-skill, agent-symphony, rtest |
-| implementer | `C:\Users\pooji\Documents\symphony\.agent_profiles\implementer_profile.md` | global-skill, agent-symphony, rtest |
+| architect | `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md` | ticket-management |
+| qa | `C:\Users\pooji\Documents\symphony\.agent_profiles\qa_profile.md` | rtest |
+| dev | `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md` | rtest |
+| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest |
+| orchestrator | `C:\Users\pooji\Documents\symphony\.agent_profiles\orchestrator_profile.md` | — |
+| composer | `C:\Users\pooji\Documents\symphony\.agent_profiles\composer_profile.md` | — |
+| critic | `C:\Users\pooji\Documents\symphony\.agent_profiles\critic_profile.md` | — |
+| designer | `C:\Users\pooji\Documents\symphony\.agent_profiles\designer_profile.md` | ticket-management |
+| tester | `C:\Users\pooji\Documents\symphony\.agent_profiles\tester_profile.md` | rtest |
+| implementer | `C:\Users\pooji\Documents\symphony\.agent_profiles\implementer_profile.md` | rtest |
 
 ### Step 4: Load Context and Synchronize (EXACT ORDER — do not skip)
 
-Read these files and perform the gate in this exact order. After each read or check, internalize its result before moving on.
+Read these files and perform the gate in this exact order. Fully read every mandatory governing file once; token discipline applies to later targeted exploration, not to skipping init context.
 
 1. **This file** (`Agent role.md`) — you are already reading it.
-2. **Your role profile** (from Step 3) — this defines your identity, boundaries, and specific workflow.
-3. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\global-skill\\SKILL.md`** — global behavior rules, the mandatory Repository Sync Gate, and Git workflow.
-4. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\agent-symphony\\SKILL.md`** — the core protocol (ticket lifecycle, agent boundaries, one-at-a-time rules).
-5. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** —
+2. **Your role profile** (from Step 3) — identity, boundaries, and role workflow.
+3. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\global-skill\\SKILL.md`** — global behavior, Repository Sync/Direct-Remote gates, and Git workflow.
+4. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\token-discipline\\SKILL.md`** — mandatory input/output token discipline with a lossless engineering floor.
+5. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\agent-symphony\\SKILL.md`** — core protocol, lifecycle, boundaries, and one-at-a-time rules.
+6. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** —
    - **Local CLI:** confirm `.symphony-root` exists at `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\.symphony-root` and its `project=` line matches the init command.
    - **Direct-repo/cloud:** fetch `.symphony-root` from the selected project's live target branch; its `project=` line must match the init command and its `canonical_path=` must name the canonical Symphony folder.
    If the marker is missing or mismatched, STOP immediately and report to the user. Do not create it, create a directory, or search for/accept an alternative project.
-6. **Synchronize the project source (MANDATORY for a Git project)** —
+7. **Synchronize the project source (MANDATORY for a Git project)** —
    - **Local CLI:** complete the clean-tree, fetch, and fast-forward-only **Repository Sync Gate** in `global-skill/SKILL.md`.
    - **Direct-repo/cloud:** complete the **Direct-Remote Gate** in that same skill against the selected project's target branch.
    A dirty local tree (CLI only), divergence, remote movement, unavailable remote, or Git error is a hard STOP: report it to the user; do not stash, reset, clean, restore, pull-over, claim a ticket, or start the loop.
-7. **Project `MEMORY.md`** — project state, architecture decisions, philosophy, and recent ticket status. A local CLI reads `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\MEMORY.md`; a direct-repo/cloud agent fetches the same path live from the selected project branch. Read it only after Step 6 succeeds.
-8. **Project `SKILL.md`** — project-specific technical conventions (build commands, rtest command, key file paths, architecture notes). A local CLI reads the canonical project folder; a direct-repo/cloud agent fetches the same path live from the selected project branch.
-9. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\ticket-management\\SKILL.md`** — if your role creates tickets (Architect, Designer). Skip if your role does not create tickets.
-10. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\rtest\\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer). Skip otherwise.
-11. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\blocker-resolution\\SKILL.md`** — if your role touches tests (QA, Dev, Tester, Implementer; same condition as step 10). Skip otherwise. Governs when a role-boundary block is a straightforward, ticket-traceable fix you make yourself (logged) versus a genuine design conflict that escalates to `CANNOT` with an audible alarm.
-12. **Discover current work state** — a local CLI lists `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\tickets` (including bracket-prefixed files) from the canonical disk. A direct-repo/cloud agent lists the same `tickets/` path live from the selected project branch. Identify active tickets by their status prefix.
+8. **Project `MEMORY.md`** — live project state, decisions, philosophy, and recent status. Read only after Step 7 succeeds; ignore any HISTORY section unless the user or current work explicitly requires it.
+9. **Project `SKILL.md`** — project-specific technical conventions, build/test commands, key paths, and architecture notes.
+10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer). Skip otherwise.
+11. **`skills/rtest/SKILL.md`** — if the role touches tests (QA, Dev, SRTL, Tester, Implementer). Skip otherwise.
+12. **`skills/blocker-resolution/SKILL.md`** — under the same test-touching condition as Step 11.
+13. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
 
-The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, and source: cloud-authored changes must be visible before an agent reasons about or takes work.
+The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, source, and artifacts. Token discipline never weakens this freshness gate.
 
 ### Step 5: Report Readiness + Auto-Proceed to Next Task
 
@@ -398,7 +407,8 @@ is unbroken, which catches any renumbering mistake at build time.
 |---|---|
 | `Agent role.md` | Universal entry point and init parser (this file) |
 | `skills/project-onboarding/SKILL.md` | The `add project <project-folder>` command: how a new project joins the Symphony |
-| `skills/global-skill/SKILL.md` | Global behavior rules, ambiguity resolution, Git workflow |
+| `skills/global-skill/SKILL.md` | Global behavior rules, ambiguity resolution, live-state/repository gates, Git workflow |
+| `skills/token-discipline/SKILL.md` | Mandatory vendor-neutral input/output token discipline; terse conversation with lossless engineering artifacts |
 | `skills/agent-symphony/SKILL.md` | Core protocol: ticket lifecycle, agent boundaries, batch rules |
 | `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
 | `skills/rtest/SKILL.md` | Common regression test conventions and TDD principles |
