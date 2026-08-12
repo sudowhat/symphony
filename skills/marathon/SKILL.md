@@ -32,11 +32,11 @@ The user's framing: *"review already DONE and finish remaining in the batch."*
    you are a legitimately fresh seat — review it properly and write its terminal.
 2. WALK: read ticketorder.md top-down. Take every open line in order, whatever its role
    token. Never skip the head. One seat plays QA, then Dev, then SRTL on each ticket.
-3. TERMINAL: work you implemented yourself ends at :DONE:REVIEW_PENDING. Always. See §Hard limit.
+3. TERMINAL: work you implemented yourself ends at :DONE on your own line, -SRTL left OPEN.
 4. UNBLOCK: if blocked in a way an Architect could resolve, resolve it inline, record the
    decision in the ticket, continue. Do not raise a CANNOT for something you can decide.
 5. RING: only for a decision that is genuinely the user's. Otherwise keep going.
-6. CLOSE: attempt batch close. Any REVIEW_PENDING blocks it — stage everything, then ring.
+6. CLOSE: attempt batch close. Any open -SRTL line blocks it — stage everything, then ring.
 ```
 
 Marathon mode's single deviation from the Role Work Loop (`Agent role.md`) is step 2: one seat may
@@ -50,18 +50,22 @@ strict top-down order, never skipping the head, sync gate before each fresh queu
 **WD-334 / `<project>/SKILL.md` §"Independent SRTL Review Attestation": a seat that implements or
 materially corrects a ticket may not write its own `:REVIEWED` or `SRTL Review: PASS`.**
 
-| Situation | Terminal you may write |
+| Situation | What you write |
 |---|---|
-| You implemented it | `:DONE:REVIEW_PENDING` — never `:REVIEWED` |
-| You did **not** implement it (genuinely fresh seat) | `:DONE:REVIEWED` after a real review |
-| User personally signed off | `:DONE:REVIEWED:USER` |
-| User explicitly waived review | `:DONE:REVIEW_WAIVED:USER` — never recorded as reviewed |
+| You implemented it | `:DONE` on your own QA/Dev line, and **leave the `<id>-SRTL` line open** |
+| You did **not** implement it (genuinely fresh seat) | `:REVIEWED` on the reviewed line + `<id>-SRTL:DONE` |
+| User personally signed off | `:REVIEWED:USER` |
+| User explicitly waived review | `:REVIEW_WAIVED:USER` — never recorded as reviewed |
 
-Speed is never a reason to self-certify. A marathon that ends with honest `REVIEW_PENDING` terminals
+**One signal:** an open `<id>-SRTL` line is the single statement that review is owed. Do not invent a
+second encoding for it (the retired `:REVIEW_PENDING` suffix was exactly that mistake, and the
+retired `:SRTL` suffix collided with the line form).
+
+Speed is never a reason to self-certify. A marathon that ends with honest open `-SRTL` lines
 succeeded; one that ends with self-signed `:REVIEWED` failed, however green the tests are.
 
-`REVIEW_PENDING` blocks batch close, version bump and build. That wall is the normal, expected end
-of a marathon the same seat implemented — reaching it is completion, not failure.
+An open `-SRTL` line blocks batch close, version bump and build. That wall is the normal, expected
+end of a marathon the same seat implemented — reaching it is completion, not failure.
 
 ---
 
@@ -82,7 +86,7 @@ reasoning. The next reader must be able to see that a judgment was made and why.
 
 1. the decision is product intent, scope change, or priority — the user's call, not yours;
 2. resolving it would weaken a guard, lock, or build assertion (never permitted regardless);
-3. a `REVIEW_PENDING` wall blocks batch close and you need review or an explicit waiver;
+3. an open `-SRTL` line blocks batch close and you need review or an explicit waiver;
 4. the premise is stale in a way that needs a human (`*_STALE` territory);
 5. anything risks data loss, or contradicts a standing ruling in the project `MEMORY.md`;
 6. repeated failure you cannot diagnose — report evidence rather than improvising.

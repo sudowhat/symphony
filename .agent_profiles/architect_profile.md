@@ -272,8 +272,21 @@ The mount/filesystem view can lag behind parallel sessions' writes. Therefore: (
 |---|---|---|
 | `WD-294-QA` | queued for that role, not started or not finished | **No** |
 | `WD-294-QA:DONE` | that role finished | Yes |
-| `WD-283-Dev:DONE:SRTL` | Dev finished **and SRTL has reviewed it** | **Yes** |
+| `WD-283-Dev:DONE:REVIEWED` | Dev finished **and an independent SRTL reviewed it** | **Yes** |
+| `WD-284-SRTL` | SRTL's own job here is **owed** — this is the single "review is owed" signal | **No** |
 | `WD-284-SRTL:DONE` | an explicitly routed SRTL pass completed | Yes |
+
+**Notation simplified 2026-08-12 (SRTL, at user direction).** Two suffixes are **retired** because
+each duplicated or collided with the `<id>-SRTL` line form:
+
+- `:SRTL` as a suffix — collided with the `<id>-SRTL` line. Read legacy `:DONE:SRTL` as `:DONE:REVIEWED`.
+- `:REVIEW_PENDING` as a suffix — duplicated "the `<id>-SRTL` line is still open", which let route
+  files contradict their own legend. Read legacy `:DONE:REVIEW_PENDING` as `:DONE` with `-SRTL` open.
+
+The rule now has one moving part: **an open `<id>-SRTL` line means review is owed; suffixes on
+another role's line record the outcome (`:REVIEWED`, `:REVIEWED:USER`, `:REVIEW_WAIVED:USER`) and
+never gate anything.** A seat that implemented the work writes `:DONE` on its own line and leaves
+`-SRTL` open — it never signs its own review (REQ-005 / WD-334).
 
 **The absence of `:DONE` is the only open signal.** A trailing `:SRTL` is a *record of review already given*, not a request for one — SRTL is a full code+test-authority allrounder (`skills/agent-symphony/SKILL.md` §SRTL) that fixes and re-tests directly, so by the time it annotates a line, the work is done.
 
