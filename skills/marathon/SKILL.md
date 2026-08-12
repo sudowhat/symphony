@@ -95,6 +95,36 @@ Bell procedure: `global-skill/SKILL.md` §"Audible Attention Signal" (6 seconds)
 
 ---
 
+## Test economy (user ruling 2026-08-12)
+
+A marathon that re-runs the whole gate per ticket spends most of its wall-clock in Gradle. Two
+standing economies apply, both already canon — this section just makes them the marathon default:
+
+**1. Defer the gate — Batch-Fast Mode** (`agent-symphony` §"Batch-Fast Mode"). Per ticket run only:
+
+- the ticket's targeted tests (`rtest --targeted`), and
+- a compile check (`compileOnlineDebugUnitTestKotlin` or project equivalent), ~10 s.
+
+Run the full lock gate **once, at batch close**. Keep the compile check — it is the guardrail that
+catches a test referencing something this ticket removed, which otherwise surfaces as a confusing
+red at close with several tickets to bisect.
+
+**2. Don't write UI tests for what the user catches in seconds** (`<project>/SKILL.md` standing
+ruling). Robolectric UI assertions are the expensive, brittle, low-yield tier and the user is already
+running each ticket's Manual Test Script on the APK. Write tests for what a human cannot verify by
+looking; route anything visible-on-sight to the manual script instead:
+
+| Write a test | Leave to the Manual Test Script |
+|---|---|
+| boundary/recurrence/duration maths, half-open intervals | layout, spacing, alignment |
+| normalisation, precedence, parsing, decoding | chip/caption copy and title case |
+| migrations, serialization, redaction | colours, dark mode, iconography |
+| state that survives process death | keyboard behaviour, scroll feel |
+
+**The limit:** this trims *new* tests. It never deletes, weakens or `@Ignore`s an existing lock —
+that still requires its own approved ticket. When a ticket names a required lock and you skip it
+under this ruling, say so plainly in the ticket rather than silently omitting it.
+
 ## What still binds during a marathon
 
 Marathon mode changes **who** does the steps, never **what the steps are**:
