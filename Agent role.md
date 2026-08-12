@@ -420,6 +420,7 @@ is unbroken, which catches any renumbering mistake at build time.
 | `skills/semantic-memory/SKILL.md` | **Optional** provider-neutral locator for historical engineering knowledge; recalled content is advisory and must be verified against live canon |
 | `skills/cli-output-optimization/SKILL.md` | **Optional** accelerator policy: which CLI output may be compressed, which must stay raw, how to recover full output. Never required |
 | `skills/agent-symphony/SKILL.md` | Core protocol: ticket lifecycle, agent boundaries, batch rules |
+| `skills/marathon/SKILL.md` | The `start marathon` command: one seat reviews what is done, then carries an open batch to the end, self-unblocking with Architect judgment. Never overrides the WD-334 self-review limit |
 | `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
 | `skills/rtest/SKILL.md` | Common regression test conventions and TDD principles |
 | `skills/blocker-resolution/SKILL.md` | Self-fix vs. escalate triage for role-boundary blocks (QA↔Dev, Tester↔Implementer); CANNOT + alarm procedure |
