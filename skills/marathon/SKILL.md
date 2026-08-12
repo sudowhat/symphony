@@ -54,8 +54,12 @@ materially corrects a ticket may not write its own `:REVIEWED` or `SRTL Review: 
 |---|---|
 | You implemented it | `:DONE` on your own QA/Dev line, and **leave the `<id>-SRTL` line open** |
 | You did **not** implement it (genuinely fresh seat) | `:REVIEWED` on the reviewed line + `<id>-SRTL:DONE` |
-| User personally signed off | `:REVIEWED:USER` |
-| User explicitly waived review | `:REVIEW_WAIVED:USER` — never recorded as reviewed |
+
+**Check the project's own attestation section before assuming a `:USER` terminal exists.** On WhatDate
+the user has ruled (2026-08-12) that they do not review tickets, so `:REVIEWED:USER` and
+`:REVIEW_WAIVED:USER` are unavailable and must never be written or requested. Where that ruling
+applies, an open `-SRTL` line is cleared **only** by running a genuinely fresh reviewing seat — it is
+not a decision to hand back to the user, and asking is itself the error.
 
 **One signal:** an open `<id>-SRTL` line is the single statement that review is owed. Do not invent a
 second encoding for it (the retired `:REVIEW_PENDING` suffix was exactly that mistake, and the
