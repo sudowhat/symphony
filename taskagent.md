@@ -6,6 +6,7 @@ architect: opus4.8-max, fable5-high
 qa: sonnet5-high, grok-medium
 dev: sonnet5-high, sonnet5-max
 srtl: opus4.8-max
+launcher: opus4.8-max, sonnet5-high
 composer: sonnet5-medium, grok-medium
 critic: opus4.8-medium, sonnet5-high
 designer: opus4.8-max, grok-high

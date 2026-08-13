@@ -40,7 +40,7 @@ State every derived value in one assumptions block in your final report. Ask not
 |---|---|
 | Short name | Folder name minus a trailing `-folder` (`dbmeter-folder` → `dbmeter`). Lowercase, no spaces. |
 | Project type | **`kmp-mobile` — always, for every new project.** See §4. |
-| Role set | From the type: `kmp-mobile` / `android-dev` → architect · qa · dev · srtl · orchestrator. `content-web` → composer · critic · designer · tester · implementer · srtl · orchestrator. |
+| Role set | From the type: `kmp-mobile` / `android-dev` → architect · qa · dev · srtl · launcher · orchestrator. `content-web` → composer · critic · designer · tester · implementer · srtl · orchestrator. Add Launcher to content-web only after its deployment reference/checklist is defined. |
 | Ticket prefix | Read it off existing tickets if any exist (`DBM-0` → `DBM`). Otherwise an uppercase abbreviation of the short name. Never renumber or re-prefix tickets that already exist. |
 | Git remote | `https://github.com/sudowhat/<short-name>.git` |
 | Branch | `main` for a repo with no commits. If commits already exist, keep whatever branch they are on — never rename a branch that has history. |

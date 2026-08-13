@@ -393,7 +393,7 @@ To ensure synchronization across different agents, every init loads context in t
 5. `skills/agent-symphony/SKILL.md` (protocol)
 6. Project `MEMORY.md` (live state; only after the repository/direct-remote gate)
 7. Project `SKILL.md` (technical conventions)
-8. Conditional role skills such as `ticket-management`, `rtest`, and `blocker-resolution`
+8. Conditional role skills such as `ticket-management`, `release-launch`, `rtest`, and `blocker-resolution`
 9. Active route, claim, ticket, and work state
 10. Optional `skills/semantic-memory/SKILL.md` historical enrichment, only when the active work needs it and only after step 9
 

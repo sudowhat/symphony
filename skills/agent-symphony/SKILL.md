@@ -51,8 +51,8 @@ The Orchestrator's `.claims/` markers and timeout-retry (§Orchestrator, "State 
 
 ## Agent Boundaries
 
-### Android Development Lifecycle (4 Agents)
-Used by: whatdate, sulipi, oneid
+### Android Development Lifecycle (4 development agents + post-quality Launcher)
+Used by: whatdate, sulipi, oneid, dbmeter
 
 **The Architect — NEVER writes application code for DONE tickets**
 - Only writes documentation and `[APPROVED]` tickets.
@@ -89,6 +89,13 @@ Used by: whatdate, sulipi, oneid
 - **Direct user-request fast path:** When the user directly asks the active SRTL for an on-the-fly correction, review, verification, or small implementation, SRTL may fix it immediately without FFTL (Fix-First-Ticket-Later). Do not create a ticket or modify `ticketorder.md` for that request unless the user explicitly asks for ticketing. Tests, commit, and push remain required for software changes. This does not bypass the normal lifecycle for Architect-created or already-queued tickets.
 - All Hard Rules (scope lock, commit discipline, encoding, integrity gates) apply.
 
+**The Launcher — release preparation authority; NEVER changes product behavior/tests**
+- Runs only after implementation and required review gates: verifies package/version/SDK, secure signing, release tasks, regression/lint/build state, artifact checksum/signature, size/bundled data, and store handoff evidence.
+- May modify narrowly scoped release configuration and metadata. Product-code, test, architecture, or guard defects are handed to SRTL.
+- Maintains the project `LAUNCH_CHECKLIST.md` without secrets.
+- Never uploads, publishes, rolls out, invites testers, answers store policy declarations, or rotates/revokes keys without explicit human authorization for that exact action.
+- Direct user launch requests need no ticket; routed `<ticket>-Launcher` work requires `[DONE]` plus the required SRTL review marker.
+
 **[UI_FAST_TRACK] Exception:** If the Architect determines a ticket is purely visual/UI (e.g., updating design tokens, fonts, icons) with no complex business logic, they may label it `[APPROVED_UI]`. When the QA or Dev agent picks up an `[APPROVED_UI]` ticket, they are authorized to act as a **Full-Stack Implementer**—writing both the UI verification tests and the implementation code in a single rapid pass before marking the ticket `[DONE]`. This avoids unnecessary file-handoff overhead for coupled, boilerplate-heavy visual updates.
 
 
@@ -122,7 +129,7 @@ If the user then replies **"continue"** — meaning "yes, go do your next QA-app
 When resuming from "proceed" / "next" / "continue", every agent must:
 
 1. **Never re-offer or silently take an action outside its own role's boundary**, even if the agent itself suggested that action moments earlier. If the prior turn's question crossed a boundary, that question itself was the mistake — fix it by not following through, not by asking again.
-2. **Pass the Repository Sync Gate, then resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop). A dirty/diverged/unavailable repository is reported to the user and ends the session. After a successful gate: for **QA/Dev**, resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others, re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches — Architect is exempt from the three-state loop; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there.
+2. **Pass the Repository Sync Gate, then resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop). A dirty/diverged/unavailable repository is reported to the user and ends the session. After a successful gate: for **QA/Dev**, resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others, re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches; Launcher: release-preflight/checklist state; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there. Architect and Launcher are exempt from the three-state polling loop except when Launcher is explicitly routed.
 3. **If genuinely ambiguous** whether "continue" refers to resuming in-role work or something else, ask — do not guess toward the role-crossing interpretation.
 
 ### Why this matters
@@ -486,7 +493,7 @@ A first-class role invoked per project like any other (`init <project> orchestra
 
 **The three-file contract:** `<project>/ticketorder.md` (Architect-authored route: `<ticket>-<role>` per line, top-down; **Architect authors/reorders/prunes lines; QA and Dev may only append `:DONE` to the single line they just completed**) + `taskagent.md` (constant-size model rotation rings; Orchestrator rotates head→tail atomically before each spawn) + `orchestrator model map.md` (static slug legend). Route says WHAT next, ticket status says WHEN (gate), ring says on WHICH model. **QA/Dev themselves read `ticketorder.md` only after passing the Repository Sync Gate on every loop entry** (not only the Orchestrator), so manual pure-Grok/Claude seats follow the same current order.
 
-**Role Work Loop (2026-07-25 — all roles except Architect):** EXIT if no open work for your role remains on the list; WAIT if your work exists but is not the head; TAKE when head is yours and **repeat** (chain same-role heads). On WAIT/EXIT: **no keepalive tool spam** — end the turn after one status line (`Agent role.md` + `global-skill` §"No Keepalive"). Canonical text: `Agent role.md` §"Role Work Loop". Supersedes "orchestrator-spawned stops after one ticket."
+**Role Work Loop (2026-08-13 — all roles except Architect and Launcher):** EXIT if no open work for your role remains on the list; WAIT if your work exists but is not the head; TAKE when head is yours and **repeat** (chain same-role heads). Launcher follows its interactive release-preflight auto-proceed unless a human explicitly routes a Launcher line. On WAIT/EXIT: **no keepalive tool spam** — end the turn after one status line (`Agent role.md` + `global-skill` §"No Keepalive"). Canonical text: `Agent role.md` §"Role Work Loop".
 
 **Gates (android):** QA runs at `[APPROVED]`→`[READY_FOR_DEV]`; Dev at `[READY_FOR_DEV]`→`[DONE]`; SRTL review ONLY via a human-added `<T>-SRTL` route line at `[DONE]`. **Content-web:** per the existing suffix lifecycle incl. the Designer bridge (`[FINAL]` capsule → `*_APPROVED` ticket). CANNOT states are AUTO-routed (Architect/Designer → SRTL → human escalation, bounded at 3); `*_STALE` is ALWAYS human-escalated; `[DONE]`/`*_FIXED` review is ALWAYS human-gated.
 

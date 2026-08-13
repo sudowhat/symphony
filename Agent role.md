@@ -34,7 +34,7 @@ When the user gives you a command like:
 init <project-short-name> <role>
 ```
 
-Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`
+Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter launcher`
 
 You MUST follow this exact initialization sequence. **Do not skip steps.** Do not read source code, list directories, or make any changes until you complete the full sequence.
 
@@ -50,12 +50,12 @@ Use the **Project Registry** below to map the short name to the project folder a
 
 | Short Name | Project Folder | Project Type | Available Roles |
 |---|---|---|---|
-| whatdate | whatdate-folder | android-dev | architect, qa, dev, srtl, orchestrator |
-| sulipi | sulipi-folder | android-dev | architect, qa, dev, srtl, orchestrator |
-| oneid | oneid-folder | android-dev | architect, qa, dev, srtl, orchestrator |
+| whatdate | whatdate-folder | android-dev | architect, qa, dev, srtl, launcher, orchestrator |
+| sulipi | sulipi-folder | android-dev | architect, qa, dev, srtl, launcher, orchestrator |
+| oneid | oneid-folder | android-dev | architect, qa, dev, srtl, launcher, orchestrator |
 | wisdom-capsules | wisdom_capsules-folder | content-web | composer, critic, designer, tester, implementer, srtl, orchestrator |
 | wd-portal | wd-portal-folder | content-web | designer, tester, implementer, srtl, orchestrator |
-| dbmeter | dbmeter-folder | kmp-mobile | architect, qa, dev, srtl, orchestrator |
+| dbmeter | dbmeter-folder | kmp-mobile | architect, qa, dev, srtl, launcher, orchestrator |
 | cipher-board-game | cipher-board-game | (tbd) | (tbd) |
 | agitated-curie | agitated-curie | (tbd) | (tbd) |
 
@@ -85,6 +85,7 @@ Optional capabilities never become init dependencies. Their absence, provider fa
 | qa | `C:\Users\pooji\Documents\symphony\.agent_profiles\qa_profile.md` | rtest |
 | dev | `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md` | rtest |
 | srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest |
+| launcher | `C:\Users\pooji\Documents\symphony\.agent_profiles\launcher_profile.md` | release-launch, rtest |
 | orchestrator | `C:\Users\pooji\Documents\symphony\.agent_profiles\orchestrator_profile.md` | — |
 | composer | `C:\Users\pooji\Documents\symphony\.agent_profiles\composer_profile.md` | — |
 | critic | `C:\Users\pooji\Documents\symphony\.agent_profiles\critic_profile.md` | — |
@@ -112,10 +113,11 @@ Read these files and perform the gate in this exact order. Fully read every mand
 8. **Project `MEMORY.md`** — live project state, decisions, philosophy, and recent status. Read only after Step 7 succeeds; ignore any HISTORY section unless the user or current work explicitly requires it.
 9. **Project `SKILL.md`** — project-specific technical conventions, build/test commands, key paths, and architecture notes.
 10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer). Skip otherwise.
-11. **`skills/rtest/SKILL.md`** — if the role touches tests (QA, Dev, SRTL, Tester, Implementer). Skip otherwise.
-12. **`skills/blocker-resolution/SKILL.md`** — under the same test-touching condition as Step 11.
-13. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
-14. **Optional historical enrichment** — only after Step 13, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
+11. **`skills/release-launch/SKILL.md`** — if the role is Launcher; then read its applicable platform reference. Skip otherwise.
+12. **`skills/rtest/SKILL.md`** — if the role touches or executes tests (QA, Dev, SRTL, Tester, Implementer, Launcher). Skip otherwise.
+13. **`skills/blocker-resolution/SKILL.md`** — if the role may cross the QA↔Dev or Tester↔Implementer test/code boundary (QA, Dev, SRTL, Tester, Implementer). Launcher skips it.
+14. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
+15. **Optional historical enrichment** — only after Step 14, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
 
 The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, source, and artifacts. Token discipline and semantic memory never weaken this freshness gate.
 
@@ -125,7 +127,7 @@ After completing the full sequence above, report a structured summary:
 - **Your role and strict boundaries** (from your profile)
 - **Current active tickets** (list all `[APPROVED]`, `[READY_FOR_DEV]`, `[IN_PROGRESS]`, any `[CANNOT]` tickets, and any `[DRAFT]` tickets — with their full filenames. `[DRAFT]` = Architect/Designer design-in-progress, NOT yet in the active batch for QA handoff)
 - **Project core philosophy** (in your own words, from MEMORY.md)
-- **Confirmation** that you understand the batch rule (if Architect/Designer) or the one-at-a-time rule (if Dev/Implementer) or the strict no-code boundary (if QA/Tester) or the review-and-unblock authority (if SRTL)
+- **Confirmation** that you understand the batch rule (if Architect/Designer), the one-at-a-time rule (if Dev/Implementer), the strict no-code boundary (if QA/Tester), the review-and-unblock authority (if SRTL), or the release-only and human-publication boundaries (if Launcher)
 - **"I am ready for the next task."**
 
 **Whenever you stop and need the user** — finished and handing back, blocked, waiting on an answer,
@@ -140,11 +142,11 @@ job finishing when you intend to keep working.
 
 After reporting readiness, you must **automatically** scan for work applicable to your role and either begin it or report what you found. **Do not wait for the user to tell you what to do.** The `init` command implies you are ready to work.
 
-#### Role Work Loop (MANDATORY — all roles EXCEPT Architect — rewritten 2026-07-29, supersedes the 2026-07-25 version)
+#### Role Work Loop (MANDATORY — all roles EXCEPT Architect and Launcher — rewritten 2026-08-13, supersedes the 2026-07-29 version)
 
-**Architect is exempt.** Architect keeps its own interactive/batch auto-proceed below and does **not** use this loop.
+**Architect and Launcher are exempt.** Architect keeps its interactive/batch auto-proceed below. Launcher keeps its release-preflight auto-proceed below. Neither uses this queue-polling loop unless a human explicitly adds a routed role line.
 
-Every other role (QA, Dev, SRTL, Orchestrator, Composer, Critic, Designer, Tester, Implementer — and any future non-Architect role) runs this loop after init, after each handoff, and on every scheduled poll — same law whether user-spawned, orchestrator-spawned, or timed. Every such entry begins with the Repository Sync Gate. Purpose: continuously process the work list in strict order, taking only what's yours, until nothing is left.
+Every other role (QA, Dev, SRTL, Orchestrator, Composer, Critic, Designer, Tester, Implementer — and any future role not explicitly exempted) runs this loop after init, after each handoff, and on every scheduled poll — same law whether user-spawned, orchestrator-spawned, or timed. Every such entry begins with the Repository Sync Gate. Purpose: continuously process the work list in strict order, taking only what's yours, until nothing is left.
 
 ### The loop, in full (this is the whole thing — read it once, obey it exactly)
 
@@ -300,6 +302,14 @@ Only SRTL writes `:REVIEWED` or any `<id>-SRTL` line. No role ever removes them.
 2. **CANNOT unblocking is autonomous — no route line needed first.** SRTL scans `tickets/` directly for `[CANNOT_QA]`/`[CANNOT_DEV]` on every init/poll (same discovery pattern as the Architect's own `[CANNOT]` priority scan), TAKEs the oldest one, investigates + fixes the root cause per its dual code+test authority. There is no pre-existing open `<id>-SRTL` line to gate on — SRTL **appends `<id>-SRTL:DONE` to `ticketorder.md` only once it finishes**, as a completion record (same append-only pattern QA/Dev use for their own lines), not as a permission check. This is what makes the Role Work Loop's WAIT-on-CANNOT (§"Role Work Loop", step 4) actually resolve on its own: another role sees the CANNOT, backs off to WAIT, and SRTL's autonomous scan is what eventually clears it.
 3. If neither review lines nor CANNOT tickets exist: report *"Initialized as SRTL. No SRTL review lines, no CANNOT tickets. Ready when pointed at something."* (EXIT for poll purposes.)
 
+**If Launcher (release readiness — interactive, queue-loop exempt by default):**
+1. A direct `init <project> launcher` or direct user release request starts the release preflight in `skills/release-launch/SKILL.md`; no product ticket or route line is required.
+2. Verify the clean/current source commit, review/test gates, package/version/target, real release task, secure signing, artifact checksum/signature, size/privacy contents, and project `LAUNCH_CHECKLIST.md` evidence.
+3. Release-only configuration is in scope. Product code, tests, architecture, and guard changes are not; hand those blockers to SRTL.
+4. Never upload, publish, roll out, invite testers, answer policy declarations, or rotate/revoke keys without explicit human authorization for that exact action.
+5. If a human adds `<ticket>-Launcher`, apply route order for that line only: gate `[DONE]` plus required SRTL review → prepare artifact → record `Launcher Result` → mark the Launcher line `:DONE`. A blocked preparation remains open.
+6. Stop at `PREPARED`, a genuine blocker, or a human-controlled store action. `PREPARED` is never reported as `PUBLISHED`.
+
 **If Composer (content-web):** *(Role Work Loop — list = `[REVISION]-*.md` in project root)*
 1. EXIT if none. TAKE oldest if any exist; after fix → `[DRAFT]`, **re-scan and repeat**. WAIT does not apply (Composer owns the whole revision queue when present).
 
@@ -352,7 +362,7 @@ Agents in this ecosystem do **NOT** communicate via direct chat or internal mess
 
 ### Two Main Lifecycles
 
-**1. Android Development Lifecycle (4 Agents)**
+**1. Android Development Lifecycle (4 development agents + post-quality Launcher)**
 Used by: whatdate, sulipi, oneid, dbmeter
 
 *(dbmeter is project type `kmp-mobile` — Kotlin Multiplatform, Android **and** iOS from one shared codebase. It uses this exact 4-agent lifecycle and the same role profiles; the only difference is that "the app builds and passes" means **both** platforms. On a non-macOS host the native iOS phase reports `HOST_SKIPPED`, which is never equivalent to PASS for iOS release certification.)*
@@ -361,6 +371,7 @@ Used by: whatdate, sulipi, oneid, dbmeter
 - **QA**: Reads `[APPROVED]` tickets, writes failing regression tests (`rtest`), and promotes the ticket to `[READY_FOR_DEV]`. **NEVER writes application code.**
 - **Dev**: Reads `[READY_FOR_DEV]` tickets, writes application code to make tests pass, and promotes the ticket to `[DONE]`. **NEVER writes tests or changes architecture.** Follows the Solution Approach exactly.
 - **SRTL (Senior Tech Lead)**: Reviews `[DONE]` tickets against the architect's directions; makes corrections to **both code and tests** when deviations are found. Unblocks `[CANNOT_QA]`/`[CANNOT_DEV]` tickets by fixing the root cause directly. **NEVER touches architecture/design docs unless asked.** The only role with full code+test write authority.
+- **Launcher**: Runs the final release preflight after quality gates: verifies release identity/version/SDK, configures signing through local secrets, builds and independently verifies artifacts, audits size/bundled data, records launch evidence, and guides store handoff. **Never changes product behavior/tests and never uploads or rolls out without explicit human authorization.**
 
 **SRTL direct-request fast path:** When the user directly asks the active SRTL to make an on-the-fly correction, review, verification, or small implementation, SRTL may act immediately without FFTL (Fix-First-Ticket-Later). Do not create a ticket, append a `ticketorder.md` line, or route the request through Architect → QA → Dev unless the user explicitly asks for that workflow. SRTL must still test, commit, and push normal software changes, and must remain within the user's stated scope. This exception applies only to a direct user request to SRTL; it does not change the ticket lifecycle for Architect-created or already-queued work.
 
@@ -423,6 +434,7 @@ is unbroken, which catches any renumbering mistake at build time.
 | `skills/marathon/SKILL.md` | The `start marathon` command: one seat reviews what is done, then carries an open batch to the end, self-unblocking with Architect judgment. Never overrides the WD-334 self-review limit |
 | `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
 | `skills/rtest/SKILL.md` | Common regression test conventions and TDD principles |
+| `skills/release-launch/SKILL.md` | Secure release preflight, signed artifact verification, launch checklist, and store handoff |
 | `skills/blocker-resolution/SKILL.md` | Self-fix vs. escalate triage for role-boundary blocks (QA↔Dev, Tester↔Implementer); CANNOT + alarm procedure |
 | `.agent_profiles/<role>_profile.md` | Role-specific identity, boundaries, workflow |
 | `<project-folder>/MEMORY.md` | Project state, architecture decisions, philosophy, ticket status |

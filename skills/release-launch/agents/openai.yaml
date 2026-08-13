@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Launch"
+  short_description: "Prepare and verify secure release artifacts"
+  default_prompt: "Use $release-launch to prepare and verify this project for a secure release."
