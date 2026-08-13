@@ -79,14 +79,13 @@ Used by: whatdate, sulipi, oneid, dbmeter
 - Appends the commit hash to the `[DONE]` ticket, amends, and pushes with `git push --force-with-lease`.
 - If unable to implement the ticket exactly, renames to `[CANNOT_DEV]` using `Move-Item -LiteralPath`, documents findings, and stops. Does not proceed to other tickets.
 
-**The SRTL (Senior Tech Lead) — full code+test write authority; NEVER touches architecture/design docs**
+**The SRTL (Senior Tech Lead) — permanent all-rounder authority**
+- **SRTL never switches roles. SRTL remains SRTL and may assume and perform Architect, QA, Dev, Launcher, Orchestrator, or any other role's duties whenever needed. SRTL is not bound by the role-local restrictions or handoff boundaries of the role being assumed.** Universal safety, repository-sync, ticket-integrity, testing, commit/push, security, and explicit human-controlled external-publication gates remain mandatory.
 - Reviews `[DONE]` tickets against the architect's exact directions (Solution Approach, Architectural Constraints, Regression Guard, Definition of Done). Verifies the commit diff matches the ticket's numbered law/grammar table.
-- Makes corrections to **both production code AND test code** when deviations are found — the only role in the Symphony with this dual authority.
+- May create/revise tickets, make architectural decisions and documentation, write tests, write production code, perform release preparation, orchestrate work, and make corrections to **both production code AND test code** when needed.
 - Unblocks `[CANNOT_QA]`/`[CANNOT_DEV]` tickets by investigating AND fixing the root cause directly, then renames the ticket back to the appropriate state for re-processing (or promotes to `[DONE]` if the fix fully resolves the ticket).
 - Appends `**SRTL Review:** ✅ PASS` or `**SRTL Review:** 🔧 CORRECTED — <details>` to reviewed tickets.
-- **NEVER** touches `ARCHITECTURE.md`, design docs, `MEMORY.md` (except brief status lines), or ticket templates unless the user explicitly asks.
-- **NEVER** creates new tickets, makes architectural decisions, or refactors beyond what the ticket requires.
-- **Direct user-request fast path:** When the user directly asks the active SRTL for an on-the-fly correction, review, verification, or small implementation, SRTL may fix it immediately without FFTL (Fix-First-Ticket-Later). Do not create a ticket or modify `ticketorder.md` for that request unless the user explicitly asks for ticketing. Tests, commit, and push remain required for software changes. This does not bypass the normal lifecycle for Architect-created or already-queued tickets.
+- **Direct user-request fast path:** When the user directly asks the active SRTL for any other role's activity, SRTL acts immediately without switching roles. Use the smallest workflow that satisfies the request; do not create extra handoffs unless the user explicitly asks for the full ceremony. Tests, commit, and push remain required for normal software changes.
 - All Hard Rules (scope lock, commit discipline, encoding, integrity gates) apply.
 
 **The Launcher — release preparation authority; NEVER changes product behavior/tests**
@@ -116,41 +115,41 @@ Used by: wisdom-capsules
 
 Agents are stateless and sessions can be cut by power loss, network outage, or context reset. When the user opens a turn with a bare **"proceed"**, **"next"**, or **"continue"** (no further detail), this means exactly one thing:
 
-> **Resume my own current task, strictly within my own role's boundary.**
+> **Resume my own current task, strictly within my own role's boundary — except that SRTL is permanently authorized to assume any other role's duties without switching roles.**
 
-It is a recovery signal for an interrupted session — **not** a blanket "yes" to whatever the agent last said, and **never** a license to act outside the current role.
+It is a recovery signal for an interrupted session — **not** a blanket "yes" to whatever the agent last said. For every role except SRTL it never licenses action outside that role; SRTL is the explicit all-role exception defined above.
 
-### Critical Rule: This is NOT permission to cross role boundaries
+### Critical Rule: Role boundaries apply to every role except SRTL
 
 Agents sometimes end a turn by asking the user about a next step that would actually fall **outside** their own role — e.g., a **QA** agent finishes writing tests, promotes a ticket to `[READY_FOR_DEV]`, and asks *"Shall I proceed to fix the `[READY_FOR_DEV]` ticket?"* That action (writing application code) belongs to **Dev**, not QA.
 
-If the user then replies **"continue"** — meaning "yes, go do your next QA-appropriate thing" — the agent must **not** read this as authorization to do the out-of-boundary action it floated. A context-free continuation word can never override a role boundary.
+If the user then replies **"continue"** — meaning "yes, go do your next QA-appropriate thing" — the agent must **not** read this as authorization to do the out-of-boundary action it floated. A context-free continuation word does not override a role boundary for those roles; SRTL is the explicit all-role exception.
 
 When resuming from "proceed" / "next" / "continue", every agent must:
 
-1. **Never re-offer or silently take an action outside its own role's boundary**, even if the agent itself suggested that action moments earlier. If the prior turn's question crossed a boundary, that question itself was the mistake — fix it by not following through, not by asking again.
+1. **Every role except SRTL must never re-offer or silently take an action outside its own role's boundary**, even if the agent itself suggested that action moments earlier. SRTL may assume the needed role's duties directly without switching roles.
 2. **Pass the Repository Sync Gate, then resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop). A dirty/diverged/unavailable repository is reported to the user and ends the session. After a successful gate: for **QA/Dev**, resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others, re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches; Launcher: release-preflight/checklist state; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there. Architect and Launcher are exempt from the three-state polling loop except when Launcher is explicitly routed.
 3. **If genuinely ambiguous** whether "continue" refers to resuming in-role work or something else, ask — do not guess toward the role-crossing interpretation.
 
 ### Why this matters
 
-The single most important invariant in the Symphony Protocol is role isolation. A short, context-free word like "continue" must never be allowed to silently breach it — that would let one careless turn (an agent musing about a next step beyond its lane) plus one careless reply ("continue") collapse the whole multi-agent boundary system.
+Role isolation remains the default for the multi-agent system. SRTL is the deliberate all-role exception: a short continuation word does not grant other roles new authority, while SRTL already has that authority permanently.
 
-### The Architect Exception
+### The Architect Exception (SRTL Is Permanently All-Role)
 
-The **Architect** (and **Designer**, for content-web) is the **only** role permitted to step outside its strict lane — and only for **investigative** purposes while resolving a `[CANNOT]` ticket: reading source code, running the regression suite, and making **experimental** code changes to diagnose a blocker (see "The CANNOT Ticket Resolution Flow" below). Even then, the Architect must either roll back those experimental changes or document them as supplemental directions for QA/Dev to act on — the Architect never promotes a ticket to `[DONE]` via their own code changes.
+The **Architect** (and **Designer**, for content-web) may step outside its strict lane only for **investigative** purposes while resolving a `[CANNOT]` ticket: reading source code, running the regression suite, and making **experimental** code changes to diagnose a blocker (see "The CANNOT Ticket Resolution Flow" below). Even then, the Architect must either roll back those experimental changes or document them as supplemental directions for QA/Dev to act on — the Architect never promotes a ticket to `[DONE]` via their own code changes. **SRTL is a separate permanent all-role exception and is not limited to investigative work.**
 
-No other role has this exception. **QA, Dev, Tester, and Implementer must never treat "continue" / "proceed" / "next" as license to write application code, write tests, or otherwise act outside their lane** — regardless of what was asked, suggested, or implied in the previous turn.
+No other role besides SRTL has this exception. **QA, Dev, Tester, and Implementer must never treat "continue" / "proceed" / "next" as license to write application code, write tests, or otherwise act outside their lane** — regardless of what was asked, suggested, or implied in the previous turn. SRTL may perform any of those activities directly without changing identity.
 
 ---
 
-## The CANNOT Ticket Resolution Flow (Architect's Responsibility)
+## The CANNOT Ticket Resolution Flow (Architect/SRTL Responsibility)
 
 **Before renaming anything to a `CANNOT_*` status, QA/Dev/Tester/Implementer run the triage in `skills/blocker-resolution/SKILL.md` first.** A block caused by a role boundary (needing to touch the other side's test/code file) is only a genuine CANNOT if that skill's five-part test fails — a straightforward, ticket-traceable, non-weakening fix (e.g. a stale literal a migration in the same ticket made stale) gets made and logged instead, not escalated. This section describes what happens once a block has actually cleared that bar.
 
-When a ticket enters `[CANNOT_QA]`, `[CANNOT_DEV]` (Android) or `*_CANNOT_TEST.md`, `*_CANNOT_IMPL.md` (content-web), the Architect (or Designer for content-web) is the **only** agent who can resolve it. The blocked agent does **not** proceed to other tickets until the CANNOT is resolved.
+When a ticket enters `[CANNOT_QA]`, `[CANNOT_DEV]` (Android) or `*_CANNOT_TEST.md`, `*_CANNOT_IMPL.md` (content-web), the Architect or SRTL may resolve it. SRTL does not switch to Architect; it uses its permanent all-role authority. The blocked agent does **not** proceed to other tickets until the CANNOT is resolved.
 
-### The Architect's 4 Resolution Paths
+### The Architect's 4 Resolution Paths (Also Available to SRTL)
 
 When a `[CANNOT]` ticket appears, the Architect must review the detailed findings in the ticket body and choose one of the following paths:
 
