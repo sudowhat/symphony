@@ -28,6 +28,19 @@ Always prefer explicit full paths.
 
 Whenever the user requests to place, copy, or move a file to the "main folder", this strictly refers to the **root project folder** (e.g., `whatdate-folder/`), and NOT any internal module directories like `app/src/main/`.
 
+### Universal Agent Drop Zone — `.workspace-temp/`
+
+Every Symphony project reserves `<project>/.workspace-temp/` for build-unrelated files the user wants to share with agents: screenshots, copied logs, temporary exports, drafts, and diagnostic captures.
+
+Rules:
+
+1. The project `.gitignore` must contain `.workspace-temp/`. Future projects receive the rule during onboarding; existing projects add it as a normal protocol-hygiene commit.
+2. Users and agents may create the directory on demand inside an already path-verified canonical project. This is a support directory, never a project clone or alternative project root.
+3. Files placed there do not count as repository dirtiness once the ignore rule is active. Agents may inspect a named file there without moving it into tracked source.
+4. The directory is local/untracked—not encrypted, backed up, synchronized, or durable. Never place passwords, signing properties, keystores, private keys, service-account files, tokens, personal data, or the only copy of an important artifact there.
+5. Never commit files from `.workspace-temp/`. If a file becomes a real project artifact, move/copy it to its canonical tracked path only with explicit task authority, then review and commit it normally.
+6. Agents do not clean or delete the directory unless the user explicitly asks. User-shared files remain recoverable at their local paths.
+
 ---
 
 ## Performance Is a First-Class Constraint — The Mantra (All Agents, All Projects — added 2026-07-16, user mandate)

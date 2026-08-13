@@ -431,6 +431,7 @@ These rules exist because of real damage: a combined multi-ticket commit made th
 ### 5. Working-directory hygiene
 - Verify your current directory before EVERY script or bulk file operation. The `app/app/` nested-duplicate directory in whatdate-folder was created by an agent running with the wrong cwd — never create paths like that; if your op would create a directory that mirrors an existing tree, your cwd is wrong.
 - If the worktree is dirty at **any session or loop entry**, regardless of whether paths appear inside your ticket's scope: do NOT absorb, stage, commit, revert, stash, or overwrite it. Report the exact dirty status to the user and stop before claim/queue work. The pipeline's expected terminal state is clean by definition.
+- Build-unrelated user/agent exchange files belong in the ignored project-local `.workspace-temp/` drop zone defined by `global-skill`. It is never a secret store, tracked source, or alternative project root; do not delete its contents without explicit user instruction.
 
 ### 6. Berserk brake (self-check)
 Ask yourself before every commit: "Can I name the ticket line item that authorizes each file in `git status`?" If the answer is no for any file — you have gone off-script. Stop, revert the unauthorized changes, escalate what you learned. An agent that follows a wrong plan slowly is recoverable; an agent that improvises quickly is not.

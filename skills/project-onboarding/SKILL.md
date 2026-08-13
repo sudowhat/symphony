@@ -125,9 +125,11 @@ Do not create a routine ticket-history archive inside `MEMORY.md`. Completed det
 - Seed lines from the tickets that already exist, respecting their status: a ticket sitting at `[READY_FOR_DEV]` gets only a `-Dev` line; an `[APPROVED]` one gets `-QA` then `-Dev`.
 - A route line for a role that cannot start yet is correct, not broken. Roles polling it will classify WAIT — that is the head rule working.
 
-### Step 4 — Support directories
+### Step 4 — Support directories and local drop zone
 
 Create `tickets/` (if absent) and `tickets/.claims/`. Git does not track empty directories, so put a short `README.md` in `.claims/` explaining what a claim marker is and that an orphaned claim means resume, never route around.
+
+Ensure the project root `.gitignore` contains `.workspace-temp/`. Create `.gitignore` when absent. The directory itself may be created on demand and stays untracked; do not seed it with a tracked placeholder. It is the universal local drop zone for screenshots, logs, drafts, and other build-unrelated files shared with agents. It is not encrypted and must never hold secrets, signing material, personal data, or the only copy of an important artifact.
 
 **Do not create `requests/`.** The Architect's request-intake path (`Agent role.md`, Architect step 4) reads `<project>/requests/` for `[NEW]_REQ-*.md`, but an absent directory simply means no requests — it is not an error, and every live project runs without one. Create it only when the project actually starts using Orchestrator intake.
 
@@ -189,6 +191,7 @@ The ones that recur:
 - **Bracketed filenames** (`[APPROVED]_…`) break shell globs. Force-list to see them; rename only with `Move-Item -LiteralPath` or `cmd /c ren`.
 - **Dot-directories hide** from ordinary listing tools. `Get-ChildItem -Force`, always.
 - **Empty directories vanish through git.** Always seed a README.
+- **`.workspace-temp/` is intentionally the exception:** it is ignored and created only on demand, so never seed it with a tracked placeholder.
 - **Restricted mounts.** Some sandboxes permit create-and-write but not delete. Git then leaves `.git/index.lock` and `tmp_obj_*` files behind, and the *next* git command fails with "Another git process seems to be running". Remove the leftovers — request delete permission from the host if the sandbox refuses — before continuing, and never leave a lock file in the user's repo. If you cannot remove it, say so loudly: it blocks every future git operation on that machine.
 - **Never write into a vendor directory.** `.claude/`, `.cursor/`, `.gemini/` and friends are invisible to other vendors' agents, and the Symphony is vendor-neutral by design.
 - **Full literal paths only.** The Symphony root is `C:\Users\pooji\Documents\symphony\`.

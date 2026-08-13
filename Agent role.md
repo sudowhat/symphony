@@ -440,6 +440,7 @@ is unbroken, which catches any renumbering mistake at build time.
 | `<project-folder>/MEMORY.md` | Project state, architecture decisions, philosophy, ticket status |
 | `<project-folder>/SKILL.md` | Project-specific build commands, rtest commands, key paths |
 | `<project-folder>/tickets/` | The communication API between agents |
+| `<project-folder>/.workspace-temp/` | Ignored local drop zone for screenshots/logs/drafts shared with agents; never secrets or tracked project state |
 
 ---
 
@@ -510,6 +511,7 @@ through. Rules:
 - **Directory listing**: `list_dir` and similar tools often hide dot-directories (`.agent_profiles`, `.git`, etc.). Use terminal commands with `Get-ChildItem -Force` to discover them.
 - **Ticket filenames contain brackets**: `[APPROVED]`, `[READY_FOR_DEV]`, `[DONE]`, etc. These break PowerShell globs. For renames, always use `Move-Item -LiteralPath` or `cmd /c ren`. Never use simple `Rename-Item` with bracketed names.
 - **Full paths**: Always prefer explicit full paths over relative paths. The Symphony root is `C:\Users\pooji\Documents\symphony\`.
+- **Build-unrelated shared files**: place screenshots, logs, temporary exports, and drafts in the active project's ignored `.workspace-temp/`. It is local and unencrypted; never use it for credentials, keystores, tokens, personal data, or durable canonical artifacts. Never delete its contents without explicit user instruction.
 
 ---
 
