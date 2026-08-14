@@ -450,6 +450,16 @@ Unchanged full Symphony: `[APPROVED]` → QA writes failing pure-JVM tests → `
 - Dev's promotion gate to `[DONE]`: (1) `rtest --fast` green (pure-JVM tier must never regress), (2) `compileDebugUnitTestKotlin` BUILD SUCCESSFUL, (3) `assembleDebug` builds. NO full Robolectric run required.
 - **Final acceptance is the user's manual pass.** If the user reports a bug against a `[DONE]` UI ticket, the Architect opens a follow-up ticket; the original stays `[DONE]` (history is truth).
 
+### Optional SRTL ADB diagnostics overlay
+
+ADB diagnostics is available only when the user invokes `init <project> srtl adb [serial]` and the post-sync preflight finds one authorized device plus the project’s installed target package. It is not a general UI-lane replacement and never starts implicitly.
+
+- A project ADB sheet may contain only cases that an agent can drive through visible UI and prove through a UI dump, screenshot bounds, or explicit package/process state. Each case declares deterministic setup, oracle, and UI cleanup.
+- The sheet must exclude subjective appearance, audio/audibility, OS-delivered notifications, uncontrolled network/provider behavior, clock manipulation, existing user data, and any database/hidden-intent shortcut. Those belong to a user manual script or automated code test.
+- ADB absence, authorization failure, ambiguous device selection, or absent package produces `ADB_UNAVAILABLE`, skips the overlay, and leaves normal SRTL work intact. It is not a ticket CANNOT or a failed app test.
+- An active case that lacks its promised selector/fixture/oracle is `PRECONDITION_DEFECT`: repair or retire the sheet before treating an app behavior as a regression.
+- ADB evidence lives only in ignored `.workspace-temp/adb-diagnostics/`; ticket/ledger notes stay terse and lossless. The overlay never weakens repository gates, scope/cleanup rules, rtest/build gates, regression locks, or the user’s final manual UI acceptance.
+
 ### Retiring obsolete UI tests (controlled demolition)
 Legacy Robolectric UI tests are retired screen-by-screen as the redesign replaces each screen:
 - Each UI-lane redesign ticket carries a **`## Retired tests`** list naming the exact test files/methods Dev must DELETE in the same commit. Deleting Architect-listed obsolete tests is authorized for Dev and is not "writing tests."
