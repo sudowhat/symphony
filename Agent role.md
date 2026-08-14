@@ -31,17 +31,17 @@ Both modes obey the same role boundaries, ticket lifecycle, ticket order, and on
 When the user gives you a command like:
 
 ```
-init <project-short-name> <role>
+init <project-short-name> <role> [adb [serial]]
 ```
 
-Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter launcher`
+Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter launcher`, `init whatdate srtl adb`, `init whatdate srtl adb <serial>`
 
 You MUST follow this exact initialization sequence. **Do not skip steps.** Do not read source code, list directories, or make any changes until you complete the full sequence.
 
 ---
 
 ### Step 1: Parse the Command
-Extract `<project-short-name>` and `<role>` from the user's command, case-insensitive.
+Extract `<project-short-name>` and `<role>` from the user's command, case-insensitive. The only optional mode is `adb [serial]`; it is legal only for `srtl`. Any other role/mode combination is a clarification error, not an implicit device request. `adb` without a serial targets exactly one authorized device; with multiple devices, require the supplied serial.
 
 > **Not `init`? See the `add project` command below.** If the user instead says `add project <project-folder>` (or "onboard this to symphony"), that is a different command entirely — a one-time whole-folder operation, not a role. Read `skills/project-onboarding/SKILL.md` and follow it; do not attempt to `init` into an unregistered project.
 
@@ -84,7 +84,7 @@ Optional capabilities never become init dependencies. Their absence, provider fa
 | architect | `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md` | ticket-management |
 | qa | `C:\Users\pooji\Documents\symphony\.agent_profiles\qa_profile.md` | rtest |
 | dev | `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md` | rtest |
-| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest |
+| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest; adb-diagnostics only for `init <project> srtl adb [serial]` |
 | launcher | `C:\Users\pooji\Documents\symphony\.agent_profiles\launcher_profile.md` | release-launch, rtest |
 | orchestrator | `C:\Users\pooji\Documents\symphony\.agent_profiles\orchestrator_profile.md` | — |
 | composer | `C:\Users\pooji\Documents\symphony\.agent_profiles\composer_profile.md` | — |
@@ -115,9 +115,10 @@ Read these files and perform the gate in this exact order. Fully read every mand
 10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer). Skip otherwise.
 11. **`skills/release-launch/SKILL.md`** — if the role is Launcher; then read its applicable platform reference. Skip otherwise.
 12. **`skills/rtest/SKILL.md`** — if the role touches or executes tests (QA, Dev, SRTL, Tester, Implementer, Launcher). Skip otherwise.
-13. **`skills/blocker-resolution/SKILL.md`** — if the role may cross the QA↔Dev or Tester↔Implementer test/code boundary (QA, Dev, SRTL, Tester, Implementer). Launcher skips it.
-14. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
-15. **Optional historical enrichment** — only after Step 14, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
+13. **`skills/adb-diagnostics/SKILL.md`** — only for `init <project> srtl adb [serial]`. Run its device/package preflight only now, after the sync gate and project context. If no eligible device/package is present, report `ADB_UNAVAILABLE` and continue as normal SRTL; do not run an ADB case or treat the unavailable overlay as a ticket blocker.
+14. **`skills/blocker-resolution/SKILL.md`** — if the role may cross the QA↔Dev or Tester↔Implementer test/code boundary (QA, Dev, SRTL, Tester, Implementer). Launcher skips it.
+15. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
+16. **Optional historical enrichment** — only after Step 15, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
 
 The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, source, and artifacts. Token discipline and semantic memory never weaken this freshness gate.
 
