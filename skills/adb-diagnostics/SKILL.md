@@ -48,6 +48,17 @@ If a promised selector, fixture route, or oracle is missing, report `PRECONDITIO
 - Use `PASS`, `FAIL`, `PRECONDITION_DEFECT`, and `READY` inside ADB sheets. `ADB_UNAVAILABLE` applies to the whole requested overlay, not an individual case.
 - Stop the overlay after a destructive-risk or cleanup failure; give the user the exact fixture title and evidence names.
 
+## Run resumability
+
+A long ADB run is expected to be interrupted — the session ends, the user stops it, the device drops. A stateless seat re-entering through `init <project> srtl adb [serial]` must be able to continue from the files alone, without asking what already happened.
+
+- **The Run record table is the resume pointer.** `READY` means unrun; anything else is terminal. A fresh seat continues at the first `READY` row in the lowest-numbered sheet. Never pre-fill a row before its case finishes, and never leave a finished case as `READY` — an inaccurate table sends the next seat to the wrong place.
+- **Commit per case, not per sheet.** Write the case's row and commit it as soon as that case reaches a terminal result. An interruption must never cost more than the case in flight.
+- **Keep a short Run state block beside the Run record**, current as you go: run-id, target package with `versionName`/`versionCode`, device model/product, the case in flight, and **every disposable fixture still live on the device, by exact name**. Identify the device by model, never by serial (see the serial rule above). The fixture list is the part that matters most: an abrupt stop otherwise strands prefixed fixtures on the user's real device with nothing recording that they exist, and the suite's final cleanup sweep never runs.
+- **Evidence is ephemeral; the commit is the durable record.** Delete a case's evidence once its row is committed **and pushed** — never while a result exists only locally, and never before everything needed from it is written into the row, since it is not recoverable afterward.
+- **Record the fix commit's short SHA in the row of the case that prompted it.** This is what survives evidence deletion and lets anyone trace a result back to the change that caused it.
+- **Commit the plan before the fix.** When a case FAILs and you intend to repair it, first write the observed mismatch, the suspected root cause, and the files you intend to touch into that case's row, and commit that. Then implement, `SRTL fix:` commit, retest the case on-device, and record the SHA. A few lines is enough. This keeps the scope pinned in writing before editing begins, and means an interruption between diagnosis and repair hands the next seat your reasoning instead of an unexplained FAIL.
+
 ## Standard commands
 
 Typical evidence operations are:
