@@ -48,9 +48,17 @@ report, STOP. Never adapt a stale plan.
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
-List = `tickets/*_APPROVED.md` (red) then `*_RFT.md` (green). Per `Agent role.md` §Role Work Loop:
-- **EXIT** if none remain. **TAKE** oldest eligible → handoff → **repeat** until EXIT.
-- Do not stop after one ticket for orchestrator/poll.
+Follow the universal Role Work Loop from `Agent role.md` §Role Work Loop using `<project>/ticketorder.md`:
+
+1. **Pass the Repository Sync Gate** (`git pull` / fast-forward clean check).
+2. **Scan `ticketorder.md`**:
+   - **EXIT** if no open `*-Tester` (or `*-QA`) lines remain anywhere in `ticketorder.md`. Log `LOOP_EXIT: no work remaining for Tester` and end the turn.
+   - **WAIT** if open `*-Tester` lines remain, but the head line belongs to another role or the ticket gate is not open yet (e.g. head is `*-Implementer` or ticket is not yet in `[READY_FOR_TEST]`/`_RFT`). Log `LOOP_WAIT: head is <entry>; N open Tester line(s) remain`. Arm a 300s polling timer using the `schedule` tool (e.g. `DurationSeconds: 300`, `Prompt: "Poll ticketorder.md for Tester work in <project>"`, `TimerCondition: "never"`).
+   - **TAKE** if head is `*-Tester` and gate is open:
+     - For `[APPROVED]`: add red-light failing tests, verify fail, promote to `[READY_FOR_IMPL]` / `[READY_FOR_DEV]`, commit & push.
+     - For `[READY_FOR_TEST]` / `_RFT`: run full `rtest.py`, verify green, promote to `[DONE]`, commit & push.
+     - Mark `<id>-Tester:DONE` on `ticketorder.md` and commit/push.
+     - **Re-enter loop immediately** without sleeping to chain consecutive same-role heads.
 
 ## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
 Resolve your project folder (Active Workspace) ONLY from the Project Registry
