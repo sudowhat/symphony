@@ -48,6 +48,32 @@ If a promised selector, fixture route, or oracle is missing, report `PRECONDITIO
 - Use `PASS`, `FAIL`, `PRECONDITION_DEFECT`, and `READY` inside ADB sheets. `ADB_UNAVAILABLE` applies to the whole requested overlay, not an individual case.
 - Stop the overlay after a destructive-risk or cleanup failure; give the user the exact fixture title and evidence names.
 
+## Defects found during a case — fix small, draft big (user ruling 2026-08-16)
+
+When a case's oracle turns up a genuine, confirmable app defect (not a matter of taste), triage the
+fix by size and certainty before touching anything, the same way `skills/blocker-resolution/SKILL.md`
+triages a role-boundary block:
+
+1. **Quick fix (roughly 2-3 minutes of work, small and certain):** fix it directly under SRTL's
+   normal code authority. Commit as `SRTL fix: <short description>`, retest the case on-device, and
+   record the fix SHA in that case's Run record row exactly as the sheet's ledger conventions already
+   require.
+2. **Not a quick fix** (needs real investigation, touches a shared/product decision, or otherwise
+   needs more than a fast pass affords): do not attempt it live. Instead create
+   `tickets/[DRAFT]_WD-<next>_<slug>.md` containing ONLY:
+   - the exact originating test case (sheet filename + case number), so the evidence trail is
+     traceable back to the ADB run that found it;
+   - the problem description — what was observed vs. the case's stated oracle, in the case's own
+     terms. No `## Solution Approach`, `## Architectural Constraints`, or `## QA / Testing
+     Instructions` — a `[DRAFT]` ticket is explicitly unfinished, and those sections are the
+     Architect's job when converting it to a full ticket.
+   Leave the case's own Run record row as `FAIL` with a one-line pointer to the new ticket number;
+   never mark it PASS or paper over it with a workaround.
+
+This does not change the sheet's own "commit the plan before the fix" rule for anything actually
+attempted (see "Ledger, evidence and resume conventions" rule 5) — it only decides, before that,
+whether SRTL attempts the fix at all.
+
 ## Run resumability
 
 A long ADB run is expected to be interrupted — the session ends, the user stops it, the device drops. A stateless seat re-entering through `init <project> srtl adb [serial]` must be able to continue from the files alone, without asking what already happened.
