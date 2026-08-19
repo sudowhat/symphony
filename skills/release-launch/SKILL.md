@@ -1,13 +1,39 @@
 ---
 name: release-launch
-description: Prepare, verify, and hand off release artifacts without leaking signing secrets or bypassing quality gates. Use for Android App Bundles/APKs, internal testing, release signing, version/package/SDK audits, artifact checksums and certificate fingerprints, bundle-size/privacy audits, Play Console guidance, and reusable launch checklists.
+description: Prepare, verify, and hand off Android or iOS release artifacts without leaking signing secrets or bypassing quality gates. Use for APK/AAB, simulator/TestFlight/App Store builds, release signing, version/package/SDK audits, artifact verification, size/privacy audits, store guidance, and reusable launch checklists.
 ---
 
 # Release Launch
 
 Prepare a reproducible release artifact from a clean, reviewed project state. Keep store publication human-gated and credentials local.
 
-For Android or Google Play work, read `references/android-play.md` before acting.
+Select one platform/artifact target before acting, then read its reference:
+
+- Android `apk` or `aab`: `references/android-play.md`
+- iOS `simulator`, `testflight`, or `appstore`: `references/ios-app-store.md`
+
+## One Launcher, explicit target
+
+Launcher is one universal release role. Platform and artifact are build inputs, not separate roles or duplicated workflows.
+
+The canonical protocol target is:
+
+```text
+init <project> launcher <platform> [artifact]
+```
+
+Where a project provides a launcher wrapper, expose the equivalent interface:
+
+```text
+launcher build --platform android --artifact apk|aab
+launcher build --platform ios --artifact simulator|testflight|appstore
+```
+
+A project may use Gradle and Xcode commands underneath; the wrapper selects and verifies those native tasks. It does not make the toolchains identical. Android builds use the Android/Java toolchain. Native iOS build, archive, signing, and export require macOS with Xcode; a cloud macOS runner is valid.
+
+For a multiplatform app, preserve one product codebase: shared behavior in the common source set, thin platform adapters/wrappers, and platform-specific packaging/signing only. Do not fork features merely to produce a platform artifact.
+
+If the init command omits the target, infer it only from one unambiguous user-requested artifact. Otherwise ask for the platform/artifact before building. Defaults, when the platform alone is explicit, are `aab` for Android release preparation and `simulator` for unsigned iOS feasibility checks; never silently treat a simulator build as TestFlight/App Store readiness.
 
 ## Authority and boundaries
 
@@ -34,6 +60,7 @@ Stop on dirtiness, divergence, stale work, open CANNOT state, or an unexplained 
 
 Verify from effective build output—not assumptions:
 
+- selected platform and artifact target;
 - application/package/bundle identifier;
 - version code/build number and version name;
 - minimum and target SDK/platform versions;
@@ -101,7 +128,7 @@ Never claim that an artifact contains no user data until its entries and package
 
 ### 7. Hand off to the store
 
-Before any external action, tell the user exactly what remains human-controlled. For Play internal testing:
+Before any external action, tell the user exactly what remains human-controlled. Follow the selected platform reference. For Play internal testing:
 
 1. confirm Play App Signing state;
 2. upload the verified AAB only after user authorization;
@@ -111,7 +138,7 @@ Before any external action, tell the user exactly what remains human-controlled.
 6. start rollout only after explicit user approval;
 7. install through Play on a physical device and run the project smoke test.
 
-Do not treat upload acceptance as runtime validation.
+Do not treat upload acceptance as runtime validation. For iOS/TestFlight/App Store handoff, follow `references/ios-app-store.md` and keep upload, tester-group changes, submission, and release human-gated.
 
 ## Launch checklist record
 
