@@ -99,10 +99,10 @@ There are four run modes. Always use the **cheapest mode valid for the step you 
 
 **How:** Use the background-launch pattern from `skills/global-skill/SKILL.md` (Long-Running Commands section):
 
-1. **Launch** the test in background with output redirected to temp files, return immediately.
-2. **Tell the user** the test is running in background.
-3. **Poll** on subsequent prompts (user message or agent continuation) — check `Test-Path $doneFile`, read tail of log if done.
-4. **Report results** when complete.
+1. **Launch** the test in background with output redirected to temp files, return immediately. **Set the hard timeout for this run before you launch it** — see the ceilings table in `global-skill/SKILL.md` §"Every long-running command carries a timeout" (targeted 8 min · incremental 15 min · `--full-cold` 30 min).
+2. **Tell the user** the test is running in background, and what its ceiling is.
+3. **Poll** on subsequent prompts (user message or agent continuation) — check `Test-Path $doneFile`, read tail of log if done. Poll every ~30–60s, not every 2s.
+4. **Report results** when complete — **or report `BUILD_TIMEOUT` and stop polling when the ceiling expires.** A run that never finished is not a pass and cannot promote a ticket. Diagnose (stale daemon, `.gradle` lock, first-run download) before relaunching; never blind-retry an unbounded run.
 
 **Never do this:**
 ```

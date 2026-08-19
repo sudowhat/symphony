@@ -109,7 +109,7 @@ Read these files and perform the gate in this exact order. Fully read every mand
 7. **Synchronize the project source (MANDATORY for a Git project)** —
    - **Local CLI:** complete the clean-tree, fetch, and fast-forward-only **Repository Sync Gate** in `global-skill/SKILL.md`.
    - **Direct-repo/cloud:** complete the **Direct-Remote Gate** in that same skill against the selected project's target branch.
-   A dirty local tree (CLI only), divergence, remote movement, unavailable remote, or Git error is a hard STOP: report it to the user; do not stash, reset, clean, restore, pull-over, claim a ticket, or start the loop.
+   A dirty local tree (CLI only), divergence, remote movement, unavailable remote, or Git error means you may not claim a ticket, read past the gate, or start work: report it, and **never** stash, reset, clean, restore, or pull over it. It is **not** a reason to end the session — enter the Role Work Loop at step 5 (WAIT) and re-run the gate each tick until it passes (see §"Role Work Loop" → "A failed sync gate is a WAIT, not a stop"). A dirty tree during a live batch usually just means a peer role is mid-ticket.
 8. **Project `MEMORY.md`** — live project state, decisions, philosophy, and recent status. Read only after Step 7 succeeds; ignore any HISTORY section unless the user or current work explicitly requires it.
 9. **Project `SKILL.md`** — project-specific technical conventions, build/test commands, key paths, and architecture notes.
 10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer). Skip otherwise.
@@ -153,33 +153,61 @@ Every other role (QA, Dev, SRTL, Orchestrator, Composer, Critic, Designer, Teste
 
 ```
 loop: while (true) {
-    0. sync:    clean tree + fetch + fast-forward update? -> otherwise report user ; STOP
+    0. sync:    clean tree + fetch + fast-forward update? -> otherwise goto 5 (WAIT — never exit)
     1. resume:  any half-finished ticket of MY role?  -> take it
     2. read:    <project>/ticketorder.md
     3. exit:    no open line for MY role anywhere?    -> print "<role>|exit" ; STOP
     4. take:    top open line is mine AND gate open?  -> do it ; mark it ; continue (no sleep)
-    5. wait:    print "<role>|waiting on <ticket>" ; sleep 300 ; continue
+    5. wait:    print "<role>|waiting on <reason>" ; sleep 300 ; continue
 }
 ```
 
-**Three mantras. Nothing else overrides them.**
-1. **Never exit while I still have an open line in the batch.** Blocked is not finished.
+**Four mantras. Nothing else overrides them.**
+1. **Never exit while I still have an open line in the batch.** Blocked is not finished. Neither is dirty, diverged, gated, or "I'd like to check with the user first."
 2. **Exit the moment nothing on the list is mine.** Don't linger, don't "check in case".
 3. **Sleep is a real 300s blocking sleep in this same session.** Not a cloud job, not a new agent, not a fresh `init`, not a tight poll.
+4. **Step 3 is the only exit.** Every other unhappy path in this loop — a failed sync gate included — routes to step 5. There is no state in which the correct action is to end the turn and ask the user for permission to keep going.
+
+**The loop never stops to ask permission (user ruling 2026-08-19).** `init <project> <role>` authorizes the entire batch, not one ticket. An agent that ends its turn with *"the repo is dirty / another agent seems to be working / here's what I found — shall I proceed?"* has broken the loop: the user is not watching the terminal, so that question is not a pause, it is an abandonment, and the batch stalls until a human happens to look. If work remains on the list, sleep and re-check. The only messages that legitimately end a turn are `<role>|exit` (step 3) and a genuine CANNOT you personally cannot resolve.
+
+**A failed sync gate is a WAIT, not a stop (user ruling 2026-08-19 — supersedes every "ends the session" phrasing for loop entries).** Symphony runs multiple roles against one worktree, so **a dirty tree at a loop entry is the normal signature of a peer mid-ticket**, not an anomaly. Halting on it is precisely backwards: it kills the one agent that was still watching the queue while the agent that dirtied the tree carries on.
+
+| Gate result at a loop entry | Action |
+|---|---|
+| `REPO_DIRTY` | **WAIT.** A peer is mid-ticket. Sleep, re-run the gate, and pick the queue up when their handoff lands. |
+| `REPO_DIVERGED` / `REPO_SYNC_BLOCKED` | **WAIT + ring the bell.** These need a human, so make noise — then keep polling. The human's fix lands and the next tick resumes on its own. |
+| Gate passes | Continue to step 1. |
+
+**What has *not* changed, and never will:** you still may not stash, reset, clean, restore, checkout, commit, absorb, or "tidy" another agent's uncommitted work — that prohibition is the whole reason the gate exists (WD-170/170A), and waiting is now the answer instead of quitting. You wait for their committed-and-pushed handoff; you do not go get it yourself.
+
+**Noise control for a long wait.** Print the reason on the **first** tick and whenever it *changes*; identical consecutive waits are silent. On every **6th** consecutive identical wait (~30 min), ring the attention bell once — a wait long enough to need a human is not the same as a wait that should end the session. Escalate the volume, never the exit.
 
 **Token efficiency is the point of this loop, not just discipline.** One line of status per state change. No tool calls while waiting. The required Repository Sync Gate after a real wake is work, not a keepalive. A loop that burns tokens waiting is a broken loop even if it never breaks a rule.
 
 **Definitions (no interpretation needed):**
-- *sync* = the clean-tree Repository Sync Gate in `global-skill/SKILL.md`; it runs before every fresh queue/claim read, never mid-ticket.
+- *sync* = the clean-tree Repository Sync Gate in `global-skill/SKILL.md`; it runs before every fresh queue/claim read, never mid-ticket. It **admits** work; it no longer **ends** sessions (see the WAIT table above).
 - *open line* = a line with no `:DONE` on its own role token.
+- *open batch* = at least one open line anywhere on the list, for any role. While a batch is open, the work is not finished — it is in flight.
 - *top* = the first open line in the file, reading down. Only the top may be taken.
-- *mine* = the line's role token equals my role.
+- *mine* = the line's role token equals my role. **For SRTL, see "mine, for SRTL" below — an open batch is itself SRTL's work.**
 - *gate open* = the ticket file's status prefix is one my role may take (QA: `[APPROVED]`. Dev: `[READY_FOR_DEV]` or `[IN_PROGRESS]`. SRTL: see below).
 - *print* = one short line of text. On WAIT, this is followed by the required 300s sleep in the same session before re-reading; on EXIT, end the turn.
 
-**CANNOT tickets — the deadlock this replaces (2026-08-01).** The old rule said "a CANNOT anywhere means WAIT, never EXIT". If no SRTL was running, that was an infinite loop with no escape. Now:
+**CANNOT tickets — the deadlock this replaces (2026-08-01; bounded-exit removed 2026-08-19).** The 2026-08-01 rule let a role exit after 3 waits on someone else's CANNOT, to avoid spinning forever on an SRTL that might not be running. That traded one failure mode for a worse one: the queue ends up with **nobody** watching it. Exiting never summoned an SRTL either — it just made the stall silent. Now:
 - **SRTL:** a `[CANNOT_*]` ticket is *gate open* for you with no route line needed. Take the oldest. This is what clears the block for everyone else.
-- **Every other role:** a CANNOT on a line that is **not yours** is just a closed gate — step 5, wait. But after **3 consecutive waits on the same ticket** (~15 min), print `<role>|blocked on <ticket> — needs SRTL` and **exit**. Do not spin forever waiting for a role that may not be running.
+- **Every other role:** a CANNOT on a line that is **not yours** is just a closed gate — step 5, wait, and **keep waiting**. Do not exit while you still hold an open line. Ring the attention bell on the 3rd consecutive wait (~15 min) and print `<role>|blocked on <ticket> — needs SRTL`, then carry on polling. The bell is what fetches a human; ending the turn is what guarantees no one comes.
+
+**"Mine", for SRTL — the review loop (user ruling 2026-08-19).** SRTL's queue was previously read literally: no open `*-SRTL` line and no CANNOT meant EXIT. That is wrong, because **SRTL's work is created by other roles finishing theirs.** An SRTL that exits at the start of a live QA/Dev batch is quitting exactly when it is about to be needed, and every `-Dev:DONE` that lands afterwards goes unreviewed until a human notices and re-inits one.
+
+> **An open batch is an open SRTL line.** While any line anywhere on the list is open, SRTL stays in the timer loop.
+
+SRTL's three states resolve like this:
+
+- **TAKE** — an open `*-SRTL` line at the head; **or** any `[CANNOT_*]` ticket (autonomous, no route line needed); **or** a completed `<id>-<Role>:DONE` line that does not yet carry `:REVIEWED`. That last one is the review loop's actual work: review it, stamp `:REVIEWED`, commit, re-enter with no sleep and chain through any other unreviewed completions.
+- **WAIT** — the batch is open but nothing is reviewable yet (QA/Dev still working, tree dirty, gates closed). This is the normal state of a healthy batch and SRTL should expect to spend most of it here. Sleep 300s, re-sync, re-scan.
+- **EXIT** — **only** when the batch is fully closed: every line `:DONE`, every QA/Dev completion carrying `:REVIEWED`, and no `[CANNOT_*]` ticket outstanding. That is also the trigger for Function 3 (Close the Batch), so in practice SRTL's last act before exiting is the release stamp, not a bare exit.
+
+The one unchanged limit: SRTL still does not review its own implementation work (WD-334). Reviewing what SRTL itself wrote is not a quality gate, and no loop state may be used to manufacture one.
 
 ---
 
@@ -189,13 +217,13 @@ loop: while (true) {
 
 Nothing below may contradict the five-line loop. If it appears to, the loop wins and the text below is the defect — report it.
 
-**1. Synchronize before reading work.** Run the Repository Sync Gate from `global-skill/SKILL.md`. If it reports `REPO_DIRTY`, `REPO_DIVERGED`, or `REPO_SYNC_BLOCKED`, report the finding to the user and STOP. Do not inspect claims, tickets, or source from a stale/dirty tree.
+**1. Synchronize before reading work.** Run the Repository Sync Gate from `global-skill/SKILL.md`. Do not inspect claims, tickets, or source from a stale/dirty tree. If it reports `REPO_DIRTY`, `REPO_DIVERGED`, or `REPO_SYNC_BLOCKED`, **go to step 5 (WAIT)** — report the finding once, sleep, and re-run the gate on the next tick. Ring the bell for `REPO_DIVERGED`/`REPO_SYNC_BLOCKED`, which need a human hand. **Do not end the session while open work remains** (2026-08-19 ruling): the gate blocks you from *reading past it*, not from *waiting behind it*. `REPO_DIRTY` in particular is the expected reading while a peer role is mid-ticket.
 
 **2. Resume orphaned work first.** Only after a successful sync: any `tickets/.claims/*-<YourRole>.claim`, a claim marked `IN_PROGRESS`, or a ticket already in your role's in-flight status (e.g. `[IN_PROGRESS]_*` for Dev) means a previous instance of *you* died mid-ticket. That is always TAKE, ahead of everything below — never route around it for a fresher item (the single-agent-per-role guarantee means an orphan is a corpse, never a live peer; see agent-symphony/SKILL.md §"One Agent per Role per Project" for the incident this rule exists for).
 
 **3. Read the work list.** Route roles (QA, Dev, SRTL): `<project>/ticketorder.md`, top-to-bottom, one entry per line, `<ticket_id>-<Role>[:DONE]`. Content-web roles (Composer, Critic, Designer, Tester, Implementer): your role's file-status queue instead — see the per-role bullets below for exactly which glob.
 
-**4. Find the head and check for blockers.** The head is the first entry not already `:DONE`. While scanning, also check every open entry — not just your own — for a `[CANNOT_QA]`/`[CANNOT_DEV]` (or content-web `*_CANNOT_TEST`/`*_CANNOT_IMPL`) status. A CANNOT on a line that is not yours is a closed gate → WAIT. **Bounded:** after 3 consecutive waits on the same ticket (~15 min), print `<role>|blocked on <ticket> — needs SRTL` and EXIT. Never spin forever on a role that may not be running. SRTL takes CANNOT tickets directly (see below).
+**4. Find the head and check for blockers.** The head is the first entry not already `:DONE`. While scanning, also check every open entry — not just your own — for a `[CANNOT_QA]`/`[CANNOT_DEV]` (or content-web `*_CANNOT_TEST`/`*_CANNOT_IMPL`) status. A CANNOT on a line that is not yours is a closed gate → WAIT, and you keep waiting. **Escalate by volume, not by exit** (2026-08-19): on the 3rd consecutive wait on the same ticket (~15 min), print `<role>|blocked on <ticket> — needs SRTL` and ring the attention bell, then continue polling. SRTL takes CANNOT tickets directly (see below), which is how the block actually clears.
 
 **5. Decide:**
 
@@ -254,7 +282,7 @@ Dev polls: head `121-Dev`, matches Dev, gate open → **TAKE.** Implements, push
 
 ---
 
-**Every role, including Architect, starts any new Auto-Proceed scan reached after init, a continuation, or a completed handoff with the Repository Sync Gate.** A failed gate ends the session before any ticket/claim scan.
+**Every role, including Architect, starts any new Auto-Proceed scan reached after init, a continuation, or a completed handoff with the Repository Sync Gate.** A failed gate blocks the ticket/claim scan — it does **not** end the session. Loop roles wait behind it and retry (§"Role Work Loop"); the queue-exempt roles (Architect, Launcher) report it and stop, since they have no timer loop to hold.
 
 **If Architect:** *(exempt from Role Work Loop — interactive design role)*
 1. Check for `[CANNOT_QA]` or `[CANNOT_DEV]` tickets first. If any exist, **stop** and report: *"Found [CANNOT] tickets that require Architect review. Here are the findings..."* — then wait for the user's direction on which resolution path to take.
@@ -305,7 +333,7 @@ Only SRTL writes `:REVIEWED` or any `<id>-SRTL` line. No role ever removes them.
 **If SRTL (Senior Tech Lead):** *(the following is the default queue behavior; it does not limit SRTL's all-role authority)*
 1. **`[DONE]`-ticket review** requires a **human-added** open `*-SRTL` line (unchanged): apply Role Work Loop (TAKE when head is `*-SRTL` and ticket is `[DONE]`/reviewable; WAIT if SRTL review work remains but head is not yours; EXIT if no open `*-SRTL`). **After completing each review** (pass or corrected), update the reviewed ticket's `ticketorder.md` line from `<id>-Dev:DONE` to `<id>-Dev:DONE:SRTL`. This `:SRTL` suffix is the visibility marker that the quality gate has been applied. Include it in the same commit as the review note.
 2. **CANNOT unblocking is autonomous — no route line needed first.** SRTL scans `tickets/` directly for `[CANNOT_QA]`/`[CANNOT_DEV]` on every init/poll (same discovery pattern as the Architect's own `[CANNOT]` priority scan), TAKEs the oldest one, investigates + fixes the root cause per its dual code+test authority. There is no pre-existing open `<id>-SRTL` line to gate on — SRTL **appends `<id>-SRTL:DONE` to `ticketorder.md` only once it finishes**, as a completion record (same append-only pattern QA/Dev use for their own lines), not as a permission check. This is what makes the Role Work Loop's WAIT-on-CANNOT (§"Role Work Loop", step 4) actually resolve on its own: another role sees the CANNOT, backs off to WAIT, and SRTL's autonomous scan is what eventually clears it.
-3. If neither review lines nor CANNOT tickets exist: report *"Initialized as SRTL. No SRTL review lines, no CANNOT tickets. Ready when pointed at something."* (EXIT for poll purposes.)
+3. **If neither review lines nor CANNOT tickets exist, check whether the batch is open before you even think about exiting** (user ruling 2026-08-19). An open line anywhere — `DBM-32-Dev`, `WD-284-QA`, anything — means QA/Dev work is in flight and its review is yours the moment it lands. Enter the timer loop and wait: `SRTL|waiting on <ticket> — batch open, nothing reviewable yet`. Each tick, re-sync and re-scan for (a) new `<id>-<Role>:DONE` lines lacking `:REVIEWED`, (b) new `[CANNOT_*]` tickets, (c) new `*-SRTL` lines. **This is the review loop, and it is SRTL's normal state during a live batch — not idleness.** Only when the list is fully closed and reviewed do you report *"Initialized as SRTL. Batch closed, nothing outstanding. Ready when pointed at something."* and EXIT.
 
 **If Launcher (release readiness — interactive, queue-loop exempt by default):**
 1. A direct `init <project> launcher` or direct user release request starts the release preflight in `skills/release-launch/SKILL.md`; no product ticket or route line is required.

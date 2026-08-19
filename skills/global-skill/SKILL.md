@@ -238,14 +238,28 @@ Even when reading the final output, **always trim** with `Select-Object -Last N`
 
 ### When to use background vs. foreground
 
-| Command | Expected duration | Mode |
-|---|---|---|
-| `git status`, `git fetch`, `git log`, `Move-Item`, file reads/edits | <5s | Foreground (single call) |
-| `.\gradlew.bat compileDebugUnitTestKotlin` (incremental, warm cache) | 20–90s | Background if >30s expected; foreground ok if warm |
-| `.\rtest.bat --tests "..."` (targeted, 1–3 classes) | 30–120s | Background |
-| `.\rtest.bat` (incremental full suite, no clean) | 2–5min | **Always background** |
-| `.\rtest.bat --full-cold` (clean + no cache) | 5–15min | **Always background** |
-| `.\gradlew.bat clean assembleDebug` | 2–5min | **Always background** |
+| Command | Expected duration | **Hard timeout** | Mode |
+|---|---|---|---|
+| `git status`, `git fetch`, `git log`, `Move-Item`, file reads/edits | <5s | 60s | Foreground (single call) |
+| `.\gradlew.bat compileDebugUnitTestKotlin` (incremental, warm cache) | 20–90s | **5 min** | Background if >30s expected; foreground ok if warm |
+| `.\rtest.bat --tests "..."` (targeted, 1–3 classes) | 30–120s | **8 min** | Background |
+| `.\rtest.bat` (incremental full suite, no clean) | 2–5min | **15 min** | **Always background** |
+| `.\rtest.bat --full-cold` (clean + no cache) | 5–15min | **30 min** | **Always background** |
+| `.\gradlew.bat clean assembleDebug` / `bundleRelease` | 2–5min | **15 min** | **Always background** |
+| First build after a dependency change / cold Gradle daemon | +2–5min | +10 min on the above | **Always background** |
+
+### Every long-running command carries a timeout — no unbounded waits (user ruling 2026-08-19)
+
+**The incident:** agents have sat waiting on a single build or test invocation for 12 minutes, 30 minutes, and over an hour — a hung daemon, a lock, a stalled download, a dialog nobody could see — and the user had to notice and wake them. A command with no ceiling turns one stuck process into an entire stuck session.
+
+**Rules:**
+
+1. **Declare the ceiling before you launch.** Every gradle/rtest/build/emulator invocation gets an explicit timeout from the table above (host-native timeout parameter, or a wall-clock deadline you enforce across polls). Never launch one open-ended.
+2. **The ceiling is generous, not tight.** It is a *hang detector*, not a performance budget — roughly 3× the expected duration. Do not kill a healthy slow build; do not babysit a dead one.
+3. **When the ceiling expires, stop waiting and say so.** Report `BUILD_TIMEOUT: <command> exceeded <limit>` with the log tail, ring the attention bell, and stop polling that job. Never let a poll loop run forever "just in case it finishes".
+4. **Diagnose before relaunching.** A timeout means something is wrong — a stale Gradle daemon, a `.gradle` lock, a stuck `index.lock`, a first-run dependency download, an emulator waiting on input. Check the log tail and, where safe, the daemon state. Do not blind-retry the same command; a second unbounded run is the same bug twice.
+5. **Poll on a sane cadence.** Roughly every 30–60s for a multi-minute job. Not every 2s (that is the keepalive tool spam this protocol bans) and not once every 20 minutes (that hides a hang until it has cost the whole window).
+6. **A timeout is never silently swallowed.** It is a reportable result like a failure — it may not be recorded as a pass, and a ticket may not reach a terminal state on a run that never finished.
 
 ### Communication contract while background jobs run
 
@@ -282,26 +296,50 @@ Do **not** run the gate while actively executing a claimed ticket: the worktree 
 
 ### Gate procedure
 
-1. Confirm the current directory is the canonical project Git root. If Git cannot identify a worktree, report `REPO_SYNC_BLOCKED` and stop; never search for or create another checkout.
-2. If Git reports an `index.lock`, index corruption, missing upstream, detached/unknown branch, or any other repository-state error, report `REPO_SYNC_BLOCKED` to the user and stop. Do not remove locks, repair the index, or rewrite Git metadata in this gate.
+> **Read "stop" below as "stop advancing", not "stop existing" (amended 2026-08-19).** Every failure in this
+> procedure blocks you from reading past the gate, claiming a ticket, or touching a file. For a role inside the
+> Role Work Loop it is a **WAIT**, never a session end — see §"A failed gate is a WAIT for loop roles" directly
+> after this procedure. The prohibitions on stashing, resetting, cleaning, and pulling over other people's work
+> are unchanged and absolute.
+
+1. Confirm the current directory is the canonical project Git root. If Git cannot identify a worktree, report `REPO_SYNC_BLOCKED` and do not advance; never search for or create another checkout.
+2. If Git reports an `index.lock`, index corruption, missing upstream, detached/unknown branch, or any other repository-state error, report `REPO_SYNC_BLOCKED` to the user and do not advance. Do not remove locks, repair the index, or rewrite Git metadata in this gate.
 3. **Before any fetch or pull**, run:
    ```powershell
    git status --porcelain=v1 --untracked-files=all
    ```
-   Any output — modified, staged, deleted, renamed, conflicted, or untracked files — is a dirty worktree. Report it to the user and stop immediately:
+   Any output — modified, staged, deleted, renamed, conflicted, or untracked files — is a dirty worktree. Report it and do not advance:
    ```text
    REPO_DIRTY: <project> (<branch>)
    <verbatim porcelain status>
    No repository update or ticket loop was started.
    ```
-   Do not stash, reset, restore, clean, checkout, commit, stage, discard, or otherwise alter those files. Do not claim a ticket or enter the loop.
-4. With a clean tree only, run `git fetch --prune`. A fetch failure is `REPO_SYNC_BLOCKED`: report the command failure and stop.
+   Do not stash, reset, restore, clean, checkout, commit, stage, discard, or otherwise alter those files. Do not claim a ticket or read past this point. **During a live batch this is the expected reading while a peer role is mid-ticket — loop roles wait it out rather than quitting.**
+4. With a clean tree only, run `git fetch --prune`. A fetch failure is `REPO_SYNC_BLOCKED`: report the command failure and do not advance. (Transient network failures clear themselves on a later tick.)
 5. Compare `HEAD` with its configured upstream:
    - **behind only** → run `git pull --ff-only`;
    - **up to date** → continue;
    - **ahead only** → push the already committed local work with ordinary `git push`, then verify it is current;
-   - **diverged** → report `REPO_DIVERGED` with branch/upstream and ahead/behind counts, then stop. Do not merge, rebase, force-push, or choose a side.
-6. After any pull or push, re-run the porcelain check and verify `HEAD` equals its upstream. Any failure, remaining dirtiness, or non-fast-forward condition is `REPO_SYNC_BLOCKED`: report it and stop.
+   - **diverged** → report `REPO_DIVERGED` with branch/upstream and ahead/behind counts, and do not advance. Do not merge, rebase, force-push, or choose a side.
+6. After any pull or push, re-run the porcelain check and verify `HEAD` equals its upstream. Any failure, remaining dirtiness, or non-fast-forward condition is `REPO_SYNC_BLOCKED`: report it and do not advance.
+
+### A failed gate is a WAIT for loop roles (user ruling 2026-08-19)
+
+**The incident:** a batch was in flight, a Dev was mid-ticket with the expected uncommitted work in the tree, and every other agent that started up hit `REPO_DIRTY` and ended its session with a variant of *"the repo is dirty — shall I proceed?"*. The gate was doing its job; the **response** was wrong. Symphony deliberately runs several roles against one worktree, so a dirty tree mid-batch is the system working normally, not an error state. Treating it as fatal means the batch loses every watcher it had, and the work stalls until a human happens to look at a terminal they were never watching.
+
+**The rule:**
+
+| Who | Failed gate → |
+|---|---|
+| Any role inside the Role Work Loop (QA, Dev, SRTL, Orchestrator, Tester, Implementer, Composer, Critic, Designer) | **WAIT.** Print the reason, sleep 300s, re-run the gate. Repeat until it passes. Exit only per the loop's step 3 (nothing on the list is yours). |
+| Architect / Launcher (no timer loop) | Report and stop, as before. |
+| Mid-ticket (gate not applicable) | Not a gate moment at all — finish the ticket to its committed-and-pushed handoff. |
+
+`REPO_DIRTY` resolves on its own when the peer finishes. `REPO_DIVERGED` and `REPO_SYNC_BLOCKED` need human hands, so **ring the attention bell** (§"Audible Attention Signal") and then keep polling — the human's fix lands and the next tick picks it up with no re-init.
+
+**Unchanged and non-negotiable:** you never stash, reset, clean, restore, checkout, commit, absorb, or "tidy" another agent's uncommitted work to get past this gate. That prohibition is the entire reason the gate exists (WD-170/170A). Waiting replaces quitting — it does not license touching.
+
+**Never end a turn to ask permission to continue.** "Shall I proceed?" is not a loop state. `init <project> <role>` pre-authorizes the batch. Your host may still gate individual *actions* (a commit, a push) — that is an environment permission boundary, not a cue to abandon the queue.
 
 The gate is deliberately conservative. It updates only a clean worktree by fast-forward pull, and it never hides another person's local changes. A successful gate is the only condition under which the local CLI agent may inspect current project state or proceed to the role loop.
 

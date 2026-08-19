@@ -77,7 +77,7 @@ When QA hits `[CANNOT_QA]` or Dev hits `[CANNOT_DEV]`, you have the authority to
 
 ### Workflow (strict order)
 
-1. **Repository Sync Gate** (see `global-skill/SKILL.md`): before scanning any ticket, pass the clean-tree fetch/fast-forward gate. A dirty tree, divergence, remote failure, index error, or Git error is reported to the user and ends the session. Do not clear locks, stash, reset, clean, restore, merge, or claim work to bypass it.
+1. **Repository Sync Gate** (see `global-skill/SKILL.md`): before scanning any ticket, pass the clean-tree fetch/fast-forward gate. A dirty tree, divergence, remote failure, index error, or Git error blocks the scan — **and is a WAIT, not a session end** (2026-08-19): print the reason, sleep 300s, re-run the gate, and keep doing that while the batch is open. A dirty tree usually just means QA or Dev is mid-ticket, which is exactly what you are waiting for. Do not clear locks, stash, reset, clean, restore, merge, or claim work to bypass it.
 2. **Scan for `[CANNOT]` tickets first** — these are urgent blockers.
 3. **Then scan for `[DONE]` tickets without an `SRTL Review:` marker** — these need review.
 4. Work oldest first (lowest ticket number).

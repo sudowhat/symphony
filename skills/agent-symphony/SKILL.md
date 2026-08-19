@@ -128,7 +128,7 @@ If the user then replies **"continue"** — meaning "yes, go do your next QA-app
 When resuming from "proceed" / "next" / "continue", every agent must:
 
 1. **Every role except SRTL must never re-offer or silently take an action outside its own role's boundary**, even if the agent itself suggested that action moments earlier. SRTL may assume the needed role's duties directly without switching roles.
-2. **Pass the Repository Sync Gate, then resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop). A dirty/diverged/unavailable repository is reported to the user and ends the session. After a successful gate: for **QA/Dev**, resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others, re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches; Launcher: release-preflight/checklist state; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there. Architect and Launcher are exempt from the three-state polling loop except when Launcher is explicitly routed.
+2. **Pass the Repository Sync Gate, then resume its own role's Auto-Proceed scan** (per `Agent role.md` Step 6 + Role Work Loop). A dirty/diverged/unavailable repository is reported and then **waited out** by loop roles (2026-08-19 ruling) — it blocks reading past the gate, never ends the session while open work remains; Architect/Launcher, having no timer loop, report and stop. After a successful gate: for **QA/Dev**, resume orphaned claims first, then EXIT / WAIT / TAKE on `ticketorder.md` (chain same-role heads on TAKE; do not stop after one); for others, re-check ticket states your role may pick up (Architect: `[CANNOT]` / `[APPROVED]` batches; Launcher: release-preflight/checklist state; Tester: `*_APPROVED`; Implementer: `*_VERIFIED` / `*_FIX_FAILS`) — and continue or pick up work from there. Architect and Launcher are exempt from the three-state polling loop except when Launcher is explicitly routed.
 3. **If genuinely ambiguous** whether "continue" refers to resuming in-role work or something else, ask — do not guess toward the role-crossing interpretation.
 
 ### Why this matters
@@ -206,7 +206,7 @@ Local CLI agents use the canonical project checkout. Direct-repo/cloud agents ac
 
 Consequences:
 - **QA's committed + pushed changes are visible to Dev** only after the appropriate gate has refreshed the canonical branch: the clean-tree Repository Sync Gate for local CLI, or the Direct-Remote Gate for cloud access.
-- **QA's uncommitted local changes exist only in the canonical working directory.** Another local CLI role reaching a loop entry receives `REPO_DIRTY` and stops; it never absorbs, stashes, or overwrites them. A direct-repo/cloud agent cannot observe those changes and must fail closed on remote revision movement instead.
+- **QA's uncommitted local changes exist only in the canonical working directory.** Another local CLI role reaching a loop entry receives `REPO_DIRTY` and **waits** (2026-08-19); it never absorbs, stashes, or overwrites them, and it never ends its session over them — a peer mid-ticket is the expected cause, and their committed-and-pushed handoff clears it on a later tick. A direct-repo/cloud agent cannot observe those changes and must fail closed on remote revision movement instead.
 - **Whatever QA commits directly impacts Dev** — via the one logical branch, the shared `rtest` suite, and the shared production files.
 
 There is no independent agent sandbox. One logical project state = shared consequences.
@@ -215,8 +215,8 @@ There is no independent agent sandbox. One logical project state = shared conseq
 
 The canonical procedure is `global-skill/SKILL.md` §“Mandatory Pre-Loop Repository Sync Gate”. Every role, including Architect, must pass it before reading claims, tickets, project memory, source, or queue state on init, after a terminal handoff, after a real WAIT wake, and on a bare continuation.
 
-- A dirty worktree is a **user-visible hard stop**, regardless of whether the paths appear related to the next ticket.
-- A clean tree is updated only by fetch plus fast-forward pull. Branch divergence, remote failure, index errors, or missing upstream are hard stops reported to the user.
+- A dirty worktree **hard-blocks the next claim**, regardless of whether the paths appear related to the next ticket — and for a loop role it is a **WAIT**, not a session end (2026-08-19). Report it, sleep, re-check. Never touch it.
+- A clean tree is updated only by fetch plus fast-forward pull. Branch divergence, remote failure, index errors, or missing upstream block advancement and are reported to the user with the attention bell; loop roles keep polling behind them rather than exiting.
 - Never stash, reset, restore, clean, checkout, rebase, merge, or force-push merely to enter a loop.
 - An active Dev ticket is the narrow exception: its intentional amend/force-with-lease happens *inside* that ticket, using the upstream remote/ref/SHA captured at claim time. It must finish its normal committed-and-pushed handoff before any new loop entry.
 
