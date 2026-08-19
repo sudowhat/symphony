@@ -133,6 +133,33 @@ Binding regardless of whether you load the detail:
 Operational policy, provider contract, ingestion allowlist, role boundaries, verification, and the first reference adapter:
 `skills/semantic-memory/SKILL.md`. Load it on demand only after active context is known.
 
+## Optional context assurance
+
+A context-assurance provider (currently Entroly) may reduce a **large, already-narrowed, model-bound evidence bundle** while preserving provenance, recovery, and raw fallback. It is an optional accelerator, never a source of truth or dependency.
+
+Use **surface ownership**, not file extension or command type, to choose an optimizer:
+
+```text
+exact / canonical / gate evidence     -> RAW; no optimizer
+historical knowledge lookup           -> semantic-memory provider
+CLI / shell stdout or stderr          -> cli-output-optimization provider
+large reconstructible model context   -> context-assurance provider
+anything else                         -> native/direct path
+```
+
+Binding regardless of whether you load the detail:
+
+1. **One optimizer per surface.** Never chain RTK output through Entroly, or use Entroly as semantic memory merely because it also implements memory features.
+2. Mandatory init/protocol files, active ticket requirements, authoritative architecture, exact source/config needed for decisions/edits, repository gates, exact diffs, and material test/security evidence stay raw.
+3. Token discipline runs first: narrow retrieval before considering context assurance. Do not collect broad context merely to compress it afterwards.
+4. Use context assurance only when the remaining necessary non-authoritative/reconstructible evidence is still materially large and the active environment positively exposes a policy-compliant provider path.
+5. Require sufficient receipt/provenance and the ability to recover/reacquire exact originals when omitted evidence later becomes necessary.
+6. If classification is ambiguous, the provider is unavailable, or the reduced result is insufficient, use/recover the native exact context. Never guess and never silently switch ownership to another optimizer.
+7. The absence of RTK does not make CLI output an Entroly surface; the absence of semantic memory does not make historical recall an Entroly surface.
+
+Operational policy, surface classification, recovery, privacy, role guidance, and the first reference adapter:
+`skills/context-assurance/SKILL.md`. Load it on demand only for a qualifying large model-bound context bundle.
+
 ## Optional CLI-output compression
 
 An external compressor (currently RTK) may reduce noisy build/test/log output before it enters
