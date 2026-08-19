@@ -133,6 +133,34 @@ Binding regardless of whether you load the detail:
 Operational policy, provider contract, ingestion allowlist, role boundaries, verification, and the first reference adapter:
 `skills/semantic-memory/SKILL.md`. Load it on demand only after active context is known.
 
+## Optional code intelligence
+
+A code-intelligence provider (currently jCodeMunch) may answer **current-source structural questions** and retrieve narrow symbol-level code after mandatory init and active-work discovery. It is an optional navigation/index accelerator, never live Git/gate truth or a required dependency.
+
+Use surface ownership:
+
+```text
+exact / canonical / gate evidence        -> RAW / native exact path
+historical engineering knowledge         -> semantic-memory provider
+current source-code structural retrieval -> code-intelligence provider
+CLI / shell stdout or stderr             -> cli-output-optimization provider
+large reconstructible general context    -> context-assurance provider
+anything else                            -> native/direct path
+```
+
+Binding regardless of whether you load the detail:
+
+1. Use code intelligence for symbol discovery, outlines, callers/callees, imports/importers, implementations/inheritance, blast radius, changed-symbol mapping, and narrow source retrieval—not for tickets, history, shell output, or live repository state.
+2. Require freshness and coverage awareness. A stale/uncertain index is a locator only; incomplete/withheld coverage cannot support absence or safety claims.
+3. Current repository/worktree/ref remains authoritative. Exact-read current source when the governing role/ticket requires exact bytes before an edit, review, approval, or correctness decision.
+4. **One layer per surface.** Do not send jCodeMunch source/context through Entroly merely to compress it again, do not run it through RTK, and do not treat optional jCodeMunch memory/context features as Symphony semantic memory.
+5. If the provider is unavailable, stale, incomplete, unlicensed for the environment, or insufficient for the question, fall back immediately to native targeted search/read. Do not block role execution.
+6. Prefer the smallest useful code-intelligence tool surface; do not load a large MCP/tool catalog merely because the provider exposes it.
+7. Treat local indexes/caches as source-derived confidential data and verify provider licensing before use on commercial/company repositories.
+
+Operational policy, freshness/coverage classes, C/C++/SCIP guidance, security, licensing, role boundaries, and the first reference adapter:
+`skills/code-intelligence/SKILL.md`. Load it on demand only when the active task benefits from current-code structural retrieval.
+
 ## Optional context assurance
 
 A context-assurance provider (currently Entroly) may reduce a **large, already-narrowed, model-bound evidence bundle** while preserving provenance, recovery, and raw fallback. It is an optional accelerator, never a source of truth or dependency.
@@ -140,22 +168,23 @@ A context-assurance provider (currently Entroly) may reduce a **large, already-n
 Use **surface ownership**, not file extension or command type, to choose an optimizer:
 
 ```text
-exact / canonical / gate evidence     -> RAW; no optimizer
-historical knowledge lookup           -> semantic-memory provider
-CLI / shell stdout or stderr          -> cli-output-optimization provider
-large reconstructible model context   -> context-assurance provider
-anything else                         -> native/direct path
+exact / canonical / gate evidence        -> RAW; no optimizer
+historical knowledge lookup              -> semantic-memory provider
+current source-code structural retrieval -> code-intelligence provider
+CLI / shell stdout or stderr             -> cli-output-optimization provider
+large reconstructible general context    -> context-assurance provider
+anything else                            -> native/direct path
 ```
 
 Binding regardless of whether you load the detail:
 
-1. **One optimizer per surface.** Never chain RTK output through Entroly, or use Entroly as semantic memory merely because it also implements memory features.
+1. **One optimizer/intelligence layer per surface.** Never chain RTK or code-intelligence output through Entroly, or use Entroly as semantic memory merely because it also implements memory features.
 2. Mandatory init/protocol files, active ticket requirements, authoritative architecture, exact source/config needed for decisions/edits, repository gates, exact diffs, and material test/security evidence stay raw.
 3. Token discipline runs first: narrow retrieval before considering context assurance. Do not collect broad context merely to compress it afterwards.
-4. Use context assurance only when the remaining necessary non-authoritative/reconstructible evidence is still materially large and the active environment positively exposes a policy-compliant provider path.
+4. Use context assurance only when the remaining necessary non-authoritative/reconstructible **general** evidence is still materially large and the active environment positively exposes a policy-compliant provider path.
 5. Require sufficient receipt/provenance and the ability to recover/reacquire exact originals when omitted evidence later becomes necessary.
 6. If classification is ambiguous, the provider is unavailable, or the reduced result is insufficient, use/recover the native exact context. Never guess and never silently switch ownership to another optimizer.
-7. The absence of RTK does not make CLI output an Entroly surface; the absence of semantic memory does not make historical recall an Entroly surface.
+7. The absence of RTK does not make CLI output an Entroly surface; the absence of semantic memory does not make historical recall an Entroly surface; the absence of code intelligence does not make source-code retrieval an Entroly surface.
 
 Operational policy, surface classification, recovery, privacy, role guidance, and the first reference adapter:
 `skills/context-assurance/SKILL.md`. Load it on demand only for a qualifying large model-bound context bundle.
