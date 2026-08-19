@@ -1,5 +1,12 @@
 # Android / Google Play release reference
 
+## Target and shared-code boundary
+
+- Keep one shared multiplatform codebase. Shared product behavior belongs in `commonMain`; `androidMain` and the Android application wrapper contain only platform adapters, manifest/resources, signing, and packaging needed by Android.
+- Select the artifact explicitly: `apk` for direct installation/smoke testing or `aab` for Google Play. The target changes the toolchain task and verification, not the Launcher role or product implementation.
+- In a mixed Android/iOS repository, run the Android release task from the same pinned commit used by shared checks. State the iOS phase separately as PASS, FAIL, or `HOST_SKIPPED`.
+
+
 ## Preflight
 
 - Read the effective Android application module, version catalog, manifest, project `SKILL.md`, and `LAUNCH_CHECKLIST.md`.
