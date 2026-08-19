@@ -31,17 +31,21 @@ Both modes obey the same role boundaries, ticket lifecycle, ticket order, and on
 When the user gives you a command like:
 
 ```
-init <project-short-name> <role> [adb [serial]]
+init <project-short-name> <role> [launcher-target | adb [serial]]
 ```
 
-Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter launcher`, `init whatdate srtl adb`, `init whatdate srtl adb <serial>`
+Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter launcher android aab`, `init dbmeter launcher ios simulator`, `init whatdate srtl adb`, `init whatdate srtl adb <serial>`
 
 You MUST follow this exact initialization sequence. **Do not skip steps.** Do not read source code, list directories, or make any changes until you complete the full sequence.
 
 ---
 
 ### Step 1: Parse the Command
-Extract `<project-short-name>` and `<role>` from the user's command, case-insensitive. The only optional mode is `adb [serial]`; it is legal only for `srtl`. Any other role/mode combination is a clarification error, not an implicit device request. `adb` without a serial targets exactly one authorized device; with multiple devices, require the supplied serial.
+Extract `<project-short-name>` and `<role>` from the user's command, case-insensitive. Optional arguments are role-specific:
+
+- Launcher accepts `<platform> [artifact]`: Android with `apk|aab`, or iOS with `simulator|testflight|appstore`. Platform/artifact select the release pipeline; they do not create a different role. If the platform alone is explicit, default to Android `aab` or iOS `simulator`. If omitted, infer a target only from one unambiguous requested artifact; otherwise ask before build work.
+- SRTL accepts `adb [serial]` only. `adb` without a serial targets exactly one authorized device; with multiple devices, require the supplied serial.
+- Other role/mode combinations are clarification errors, not implicit device or release requests.
 
 > **Not `init`? See the `add project` command below.** If the user instead says `add project <project-folder>` (or "onboard this to symphony"), that is a different command entirely — a one-time whole-folder operation, not a role. Read `skills/project-onboarding/SKILL.md` and follow it; do not attempt to `init` into an unregistered project.
 
@@ -113,7 +117,7 @@ Read these files and perform the gate in this exact order. Fully read every mand
 8. **Project `MEMORY.md`** — live project state, decisions, philosophy, and recent status. Read only after Step 7 succeeds; ignore any HISTORY section unless the user or current work explicitly requires it.
 9. **Project `SKILL.md`** — project-specific technical conventions, build/test commands, key paths, and architecture notes.
 10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer). Skip otherwise.
-11. **`skills/release-launch/SKILL.md`** — if the role is Launcher; then read its applicable platform reference. Skip otherwise.
+11. **`skills/release-launch/SKILL.md`** — if the role is Launcher; then read exactly one applicable platform reference: `references/android-play.md` for Android or `references/ios-app-store.md` for iOS. Skip otherwise.
 12. **`skills/rtest/SKILL.md`** — if the role touches or executes tests (QA, Dev, SRTL, Tester, Implementer, Launcher). Skip otherwise.
 13. **`skills/adb-diagnostics/SKILL.md`** — only for `init <project> srtl adb [serial]`. Run its device/package preflight only now, after the sync gate and project context. If no eligible device/package is present, report `ADB_UNAVAILABLE` and continue as normal SRTL; do not run an ADB case or treat the unavailable overlay as a ticket blocker.
 14. **`skills/blocker-resolution/SKILL.md`** — if the role may cross the QA↔Dev or Tester↔Implementer test/code boundary (QA, Dev, SRTL, Tester, Implementer). Launcher skips it.
@@ -336,8 +340,8 @@ Only SRTL writes `:REVIEWED` or any `<id>-SRTL` line. No role ever removes them.
 3. **If neither review lines nor CANNOT tickets exist, check whether the batch is open before you even think about exiting** (user ruling 2026-08-19). An open line anywhere — `DBM-32-Dev`, `WD-284-QA`, anything — means QA/Dev work is in flight and its review is yours the moment it lands. Enter the timer loop and wait: `SRTL|waiting on <ticket> — batch open, nothing reviewable yet`. Each tick, re-sync and re-scan for (a) new `<id>-<Role>:DONE` lines lacking `:REVIEWED`, (b) new `[CANNOT_*]` tickets, (c) new `*-SRTL` lines. **This is the review loop, and it is SRTL's normal state during a live batch — not idleness.** Only when the list is fully closed and reviewed do you report *"Initialized as SRTL. Batch closed, nothing outstanding. Ready when pointed at something."* and EXIT.
 
 **If Launcher (release readiness — interactive, queue-loop exempt by default):**
-1. A direct `init <project> launcher` or direct user release request starts the release preflight in `skills/release-launch/SKILL.md`; no product ticket or route line is required.
-2. Verify the clean/current source commit, review/test gates, package/version/target, real release task, secure signing, artifact checksum/signature, size/privacy contents, and project `LAUNCH_CHECKLIST.md` evidence.
+1. A direct `init <project> launcher <platform> [artifact]` or direct user release request starts the release preflight in `skills/release-launch/SKILL.md`; no product ticket or route line is required. Launcher remains one universal role; the target selects Android or iOS tasks and verification.
+2. Verify the clean/current source commit, review/test gates, selected platform/artifact, package/version/target, real release task or Xcode scheme, secure signing, artifact checksum/signature, size/privacy contents, and project `LAUNCH_CHECKLIST.md` evidence.
 3. Release-only configuration is in scope. Product code, tests, architecture, and guard changes are not; hand those blockers to SRTL.
 4. Never upload, publish, roll out, invite testers, answer policy declarations, or rotate/revoke keys without explicit human authorization for that exact action.
 5. If a human adds `<ticket>-Launcher`, apply route order for that line only: gate `[DONE]` plus required SRTL review → prepare artifact → record `Launcher Result` → mark the Launcher line `:DONE`. A blocked preparation remains open.
@@ -404,7 +408,7 @@ Used by: whatdate, sulipi, oneid, dbmeter
 - **QA**: Reads `[APPROVED]` tickets, writes failing regression tests (`rtest`), and promotes the ticket to `[READY_FOR_DEV]`. **NEVER writes application code.**
 - **Dev**: Reads `[READY_FOR_DEV]` tickets, writes application code to make tests pass, and promotes the ticket to `[DONE]`. **NEVER writes tests or changes architecture.** Follows the Solution Approach exactly.
 - **SRTL (Senior Tech Lead)**: **Always remains SRTL and is the Symphony all-rounder.** May assume Architect, QA, Dev, Launcher, Orchestrator, or any other role's duties on need basis without re-initializing or inheriting that role's restrictions. May create/revise tickets, make architectural decisions and documentation, write tests, write production code, perform release preparation, and orchestrate work. Universal safety, sync, integrity, testing, commit/push, security, and human-publication gates remain mandatory.
-- **Launcher**: Runs the final release preflight after quality gates: verifies release identity/version/SDK, configures signing through local secrets, builds and independently verifies artifacts, audits size/bundled data, records launch evidence, and guides store handoff. **Never changes product behavior/tests and never uploads or rolls out without explicit human authorization.**
+- **Launcher**: One universal, target-driven release role for Android and iOS. It runs the final release preflight after quality gates: verifies release identity/version/SDK, configures signing through local or CI secrets, selects native build tasks from explicit platform/artifact arguments, independently verifies artifacts, audits size/bundled data, records launch evidence, and guides store handoff. Shared multiplatform product code remains one codebase with thin native wrappers. **Never changes product behavior/tests and never uploads or rolls out without explicit human authorization.**
 
 **SRTL direct-request fast path:** When the user directly asks the active SRTL for any Architect, QA, Dev, Launcher, Orchestrator, or other role activity—including an on-the-fly correction, review, verification, ticket, architecture change, test, implementation, release-preparation step, or small ADB/live change—SRTL acts immediately without switching roles. Use the smallest workflow that satisfies the request; do not create extra handoffs unless the user explicitly asks for the full ceremony. SRTL must still honor the universal safety, sync, integrity, testing, commit/push, security, and human-publication gates.
 
