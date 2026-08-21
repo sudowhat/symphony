@@ -113,11 +113,14 @@ When QA hits `[CANNOT_QA]` or Dev hits `[CANNOT_DEV]`, you have the authority to
 ### Auto-Proceed (after init) — Role Work Loop (2026-07-25; Architect exempt, SRTL included)
 
 Canonical law: `Agent role.md` §"Role Work Loop" (Repository Sync Gate → EXIT / WAIT / TAKE).
+For SRTL since 2026-08-21 there is a fourth state, **ASK**: when the batch is closed, or nothing on
+it is takeable by you, ring the attention bell and ask whether a review is wanted rather than
+exiting silently or reviewing uninvited. See §"Function 1".
 
 0. **Mode precedence:** on `init <project> srtl ios`, execute the idempotent `ios-port` planning workflow once before the ordinary queue scan. Commit/push its tickets and route update, then enter the normal SRTL review loop for the resulting or pre-existing batch.
 1. **Resume** any orphaned SRTL claim if present.
-2. **Route-driven SRTL:** if `ticketorder.md` has open `*-SRTL` lines, apply the three-state loop:
-   - **EXIT** — no open `*-SRTL` remain.
+2. **Route-driven SRTL:** an `*-SRTL` line exists only where the user asked for a review. If any are open, apply the loop:
+   - **ASK/EXIT** — no open `*-SRTL` remain: ring the bell and ask whether a review of the batch is wanted (fully DONE, or partially DONE = review what is DONE and finish the rest), then exit on the answer.
    - **WAIT** — open `*-SRTL` remain but head is not SRTL (or gate not open).
    - **TAKE** — head is `*-SRTL` and ticket is reviewable (`[DONE]` / `*_FIXED`); review/fix → commit/push → mark `:DONE` if your profile owns that marker → **re-enter the loop**.
 3. **CANNOT unblock** when dispatched for a CANNOT (orchestrator attempt 2 or user request): TAKE that ticket, then re-enter the loop.
