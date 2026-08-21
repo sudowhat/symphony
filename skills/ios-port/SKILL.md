@@ -116,6 +116,14 @@ SRTL may record `IOS_READY_FOR_MANUAL_TEST` only when all of these are true at o
 - remaining physical-iPhone cases are listed as a human checklist;
 - skipped device, signing, TestFlight, and App Store phases are stated separately.
 
+When the gate passes, write one durable current-state line in project `MEMORY.md`:
+
+```text
+iOS port: IOS_READY_FOR_MANUAL_TEST — <commit> — evidence <final-ticket-or-CI-run> — physical iPhone pending
+```
+
+Keep detailed chronology in the terminal tickets/CI evidence, not `MEMORY.md`. Update or remove this current-state line after the human device gate.
+
 Handoff:
 
 ```text
