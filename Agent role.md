@@ -31,10 +31,10 @@ Both modes obey the same role boundaries, ticket lifecycle, ticket order, and on
 When the user gives you a command like:
 
 ```
-init <project-short-name> <role> [launcher-target | adb [serial]]
+init <project-short-name> <role> [launcher-target | srtl-mode]
 ```
 
-Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter launcher android aab`, `init dbmeter launcher ios simulator`, `init whatdate srtl adb`, `init whatdate srtl adb <serial>`
+Examples: `init whatdate architect`, `init wisdom-capsules designer`, `init sulipi dev`, `init dbmeter srtl ios`, `init dbmeter launcher android aab`, `init dbmeter launcher ios simulator`, `init whatdate srtl adb`, `init whatdate srtl adb <serial>`
 
 You MUST follow this exact initialization sequence. **Do not skip steps.** Do not read source code, list directories, or make any changes until you complete the full sequence.
 
@@ -44,7 +44,7 @@ You MUST follow this exact initialization sequence. **Do not skip steps.** Do no
 Extract `<project-short-name>` and `<role>` from the user's command, case-insensitive. Optional arguments are role-specific:
 
 - Launcher accepts `<platform> [artifact]`: Android with `apk|aab`, or iOS with `simulator|testflight|appstore`. Platform/artifact select the release pipeline; they do not create a different role. If the platform alone is explicit, default to Android `aab` or iOS `simulator`. If omitted, infer a target only from one unambiguous requested artifact; otherwise ask before build work.
-- SRTL accepts `adb [serial]` only. `adb` without a serial targets exactly one authorized device; with multiple devices, require the supplied serial.
+- SRTL accepts one mutually exclusive mode: `ios` for same-repository iOS port assessment/ticket planning on an `android-dev` or `kmp-mobile` project, or `adb [serial]` for device diagnostics. `adb` without a serial targets exactly one authorized device; with multiple devices, require the supplied serial. Never infer either mode from the host, connected devices, or an ordinary ticket.
 - Other role/mode combinations are clarification errors, not implicit device or release requests.
 
 > **Not `init`? See the `add project` command below.** If the user instead says `add project <project-folder>` (or "onboard this to symphony"), that is a different command entirely — a one-time whole-folder operation, not a role. Read `skills/project-onboarding/SKILL.md` and follow it; do not attempt to `init` into an unregistered project.
@@ -88,7 +88,7 @@ Optional capabilities never become init dependencies. Their absence, provider fa
 | architect | `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md` | ticket-management |
 | qa | `C:\Users\pooji\Documents\symphony\.agent_profiles\qa_profile.md` | rtest |
 | dev | `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md` | rtest |
-| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest; adb-diagnostics only for `init <project> srtl adb [serial]` |
+| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest; ticket-management + ios-port only for `init <project> srtl ios`; adb-diagnostics only for `init <project> srtl adb [serial]` |
 | launcher | `C:\Users\pooji\Documents\symphony\.agent_profiles\launcher_profile.md` | release-launch, rtest |
 | orchestrator | `C:\Users\pooji\Documents\symphony\.agent_profiles\orchestrator_profile.md` | — |
 | composer | `C:\Users\pooji\Documents\symphony\.agent_profiles\composer_profile.md` | — |
@@ -116,13 +116,14 @@ Read these files and perform the gate in this exact order. Fully read every mand
    A dirty local tree (CLI only), divergence, remote movement, unavailable remote, or Git error means you may not claim a ticket, read past the gate, or start work: report it, and **never** stash, reset, clean, restore, or pull over it. It is **not** a reason to end the session — enter the Role Work Loop at step 5 (WAIT) and re-run the gate each tick until it passes (see §"Role Work Loop" → "A failed sync gate is a WAIT, not a stop"). A dirty tree during a live batch usually just means a peer role is mid-ticket.
 8. **Project `MEMORY.md`** — live project state, decisions, philosophy, and recent status. Read only after Step 7 succeeds; ignore any HISTORY section unless the user or current work explicitly requires it.
 9. **Project `SKILL.md`** — project-specific technical conventions, build/test commands, key paths, and architecture notes.
-10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer). Skip otherwise.
+10. **`skills/ticket-management/SKILL.md`** — if the role creates tickets (Architect, Designer, or SRTL in explicit `ios` mode). Skip otherwise.
 11. **`skills/release-launch/SKILL.md`** — if the role is Launcher; then read exactly one applicable platform reference: `references/android-play.md` for Android or `references/ios-app-store.md` for iOS. Skip otherwise.
 12. **`skills/rtest/SKILL.md`** — if the role touches or executes tests (QA, Dev, SRTL, Tester, Implementer, Launcher). Skip otherwise.
-13. **`skills/adb-diagnostics/SKILL.md`** — only for `init <project> srtl adb [serial]`. Run its device/package preflight only now, after the sync gate and project context. If no eligible device/package is present, report `ADB_UNAVAILABLE` and continue as normal SRTL; do not run an ADB case or treat the unavailable overlay as a ticket blocker.
-14. **`skills/blocker-resolution/SKILL.md`** — if the role may cross the QA↔Dev or Tester↔Implementer test/code boundary (QA, Dev, SRTL, Tester, Implementer). Launcher skips it.
-15. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
-16. **Optional historical enrichment** — only after Step 15, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
+13. **`skills/ios-port/SKILL.md`** — only for `init <project> srtl ios`; run its idempotent assessment/planning workflow after the sync gate and project context, before the ordinary SRTL queue scan. Skip otherwise.
+14. **`skills/adb-diagnostics/SKILL.md`** — only for `init <project> srtl adb [serial]`. Run its device/package preflight only now, after the sync gate and project context. If no eligible device/package is present, report `ADB_UNAVAILABLE` and continue as normal SRTL; do not run an ADB case or treat the unavailable overlay as a ticket blocker.
+15. **`skills/blocker-resolution/SKILL.md`** — if the role may cross the QA↔Dev or Tester↔Implementer test/code boundary (QA, Dev, SRTL, Tester, Implementer). Launcher skips it.
+16. **Discover current work state** — read the live route/claims and selected active ticket/work state required by the role. Search and range source/log reads only after this mandatory context is complete.
+17. **Optional historical enrichment** — only after Step 16, and only when historical decisions/regressions/analogies would materially help, load `skills/semantic-memory/SKILL.md` and issue one narrow query. Skip silently when no provider exists or history is unnecessary. Never use semantic recall for route, claim, ticket status, branch/ref, current source, test state, or any other live fact.
 
 The sync gate intentionally precedes project `MEMORY.md`, `SKILL.md`, claims, tickets, source, and artifacts. Token discipline and semantic memory never weaken this freshness gate.
 
@@ -132,7 +133,7 @@ After completing the full sequence above, report a structured summary:
 - **Your role and strict boundaries** (from your profile)
 - **Current active tickets** (list all `[APPROVED]`, `[READY_FOR_DEV]`, `[IN_PROGRESS]`, any `[CANNOT]` tickets, and any `[DRAFT]` tickets — with their full filenames. `[DRAFT]` = Architect/Designer design-in-progress, NOT yet in the active batch for QA handoff)
 - **Project core philosophy** (in your own words, from MEMORY.md)
-- **Confirmation** that you understand the batch rule (if Architect/Designer), the one-at-a-time rule (if Dev/Implementer), the strict no-code boundary (if QA/Tester), the review-and-unblock authority (if SRTL), or the release-only and human-publication boundaries (if Launcher)
+- **Confirmation** that you understand the batch rule (if Architect/Designer), the one-at-a-time rule (if Dev/Implementer), the strict no-code boundary (if QA/Tester), the review-and-unblock authority (if SRTL), the iOS planning/manual-device boundary (if SRTL `ios`), or the release-only and human-publication boundaries (if Launcher)
 - **"I am ready for the next task."**
 
 **Whenever you stop and need the user** — finished and handing back, blocked, waiting on an answer,
@@ -152,6 +153,8 @@ After reporting readiness, you must **automatically** scan for work applicable t
 **Architect and Launcher are exempt.** Architect keeps its interactive/batch auto-proceed below. Launcher keeps its release-preflight auto-proceed below. Neither uses this queue-polling loop unless a human explicitly adds a routed role line.
 
 Every other role (QA, Dev, SRTL, Orchestrator, Composer, Critic, Designer, Tester, Implementer — and any future role not explicitly exempted) runs this loop after init, after each handoff, and on every scheduled poll — same law whether user-spawned, orchestrator-spawned, or timed. Every such entry begins with the Repository Sync Gate. Purpose: continuously process the work list in strict order, taking only what's yours, until nothing is left.
+
+For `init <project> srtl ios`, execute the `ios-port` overlay exactly once after the initialization gate and before entering this loop. That overlay may create/reuse the port batch; the resulting work then follows the ordinary QA/Dev/SRTL queue and review law.
 
 ### The loop, in full (this is the whole thing — read it once, obey it exactly)
 
@@ -335,6 +338,7 @@ Only SRTL writes `:REVIEWED` or any `<id>-SRTL` line. No role ever removes them.
 > **SRTL never switches roles. SRTL remains SRTL and may assume and perform Architect, QA, Dev, Launcher, Orchestrator, or any other role's duties whenever needed. SRTL is not bound by the role-local restrictions or handoff boundaries of the role being assumed.** Universal safety, repository-sync, ticket-integrity, testing, commit/push, security, and explicit human-controlled external-publication gates remain mandatory.
 
 **If SRTL (Senior Tech Lead):** *(the following is the default queue behavior; it does not limit SRTL's all-role authority)*
+0. **Explicit iOS mode:** on `init <project> srtl ios`, run `skills/ios-port/SKILL.md` once before the default queue scan. Audit idempotently, create only missing port tickets, preserve an unrelated open batch as `[DRAFT]`, commit/push the plan, then enter the normal review loop. This is migration planning, not Launcher work or a platform identity.
 1. **`[DONE]`-ticket review** requires a **human-added** open `*-SRTL` line (unchanged): apply Role Work Loop (TAKE when head is `*-SRTL` and ticket is `[DONE]`/reviewable; WAIT if SRTL review work remains but head is not yours; EXIT if no open `*-SRTL`). **After completing each review** (pass or corrected), update the reviewed ticket's `ticketorder.md` line from `<id>-Dev:DONE` to `<id>-Dev:DONE:SRTL`. This `:SRTL` suffix is the visibility marker that the quality gate has been applied. Include it in the same commit as the review note.
 2. **CANNOT unblocking is autonomous — no route line needed first.** SRTL scans `tickets/` directly for `[CANNOT_QA]`/`[CANNOT_DEV]` on every init/poll (same discovery pattern as the Architect's own `[CANNOT]` priority scan), TAKEs the oldest one, investigates + fixes the root cause per its dual code+test authority. There is no pre-existing open `<id>-SRTL` line to gate on — SRTL **appends `<id>-SRTL:DONE` to `ticketorder.md` only once it finishes**, as a completion record (same append-only pattern QA/Dev use for their own lines), not as a permission check. This is what makes the Role Work Loop's WAIT-on-CANNOT (§"Role Work Loop", step 4) actually resolve on its own: another role sees the CANNOT, backs off to WAIT, and SRTL's autonomous scan is what eventually clears it.
 3. **If neither review lines nor CANNOT tickets exist, check whether the batch is open before you even think about exiting** (user ruling 2026-08-19). An open line anywhere — `DBM-32-Dev`, `WD-284-QA`, anything — means QA/Dev work is in flight and its review is yours the moment it lands. Enter the timer loop and wait: `SRTL|waiting on <ticket> — batch open, nothing reviewable yet`. Each tick, re-sync and re-scan for (a) new `<id>-<Role>:DONE` lines lacking `:REVIEWED`, (b) new `[CANNOT_*]` tickets, (c) new `*-SRTL` lines. **This is the review loop, and it is SRTL's normal state during a live batch — not idleness.** Only when the list is fully closed and reviewed do you report *"Initialized as SRTL. Batch closed, nothing outstanding. Ready when pointed at something."* and EXIT.
@@ -410,7 +414,7 @@ Used by: whatdate, sulipi, oneid, dbmeter
 - **SRTL (Senior Tech Lead)**: **Always remains SRTL and is the Symphony all-rounder.** May assume Architect, QA, Dev, Launcher, Orchestrator, or any other role's duties on need basis without re-initializing or inheriting that role's restrictions. May create/revise tickets, make architectural decisions and documentation, write tests, write production code, perform release preparation, and orchestrate work. Universal safety, sync, integrity, testing, commit/push, security, and human-publication gates remain mandatory.
 - **Launcher**: One universal, target-driven release role for Android and iOS. It runs the final release preflight after quality gates: verifies release identity/version/SDK, configures signing through local or CI secrets, selects native build tasks from explicit platform/artifact arguments, independently verifies artifacts, audits size/bundled data, records launch evidence, and guides store handoff. Shared multiplatform product code remains one codebase with thin native wrappers. **Never changes product behavior/tests and never uploads or rolls out without explicit human authorization.**
 
-**SRTL direct-request fast path:** When the user directly asks the active SRTL for any Architect, QA, Dev, Launcher, Orchestrator, or other role activity—including an on-the-fly correction, review, verification, ticket, architecture change, test, implementation, release-preparation step, or small ADB/live change—SRTL acts immediately without switching roles. Use the smallest workflow that satisfies the request; do not create extra handoffs unless the user explicitly asks for the full ceremony. SRTL must still honor the universal safety, sync, integrity, testing, commit/push, security, and human-publication gates.
+**SRTL direct-request fast path:** When the user directly asks the active SRTL for any Architect, QA, Dev, Launcher, Orchestrator, or other role activity—including an on-the-fly correction, review, verification, ticket, architecture change, test, implementation, release-preparation step, or small ADB/live change—SRTL acts immediately without switching roles. Use the smallest workflow that satisfies the request; do not create extra handoffs unless the user explicitly asks for the full ceremony. SRTL must still honor the universal safety, sync, integrity, testing, commit/push, security, and human-publication gates. The explicit `srtl ios` command is a deliberate exception to the no-extra-handoffs preference: cross-platform migration is planned as the smallest coherent QA/Dev ticket batch under `ios-port`.
 
 **2. Content & Web Lifecycle (5 Agents)**
 Used by: wisdom-capsules
@@ -471,6 +475,7 @@ is unbroken, which catches any renumbering mistake at build time.
 | `skills/marathon/SKILL.md` | The `start marathon` command: one seat reviews what is done, then carries an open batch to the end, self-unblocking with Architect judgment. Never overrides the WD-334 self-review limit |
 | `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
 | `skills/rtest/SKILL.md` | Common regression test conventions and TDD principles |
+| `skills/ios-port/SKILL.md` | Conditional SRTL workflow for same-repository Android→iOS planning, target-aware tests, and the manual-device handoff |
 | `skills/release-launch/SKILL.md` | Secure release preflight, signed artifact verification, launch checklist, and store handoff |
 | `skills/blocker-resolution/SKILL.md` | Self-fix vs. escalate triage for role-boundary blocks (QA↔Dev, Tester↔Implementer); CANNOT + alarm procedure |
 | `.agent_profiles/<role>_profile.md` | Role-specific identity, boundaries, workflow |
