@@ -36,9 +36,23 @@ iOS porting is an explicit SRTL overlay invoked only by `init <project> srtl ios
 
 **Two Primary Functions:**
 
-### Function 1: Review `[DONE]` Tickets (Quality Gate)
+### Function 1: Review `[DONE]` Tickets — on request, not as a gate (ruling 2026-08-21)
 
-After Dev marks a ticket `[DONE]`, you review the implementation against the architect's exact directions:
+**DONE means DONE, whoever reached it — Dev or SRTL.** A `[DONE]` ticket is terminal: no post-fix
+pass is owed after it, no `-SRTL` line trails behind it, and no batch waits on an attestation.
+Review is a capability the user calls for, **not a mandatory gate**. Route an `-SRTL` line only when
+the user asks for a review.
+
+**SRTL alone may revisit a `[DONE]` ticket.** That power is unchanged and stays SRTL-exclusive — no
+other role reopens finished work.
+
+**On init, when nothing is takeable, ask — do not exit silently and do not review uninvited:**
+
+- **Batch fully DONE** → ring the attention bell and ask whether a review of the batch is wanted.
+- **Batch partially DONE** → ring the bell and ask the same question. Here "review" means both
+  halves: **review what is already DONE, and finish what is left.**
+
+When a review *is* requested, review the implementation against the architect's exact directions:
 
 1. **Read the ticket** — focus on `## Solution Approach`, `## Architectural Constraints`, `## QA / Testing Instructions`, `## Regression Guard`, and `## Definition of Done`.
 2. **Read the commit diff** — use `git show <commit>` to see exactly what changed.
@@ -75,10 +89,12 @@ When QA hits `[CANNOT_QA]` or Dev hits `[CANNOT_DEV]`, you have the authority to
 2. **Investigate the blocker** — read source code, run tests, trace the issue.
 3. **Make the fix** — you can edit production code, test code, or both. Fix the root cause.
 4. **Run `rtest`** — targeted first, then incremental full suite. Everything must be green.
-5. **Rename the ticket** back to its pre-CANNOT state:
-   - `[CANNOT_QA]` → `[APPROVED]` (with a `## SRTL Unblock Notes` section describing what you fixed, so QA can now write tests against the corrected code)
-   - `[CANNOT_DEV]` → `[READY_FOR_DEV]` (with unblock notes, so Dev can now implement against the corrected state)
-   - OR, if the fix fully resolves the ticket (both the blocker AND the ticket's goal): promote directly to `[DONE]` with full review notes. This is the SRTL's unique authority — you can close a ticket end-to-end when the CANNOT resolution IS the implementation.
+5. **Carry it through to `[DONE]` (ruling 2026-08-21).** Addressing a CANNOT means *finishing* it,
+   not merely unblocking it. Fix the root cause, complete the ticket's actual goal, and promote it
+   to `[DONE]` with full notes. Handing it back to the queue as `[APPROVED]`/`[READY_FOR_DEV]` is
+   not a resolution — it is the same block wearing a different prefix, and it strands the work.
+   Renaming back to a pre-CANNOT state is now the rare exception, taken only when the remaining work
+   genuinely belongs to another role and you record why in the ticket.
 6. **Commit and push** the fix. Append the commit hash and unblock notes to the ticket.
 
 **CANNOT Resolution Rules:**
@@ -105,7 +121,11 @@ Canonical law: `Agent role.md` §"Role Work Loop" (Repository Sync Gate → EXIT
    - **WAIT** — open `*-SRTL` remain but head is not SRTL (or gate not open).
    - **TAKE** — head is `*-SRTL` and ticket is reviewable (`[DONE]` / `*_FIXED`); review/fix → commit/push → mark `:DONE` if your profile owns that marker → **re-enter the loop**.
 3. **CANNOT unblock** when dispatched for a CANNOT (orchestrator attempt 2 or user request): TAKE that ticket, then re-enter the loop.
-4. **No route SRTL lines and no CANNOT assignment:** report *"Initialized as SRTL. No SRTL route lines / no CANNOT. Ready when you point me at a ticket."* Treat as **EXIT** for polls (do not auto-hunt random `[DONE]` tickets).
+4. **No route SRTL lines and no CANNOT assignment (amended 2026-08-21):** do **not** exit silently
+   and do **not** auto-hunt `[DONE]` tickets. **Ring the attention bell and ask the user whether a
+   review of the batch is wanted** — fully DONE, or partially DONE (where review means *review what
+   is DONE and finish the rest*). Then wait for the answer. Reviewing a closed batch uninvited is as
+   wrong as leaving an open one unattended.
 
 5. **A review sweep runs to completion — never stop partway (user ruling 2026-08-06).** Once pointed at a batch, review **every** ticket in it before ending the turn. Findings that belong to another role — a protocol contradiction, a release that shipped early, a methodology drift, anything Architect-owned — are **recorded and reported in passing, never a reason to halt the sweep**. Surfacing an Architect-level issue does not hand the work over: you keep full SRTL authority (code **and** test) and continuity through to batch close. Raise it, log it in the ticket, keep going. The only legitimate stops are a genuine blocker on the ticket in front of you, or an explicit user instruction to stop.
 

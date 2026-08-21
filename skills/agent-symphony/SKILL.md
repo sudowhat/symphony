@@ -151,6 +151,15 @@ When a ticket enters `[CANNOT_QA]`, `[CANNOT_DEV]` (Android) or `*_CANNOT_TEST.m
 
 ### The Architect's 4 Resolution Paths (Also Available to SRTL)
 
+> **SRTL exception — addressing a CANNOT means finishing it (user ruling 2026-08-21).** The four
+> paths below are the *Architect's*, whose lane ends at investigation and re-routing. When **SRTL**
+> takes a CANNOT it fixes the root cause **and carries the ticket through to `[DONE]`**. Unblocking
+> it back to `[APPROVED]`/`[READY_FOR_DEV]` and returning it to the queue is not a resolution for
+> SRTL — it is the same block wearing a different prefix. Path 2/3 (revise / supplement and re-route)
+> remain available to SRTL only when the remaining work genuinely belongs to another role, and the
+> reason is written into the ticket. Path 1 (cancel) and path 4 (replace) are unchanged.
+
+
 When a `[CANNOT]` ticket appears, the Architect must review the detailed findings in the ticket body and choose one of the following paths:
 
 **1. CANCEL the ticket**
@@ -505,7 +514,7 @@ A first-class role invoked per project like any other (`init <project> orchestra
 
 **Role Work Loop (2026-08-13 — all roles except Architect and Launcher):** EXIT if no open work for your role remains on the list; WAIT if your work exists but is not the head; TAKE when head is yours and **repeat** (chain same-role heads). Launcher follows its interactive release-preflight auto-proceed unless a human explicitly routes a Launcher line. On WAIT/EXIT: **no keepalive tool spam** — end the turn after one status line (`Agent role.md` + `global-skill` §"No Keepalive"). Canonical text: `Agent role.md` §"Role Work Loop".
 
-**Gates (android):** QA runs at `[APPROVED]`→`[READY_FOR_DEV]`; Dev at `[READY_FOR_DEV]`→`[DONE]`; SRTL review ONLY via a human-added `<T>-SRTL` route line at `[DONE]`. **Content-web:** per the existing suffix lifecycle incl. the Designer bridge (`[FINAL]` capsule → `*_APPROVED` ticket). CANNOT states are AUTO-routed (Architect/Designer → SRTL → human escalation, bounded at 3); `*_STALE` is ALWAYS human-escalated; `[DONE]`/`*_FIXED` review is ALWAYS human-gated.
+**Gates (android):** QA runs at `[APPROVED]`→`[READY_FOR_DEV]`; Dev at `[READY_FOR_DEV]`→`[DONE]`; SRTL review ONLY via a human-added `<T>-SRTL` route line at `[DONE]`. **Content-web:** per the existing suffix lifecycle incl. the Designer bridge (`[FINAL]` capsule → `*_APPROVED` ticket). CANNOT states are AUTO-routed (Architect/Designer → SRTL → human escalation, bounded at 3); `*_STALE` is ALWAYS human-escalated; `[DONE]`/`*_FIXED` review is ALWAYS human-gated — and since 2026-08-21 it is **optional**: `[DONE]` is terminal whoever reached it, an `-SRTL` line exists only where a human asked for a review, and an unreviewed `:DONE` is finished rather than pending.
 
 **State discipline:** position in the route is DERIVED from ticket statuses each pass (crash-resumable, no pointer file). The only Orchestrator-written state: `tickets/.claims/<T>-<Role>.claim` markers (in-flight + same-role serialization; timeout → bounded retry with the next ring model → escalation) and the rotated ring line. Per-project dispatch is strictly serial (this IS the git isolation); different projects run in parallel. Logs (`orchestrator/LOG.md`, `orchestrator/INBOX.md`) are bounded/rotated and never loaded wholesale into context.
 
