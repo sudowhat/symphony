@@ -44,6 +44,35 @@ Common patterns across projects:
 - Targeted: `.\gradlew.bat testDebugUnitTest --tests "com.whatdate.ui.CalendarBarUiTest"`
 - For web projects: `npm test` or equivalent (see project SKILL.md)
 
+
+## Cross-platform target contract
+
+A mobile project with more than one platform must expose these logical targets through its project-specific rtest wrapper and document the exact underlying commands in project `SKILL.md`:
+
+```text
+rtest --platform common
+rtest --platform android
+rtest --platform ios
+rtest --platform all
+```
+
+The four execution modes (`--fast`, `--targeted`, incremental default, and `--full-cold`) compose with the platform selector. Single-platform projects keep their existing command until a port ticket adds this contract.
+
+- `common`: deterministic shared logic and reusable UI/state contracts, normally from `commonTest` on the cheapest valid host.
+- `android`: existing Android unit/integration coverage plus the ticket-required Android build checks.
+- `ios`: `iosTest`/native adapter coverage and the project-prescribed Xcode/simulator checks on macOS.
+- `all`: aggregate the supported targets without hiding individual results. Report each platform as PASS, FAIL, or `HOST_SKIPPED`.
+
+Platform placement rules:
+
+- Put behavior shared by both apps in `commonTest`; do not duplicate the same assertion in Android and iOS suites.
+- Keep platform-service assertions beside their adapters in Android- and iOS-specific test source sets.
+- Inject deterministic fakes for microphones, sensors, clocks, files, locations, and notifications so domain behavior does not require hardware.
+- Preserve every existing Android regression while porting. Never delete, weaken, ignore, or loosen a guard merely because iOS cannot execute that Android-specific test.
+- UI automation supplements rather than replaces the human device gate for behavior that cannot be deterministically observed.
+
+Native iOS compilation/testing requires macOS/Xcode. On another host, report iOS as `HOST_SKIPPED`; this may allow an Android-only ticket handoff when its ticket permits it, but it is never PASS and cannot satisfy `IOS_READY_FOR_MANUAL_TEST`, TestFlight, or App Store gates. The required iOS result must come from the pinned project commit on an approved macOS host or CI runner.
+
 ## Test Execution Policy (MANDATORY — overrides any "run the full suite" phrasing elsewhere)
 
 There are four run modes. Always use the **cheapest mode valid for the step you are on**. The exact command for each mode lives in `<project-folder>/SKILL.md`.
