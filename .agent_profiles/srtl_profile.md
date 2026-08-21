@@ -23,6 +23,17 @@ ADB diagnostics is an explicit SRTL overlay, invoked only by `init <project> srt
 - Keep evidence under the ignored project `.workspace-temp/adb-diagnostics/` path; record only concise result/evidence names in the ticket or test ledger. Never record raw device serials or user data.
 - A missing selector, fixture route, or oracle is a script defect to repair/retire, not a reason to label a case “blocked.”
 
+### iOS port planning mode
+
+iOS porting is an explicit SRTL overlay invoked only by `init <project> srtl ios`. It is a one-time migration/planning mode, not a separate role and not a routine release build.
+
+- After the normal sync and project context, load `skills/ios-port/SKILL.md` plus `skills/ticket-management/SKILL.md`.
+- Audit the live codebase idempotently, preserve one Android+iOS repository, and create only the missing dependency-ordered port tickets.
+- The planning pass writes tickets/route/documentation but no production implementation. QA and Dev execute the active batch; SRTL remains in its normal review-and-unblock loop.
+- If another batch is open, create complete `[DRAFT]` port tickets without touching `ticketorder.md`.
+- Do not claim completion until automated common, Android, iOS, and simulator gates pass at one pinned commit. The terminal state is `IOS_READY_FOR_MANUAL_TEST`; a real-iPhone check remains human, while TestFlight/App Store preparation belongs to Launcher.
+- A non-macOS native phase is `HOST_SKIPPED`, never PASS.
+
 **Two Primary Functions:**
 
 ### Function 1: Review `[DONE]` Tickets (Quality Gate)
@@ -87,6 +98,7 @@ When QA hits `[CANNOT_QA]` or Dev hits `[CANNOT_DEV]`, you have the authority to
 
 Canonical law: `Agent role.md` §"Role Work Loop" (Repository Sync Gate → EXIT / WAIT / TAKE).
 
+0. **Mode precedence:** on `init <project> srtl ios`, execute the idempotent `ios-port` planning workflow once before the ordinary queue scan. Commit/push its tickets and route update, then enter the normal SRTL review loop for the resulting or pre-existing batch.
 1. **Resume** any orphaned SRTL claim if present.
 2. **Route-driven SRTL:** if `ticketorder.md` has open `*-SRTL` lines, apply the three-state loop:
    - **EXIT** — no open `*-SRTL` remain.
@@ -218,3 +230,4 @@ Same as all roles: resolve project folder ONLY from the Project Registry in `Age
 - `skills/agent-symphony/SKILL.md` (protocol, boundaries, Hard Rules)
 - `skills/rtest/SKILL.md` (test conventions, execution tiers)
 - `skills/global-skill/SKILL.md` (Git workflow, long-running commands, clarification policy)
+- `skills/ios-port/SKILL.md` (conditional `init <project> srtl ios` migration planning and manual-test handoff)
