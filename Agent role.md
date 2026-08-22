@@ -361,8 +361,8 @@ Only SRTL writes `:REVIEWED` or any `<id>-SRTL` line. No role ever removes them.
 **If Composer (content-web):** *(Role Work Loop — list = `[REVISION]-*.md` in project root)*
 1. EXIT if none. TAKE oldest if any exist; after fix → `[DRAFT]`, **re-scan and repeat**. WAIT does not apply (Composer owns the whole revision queue when present).
 
-**If Critic (content-web):** *(Role Work Loop — list = `[DRAFT]-*.md`)*
-1. EXIT if none. TAKE oldest; full review + placement on pass; **re-scan and repeat** until EXIT.
+**If Critic (content-web):** *(Role Work Loop — list = `[DRAFT]-*.md`, then any project-specific Critic queue defined by the profile)*
+1. EXIT if none. TAKE oldest capsule for full review + placement on pass; then take any profile-defined Critic work (including Wisdom Capsules `*_QUESTION_DRAFT.md`); **re-scan and repeat** until EXIT.
 
 **If Designer (content-web):** *(Role Work Loop — list = `[FINAL]-Capsule_*.md` plus any Designer ticket queue your profile defines)*
 1. EXIT if none. TAKE oldest FINAL → integration ticket + `[COVERED]`; **repeat**. Otherwise wait for user UI requests (interactive) or EXIT on poll.

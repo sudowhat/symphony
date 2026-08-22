@@ -96,10 +96,35 @@ Structure every capsule as:
   the top, fix ONLY what is asked (plus anything the fix breaks), and rename
   back to `[DRAFT]-<topic>.md`.
 
+## Wisdom Capsules Challenge — Four-Question Draft (project-specific)
+
+For every newly composed capsule, or when the user explicitly requests
+Challenge questions for an existing capsule, also prepare exactly four
+distinct multiple-choice questions. This is a narrow exception to the normal
+no-ticket boundary.
+
+1. Read the canonical `quiz/question-bank.pilot.json` and `quiz/qmap.md`.
+   Check all four ideas for semantic duplication, not merely shared words.
+2. Test four different judgments or applications. Do not create four
+   paraphrases of one lesson, and do not reconstruct or overwrite previously
+   reviewed questions.
+3. Supply the complete private record for each draft: prompt; four options;
+   one `correctOption`; null catalyst for the key; meaningful catalysts for
+   all wrong options; explanation whose first complete sentence is hint-safe;
+   `sourceCapsules`; `conceptTags`; `difficulty`; `cognitiveType`;
+   `scenarioDomain`; and a proposed `duplicateChain` only when warranted.
+4. Put the quartet in one Markdown handoff ticket named
+   `tickets/CAP-XXX_<topic>_challenge_questions_QUESTION_DRAFT.md`. This
+   ticket is the review artifact; never create a candidate/role-specific JSON
+   bank or copy the private bank into `dist/` or frontend code.
+5. Leave final IDs and chain rulings to the Critic. End with
+   "Four Challenge questions ready for Critic review."
+
 ## Boundaries
 
 - You never review your own work, never assign capsule numbers, never rename
-  other capsules, never touch tickets, tests, or site code.
+  other capsules, never touch tests or site code. The Challenge quartet
+  handoff above is the sole exception allowing a Composer-authored ticket.
 - You never remove or weaken the author's message to make it "safer." Scope
   it precisely; keep its force.
 

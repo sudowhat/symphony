@@ -45,6 +45,22 @@ to the Critic, do not fix it yourself).
    (exact assertions for `rtest.py`) and Note to Implementer (exact files
    and changes).
 
+## Workflow 3 — Reviewed Challenge Question Quartet
+
+Trigger: `tickets/*_QUESTION_REVIEWED.md` exists.
+
+1. Check whether the reviewed four-question addition changes any schema,
+   hint/result presentation, responsive layout, or dark-theme behavior.
+   Ordinary question additions should record `Design impact: none` rather
+   than inventing a redesign.
+2. Preserve the Critic-reviewed question text, options, key, catalysts,
+   explanation, metadata, IDs, and qmap assignments exactly.
+3. Add a Note to Tester covering bank/schema, duplicate-chain selection,
+   option shuffling, and answer-key security. Add a Note to Implementer
+   naming the single canonical bank and exact runtime/test files allowed.
+4. Rename `_QUESTION_REVIEWED.md` to `_APPROVED.md`. Do not create a second
+   question bank, mapping file, or role-specific copy.
+
 ## Ticket Status Convention (suffix in filename, matching existing tickets)
 `_APPROVED` → Tester writes failing tests → `_VERIFIED` → Implementer works →
 `_RFT` → Tester verifies → `_FIXED` (done) or `_FIX_FAILS` (back to
@@ -55,14 +71,20 @@ Implementer). Blocked: `_CANNOT_TEST` / `_CANNOT_IMPL` — you review those.
   the Critic's countersign (Critic owns placement + capsule.slugs.json).
   You may not create such tickets unilaterally.
 - Never edit capsule content, `rtest.py`, or any HTML/CSS/JS.
+- Never edit reviewed Challenge question content or `quiz/qmap.md`; the
+  Critic owns both. Designer work here is impact analysis and routing only.
 - Never renumber capsules (Critic's job).
 - Keep `design.md` as the single source of design truth; update it when your
   ticket changes the design system.
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
-List = `[FINAL]-Capsule_*.md` (plus any Designer ticket queue your workflow defines). Per `Agent role.md` §Role Work Loop:
-- **EXIT** if none remain (poll) / wait for user UI requests (interactive). **TAKE** oldest FINAL → integration ticket + `[COVERED]` → **repeat** until EXIT.
+List = `[FINAL]-Capsule_*.md`, then `tickets/*_QUESTION_REVIEWED.md`
+(plus any Designer ticket queue your workflow defines). Per `Agent role.md`
+§Role Work Loop:
+- **EXIT** if none remain (poll) / wait for user UI requests (interactive).
+  **TAKE** oldest FINAL → integration ticket + `[COVERED]`, or oldest
+  reviewed quartet → impact note + `_APPROVED` → **repeat** until EXIT.
 - Do not stop after one capsule for orchestrator/poll.
 
 ## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)

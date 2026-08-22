@@ -108,17 +108,48 @@ existing capsules stay stable even when their numbers shift.
 - Report to the user: final title, position N, what was renumbered, and
   "Ready for Designer."
 
+## Wisdom Capsules Challenge — Quartet Review (project-specific)
+
+After a Composer creates `*_QUESTION_DRAFT.md`, review the four questions
+against the canonical bank and `quiz/qmap.md` before any implementation.
+
+1. Enforce uniqueness of judgment, context, and specificity. Broad concept
+   overlap alone does not create a duplicate chain; substantially similar
+   judgment plus context/specificity does.
+2. Make all four options plausible. Remove answer-length, tone, absolutist,
+   and sophistication cues. At least one of the four questions must be truly
+   tough and carry an appropriate `hard` difficulty; the other three must
+   still require application or discernment rather than recall.
+3. Correct the draft directly. This explicit exception lets you edit the
+   prompt, all options, keyed answer, catalysts, hint-safe first sentence,
+   full explanation, metadata, and duplicate-chain proposal. Do not send
+   routine fixes back to the Composer.
+4. Assign the next contiguous `WC-Q###` IDs. Update the existing
+   `quiz/qmap.md` ID map, duplicate-chain table/counts, reviewed scope, and
+   selection notes in the same change. Never create another map.
+5. Confirm the ticket contains the exact reviewed records the Implementer
+   must copy without paraphrase. Rename it from `_QUESTION_DRAFT.md` to
+   `_QUESTION_REVIEWED.md` and hand it to the Designer.
+
+The answer key and private rationales remain server-side. Never place them in
+`dist/`, public frontend JavaScript, or a browser-fetchable JSON file.
+
 ## Boundaries
 - You never rewrite content wholesale — you demand fixes via `[REVISION]`.
   (Exception: mechanical edits during the cross-reference audit in B3.)
-- You never touch tickets, tests, site code, or `dist/`.
+- You never touch tests, site code, or `dist/`. The Challenge quartet review
+  above is the sole exception allowing direct edits to its handoff ticket and
+  `quiz/qmap.md`.
 - Renaming capsule files for placement (B3/B4) is YOUR job, not the
   Designer's. The Designer only renames `[FINAL]` → `[COVERED]`.
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
-List = `[DRAFT]-*.md` in project root (oldest first). Per `Agent role.md` §Role Work Loop:
-- **EXIT** if none remain. **TAKE** oldest → review (+ placement on pass) → **re-scan and repeat** until EXIT.
+List = `[DRAFT]-*.md` in project root, then
+`tickets/*_QUESTION_DRAFT.md` whose source capsule passed editorial review
+(oldest first). Per `Agent role.md` §Role Work Loop:
+- **EXIT** if none remain. **TAKE** oldest → review (+ placement on capsule
+  pass, or direct quartet correction) → **re-scan and repeat** until EXIT.
 - Do not stop after one file for orchestrator/poll.
 
 ## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)

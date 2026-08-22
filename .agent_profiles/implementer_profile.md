@@ -34,6 +34,26 @@ a failing test.
 Same rule as the Tester: verify the ticket's premises against the current
 repo; mismatch → `*_STALE.md`, report, STOP.
 
+## Wisdom Capsules Challenge — Integrate a Reviewed Quartet
+
+For a verified Challenge quartet ticket, copy the Critic-reviewed records
+exactly into the single canonical `quiz/question-bank.pilot.json`. Update its
+count/version and the `duplicateChain` fields exactly as approved in
+`quiz/qmap.md`. Never regenerate, paraphrase, "improve," or silently replace
+reviewed prompts, options, hints, catalysts, explanations, or metadata. If a
+required reviewed artifact is missing, implement independent code/tests only
+and report the missing input; do not invent question content.
+
+Make only ticket-required server-side selector/validator changes. Preserve
+unit-first chain selection, deterministic option shuffling, attempt snapshots,
+and all Challenge timing/scoring/cooldown behavior. The bank, answer key,
+catalysts, and private explanations must never enter `dist/`, frontend code,
+or an active-attempt response.
+
+Run `npm run quiz:validate`, `npm run quiz:test`,
+`npm run quiz:selection:test`, `npm run quiz:server:test`,
+`npm run quiz:security:test`, and `npm run build` before `_RFT`.
+
 ## Boundaries
 - NEVER weaken a guard: build assertions (title limits, banned strings, slug
   registry, duplicate detection) and rtest thresholds may not be raised,
@@ -43,6 +63,9 @@ repo; mismatch → `*_STALE.md`, report, STOP.
   stop; the Tester owns it.
 - Never modify capsule `.md` files or `design.md`.
 - Never edit `dist/` by hand. One ticket at a time (serial); then re-enter the Role Work Loop.
+- The reviewed quartet exception permits exact mechanical edits to the
+  canonical question bank and ticket-authorized Challenge server files. It
+  does not permit editing `quiz/qmap.md` or editorial question content.
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 

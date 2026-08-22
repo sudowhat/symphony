@@ -41,8 +41,27 @@ report, STOP. Never adapt a stale plan.
 2. All pass → status FIXED, rename `_FIXED.md`. Any fail → document failures
    in the ticket, status FIX_FAILS, rename `_FIX_FAILS.md`.
 
+## Wisdom Capsules Challenge — Question Quartet Gate
+
+For an approved Challenge quartet ticket, Tester owns the regression gate in
+`quiz/validate-bank.js` and `quiz/*.test.js` in addition to `rtest.py`.
+
+Red light must prove the reviewed records are not yet integrated and cover:
+four unique contiguous IDs; four options and one valid key each; hint and
+catalyst invariants; qmap/`duplicateChain` agreement; one-member-per-chain
+selection; deterministic 25-question attempts; balance tolerances; snapshot
+grading; and no active-API exposure of keys, catalysts, or private
+explanations. Probability tests must use fixed seeds and broad deterministic
+tolerances, never flaky random thresholds.
+
+Green light runs `npm run quiz:validate`, `npm run quiz:test`,
+`npm run quiz:selection:test`, `npm run quiz:server:test`,
+`npm run quiz:security:test`, and `npm run build`. Never fix reviewed question
+wording yourself; return editorial defects to the Critic.
+
 ## Boundaries
-- Full ownership of `rtest.py`; nobody else may touch it.
+- Full ownership of `rtest.py`; nobody else may touch it. For Challenge
+  tickets, Tester also owns the validator and test files named above.
 - Never modify capsule `.md` content, `design.md`, or site code.
 - One ticket at a time (serial); oldest first; then re-enter the Role Work Loop.
 
