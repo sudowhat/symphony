@@ -60,6 +60,7 @@ Use the **Project Registry** below to map the short name to the project folder a
 | wisdom-capsules | wisdom_capsules-folder | content-web | composer, critic, designer, tester, implementer, srtl, orchestrator |
 | wd-portal | wd-portal-folder | content-web | designer, tester, implementer, srtl, orchestrator |
 | dbmeter | dbmeter-folder | kmp-mobile | architect, qa, dev, srtl, launcher, orchestrator |
+| capcon | capcon | kmp-mobile | architect, qa, dev, srtl, launcher, orchestrator |
 | cipher-board-game | cipher-board-game | (tbd) | (tbd) |
 | agitated-curie | agitated-curie | (tbd) | (tbd) |
 
@@ -411,7 +412,7 @@ Agents in this ecosystem do **NOT** communicate via direct chat or internal mess
 ### Two Main Lifecycles
 
 **1. Android Development Lifecycle (4 development agents + post-quality Launcher)**
-Used by: whatdate, sulipi, oneid, dbmeter
+Used by: whatdate, sulipi, oneid, dbmeter, capcon
 
 *(dbmeter is project type `kmp-mobile` — Kotlin Multiplatform, Android **and** iOS from one shared codebase. It uses this exact 4-agent lifecycle and the same role profiles; the only difference is that "the app builds and passes" means **both** platforms. On a non-macOS host the native iOS phase reports `HOST_SKIPPED`, which is never equivalent to PASS for iOS release certification.)*
 
