@@ -41,6 +41,13 @@ Rules:
 5. Never commit files from `.workspace-temp/`. If a file becomes a real project artifact, move/copy it to its canonical tracked path only with explicit task authority, then review and commit it normally.
 6. Agents do not clean or delete the directory unless the user explicitly asks. User-shared files remain recoverable at their local paths.
 
+### Strict Project Isolation & Window Mismatch Detection (User Ruling 2026-08-27)
+
+Every session is strictly bounded to the active initialized project workspace (`<project-folder>`).
+
+1. **No Silent Cross-Project Task Switching:** Agents must NEVER silently jump across project boundaries, inspect private files, or execute tasks/commands on sibling project folders or external servers when given a query intended for another project.
+2. **Immediate Flag-Off on Window Mismatch:** If the user asks a question or issues an instruction referencing concepts, tickets, files, or endpoints that belong to a different project, the agent MUST immediately stop and flag the window/project mismatch (e.g. *"Window mismatch: We are currently in `<current-project>`, but this request pertains to `<target-project>`"*), and ask to confirm or switch windows rather than fulfilling it cross-project.
+
 ---
 
 ## Performance Is a First-Class Constraint — The Mantra (All Agents, All Projects — added 2026-07-16, user mandate)

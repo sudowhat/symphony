@@ -24,6 +24,13 @@ Every role works against the same logical project branch and ticket state throug
 - **Direct-repo / cloud:** read the current Symphony protocol ref and the registered project repository's live target ref directly. There is no local project worktree to inspect, so use the Direct-Remote Gate in `global-skill/SKILL.md`; never claim a local `REPO_DIRTY` you cannot observe.
 Both modes obey the same role boundaries, ticket lifecycle, ticket order, and one-at-a-time logical project flow. Never substitute `sudowhat/symphony` for a project's own repository or fabricate a second project folder/repository.
 
+### Strict Project Boundary & Window Mismatch Detection (User Ruling 2026-08-27)
+
+Every session is strictly bounded to the active initialized project workspace (`<project-folder>`).
+
+1. **No Silent Cross-Project Task Switching:** An agent must NEVER silently jump across project boundaries, execute tasks, read private files, or run commands on sibling project folders or external servers when given a query intended for another project.
+2. **Immediate Flag-Off on Window Mismatch:** If the user asks a question or issues an instruction referencing concepts, tickets, files, or endpoints that belong to a different project, the agent MUST immediately stop and flag the window/project mismatch (e.g. *"Window mismatch: We are currently in `<current-project>`, but this request pertains to `<target-project>`"*), and ask to confirm or switch windows rather than fulfilling it cross-project.
+
 ---
 
 ## The `init` Command (Your Entry Point)
