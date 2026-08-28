@@ -158,6 +158,24 @@ try {
 }
 ```
 
+**Ring when a device-dependent step finds NO device attached (user ruling 2026-08-28).** Before any
+step that needs a physically connected device — device diagnostics, an install/reinstall, a device
+verification phase — run `adb devices` first, then:
+
+| What `adb devices` shows | Action |
+|---|---|
+| **No device** | **Ring the bell** so the user can come and connect one, then wait **30 seconds**. Still nothing → **continue without ADB**: skip the device phase, record `HOST_SKIPPED` / `USER_DEVICE_PRESERVED`, carry on with the rest of the work. |
+| **A device already attached** | **Do not ring.** The bell exists to summon the user to plug something in; when it is already plugged in there is nothing to summon them for. Proceed. |
+
+The bell here means *"I need a device and cannot see one"* — not *"I am about to use the device"*.
+Ringing when one is already connected is noise, and noise is what makes a bell stop working.
+
+This is a separate question from what you may then *do* to that device, and it never relaxes the
+preservation directive: an instrumentation or debug build that would uninstall, clear, or
+signature-conflict-replace the user's installed app still needs explicit approval, whether or not a
+device is attached and whether or not a bell was rung. Thirty seconds of silence authorises skipping
+the device; it never authorises overwriting what is on it.
+
 **Do not ring for:**
 - routine progress inside a turn you are still working through;
 - a background build or test finishing when you intend to keep going;
