@@ -64,6 +64,73 @@ Before building, prove the properties file is ignored with `git check-ignore` an
 7. Start the internal rollout only with explicit user approval.
 8. Add testers or tester lists, share the opt-in link, install from Play, and execute the physical-device smoke script.
 
+## Play Console store-side release
+
+The build is the easy half. These are the store-side steps, in the order that unblocks the rest.
+
+1. **Clear `Draft` first.** While an app is `Draft`, Play withholds the binary from every tester
+   regardless of a correctly configured tester list and account. The symptom is a working opt-in page
+   whose "Download test app" returns **"App not found."** Draft clears only when Store listing and
+   App content are both complete. Do not debug this device-side; it is not an adb or install problem.
+2. **App content declarations** (Policy → App content): privacy policy URL, Data safety, content
+   rating, target audience, ads, and any news/government/financial/health declarations.
+3. **Data safety is a transmission question, not an intent question.** "No data collected" is wrong
+   if *any* optional code path sends data off-device — a map tile fetch, a platform geocoder lookup,
+   a crash reporter. Declare what leaves, with purpose and optionality.
+   - A user-initiated share through the OS chooser is Google's **specific user-initiated transfer
+     exception**; do not declare data categories solely because the user can share them.
+   - The same applies to flows that run inside another app's process (Play In-App Review, a `mailto:`
+     compose) — the app neither sees nor stores the result.
+   - Answering **Yes** to "users can request data deletion" requires a **Delete data URL**. The
+     hosted policy must actually contain deletion instructions, or the URL is a false pointer.
+4. **Republish the hosted privacy policy and byte-check it** against the repository copy every
+   release. A hosted copy drifts silently; compare normalized SHA-256, don't eyeball it.
+5. **Store listing copy.** The **App name is Play's highest-weighted ASO field** — a bare brand name
+   carries no keyword weight. Short description is the second lever. Verify every product claim
+   against the code before pasting it; a store listing is a public assertion about behavior.
+6. **Graphic asset specs, checked locally before upload** (PIL or equivalent, not by rejection):
+   - Screenshots: each side 320–3840 px, aspect ratio ≤ 2:1, 24-bit PNG/JPEG **with no alpha**.
+   - Feature graphic: **fixed** 1024×500 — a size, not a ratio.
+   - Icon: 512×512 32-bit PNG **with** alpha.
+   - Label AI-generated or AI-edited assets in the AI declaration.
+7. **Submission is batched.** There is no per-change rollout button. Console collects every pending
+   edit plus the release into one **"Submit N changes for review"** on Publishing overview. Confirm
+   the count matches what you changed. With **Managed publishing off**, approval auto-publishes; with
+   it on, approval leaves a second manual gate.
+8. **Closed testing before production** (accounts created after Nov 2023): ≥12 testers continuously
+   opted in for ≥14 days. Push 2–3 minor updates during the window — review favors visible iteration.
+   Answer the production questionnaire from what the app actually does on the submission date; paid
+   testing services supply boilerplate answers that are frequently false for the specific app.
+
+## Traps with a track record
+
+Each of these has cost a real launch cycle at least once.
+
+- **A version code is burned only by upload.** Built-but-never-uploaded codes are free to reuse.
+  Bump at upload time, not at build time, or you leak version numbers on every rebuild.
+- **Source drift with no version bump blocks everything.** Check the live version code against the
+  last uploaded one before any other release work.
+- **Unused dependencies are not free.** They ship native `.so` files that fail Play's 16 KB
+  memory-page check, add permissions, and start background telemetry that contradicts the listing's
+  privacy claims. Audit dependency usage before the release build, every release.
+- **A dozing device fails connected instrumentation in a way that looks like a code defect** —
+  `No compose hierarchies found`, `Activity never becomes RESUMED`. Wake and pin the screen
+  (`input keyevent KEYCODE_WAKEUP`, `svc power stayon usb`) before blaming the app.
+- **A release-signed install blocks debug-signed instrumentation** (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+  Either uninstall first — only with authorization, since it destroys the user's data — or skip the
+  phase and record it honestly.
+- **Play-only behavior needs a Play-delivered install.** Billing and other Play services cannot
+  resolve for a sideloaded build (`installerPackageName=null`). This is an environment limitation,
+  not a code defect; don't debug the code.
+- **Verify that a "cold" or "full" test flag actually does what it claims** from the tool's own
+  output. A declared-but-unused flag can produce years of falsely-recorded clean runs.
+- **Expected signing warnings are not failures.** A self-signed upload certificate with no timestamp,
+  plus POSIX-attribute warnings, is the normal `jarsigner` output for a valid AAB.
+- **Upload size is not download size.** Play serves per-device ABI and resource splits.
+- **An unhedged inference propagates as fact.** "Console shows X," written once without anyone
+  looking, spreads into every document that cites it and is quoted back as verified. Screenshot-verify
+  console state before recording it; hedge explicitly when you have not.
+
 ## Required evidence
 
 - absolute AAB path and size;
