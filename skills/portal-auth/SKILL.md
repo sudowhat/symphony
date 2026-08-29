@@ -1,6 +1,6 @@
 ---
 name: portal-auth
-description: How to build, harden, and ship an authenticated web portal — loopback Node API behind Nginx, OAuth with PKCE, universal email login with 6-digit OTP and disposable domain filtering, transactional email delivery (Resend), sessions and CSRF, systemd hardening, least-privilege filesystem layout, secret handling, timed-flow client defects, and a pre-launch checklist. Load before designing or deploying any project where a user signs in.
+description: "CONTENT-WEB PROJECTS ONLY (content-web). How to build, harden, and ship an authenticated web portal — loopback Node API behind Nginx, OAuth with PKCE, universal email login with 6-digit OTP and disposable domain filtering, transactional email delivery (Resend), sessions and CSRF, systemd hardening, least-privilege filesystem layout, secret handling, timed-flow client defects, deployment/rollback, and a pre-launch checklist. Load before designing or deploying any content-web project where a user signs in. This also carries the launch discipline that release-launch provides for mobile projects."
 ---
 
 # Portal Auth — Building an Authenticated Portal

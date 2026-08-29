@@ -1,6 +1,6 @@
 ---
 name: criso
-description: How to build, harden, and ship Criso — private, zero-third-party, cookie-free aggregate analytics reporting from query-free server logs. Load before implementing or operating privacy-preserving analytics in web portals.
+description: "CONTENT-WEB PROJECTS ONLY (content-web). How to build, harden, and ship Criso — private, zero-third-party, cookie-free aggregate analytics reporting from query-free server logs. Load before implementing or operating privacy-preserving analytics in web portals."
 ---
 
 # Criso — Private Aggregate Analytics & Operational Reporting

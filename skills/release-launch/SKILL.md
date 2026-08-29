@@ -1,6 +1,6 @@
 ---
 name: release-launch
-description: Prepare, verify, and hand off Android or iOS release artifacts without leaking signing secrets or bypassing quality gates. Use for APK/AAB, simulator/TestFlight/App Store builds, release signing, version/package/SDK audits, artifact verification, size/privacy audits, store guidance, and reusable launch checklists.
+description: "MOBILE APP PROJECTS ONLY (android-dev, kmp-mobile). Prepare, verify, and hand off Android or iOS release artifacts without leaking signing secrets or bypassing quality gates. Use for APK/AAB, simulator/TestFlight/App Store builds, release signing, version/package/SDK audits, artifact verification, size/privacy audits, store guidance, and reusable launch checklists. Content-web projects have no store: their deploy, rollback, and pre-launch discipline lives in portal-auth."
 ---
 
 # Release Launch

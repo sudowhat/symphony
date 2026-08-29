@@ -1,6 +1,6 @@
 ---
 name: question-induction
-description: Complete standard operating procedure and workflow for authoring, reviewing, validating, duplicate-chaining, and deploying new questions into the Wisdom Capsules Challenge question bank. Load whenever adding or updating assessment questions.
+description: "CONTENT-WEB PROJECTS ONLY — specifically wisdom-capsules. Complete standard operating procedure and workflow for authoring, reviewing, validating, duplicate-chaining, and deploying new questions into the Wisdom Capsules Challenge question bank. Load whenever adding or updating assessment questions. The workflow generalizes to any assessment bank; the paths, npm scripts, and host commands are Wisdom Capsules' own."
 ---
 
 # Question Induction Skill — Wisdom Capsules Challenge

@@ -73,6 +73,28 @@ Use the **Project Registry** below to map the short name to the project folder a
 
 If the project short name is not in the registry, ask the user for clarification before proceeding. **Never invent a registry entry mid-init** — a project joins the registry only through the `add project` command below.
 
+#### Project families — which skills apply to you
+
+Every project type belongs to one of two families. **The family decides which domain skills are
+relevant to your project; loading a skill from the other family is a wasted read and its advice is
+wrong for your stack.**
+
+| Family | Project types | Projects today | Ships to | Domain skills |
+|---|---|---|---|---|
+| **Mobile app** | `android-dev`, `kmp-mobile` | whatdate, sulipi, oneid, dbmeter, capcon | Google Play / App Store | `release-launch` (+ one platform reference), `ios-port`, `adb-diagnostics` |
+| **Content web** | `content-web` | wisdom-capsules, wd-portal | A host you operate, behind Nginx | `portal-auth`, `criso` |
+
+**Default when a skill says nothing:** a skill with no stated family is **universal** — protocol,
+ticketing, testing, and context skills apply to every project. Only domain skills are family-scoped,
+and each one now states its family in the reference table at the bottom of this file and in its own
+frontmatter.
+
+**The two families do not share a launch path.** Mobile projects launch through `release-launch` —
+signed artifact, store console, policy declarations, staged rollout. Content-web projects have no
+store and no equivalent skill of their own: their deploy, rollback, and pre-launch discipline lives
+inside `portal-auth` (§10–12). Do not reach for `release-launch` on a web project; it will send you
+looking for a Play Console that does not exist.
+
 ### Step 3: Resolve the Role
 Use the **Role Registry** below to find your profile and role-conditional skills.
 
@@ -478,29 +500,33 @@ is unbroken, which catches any renumbering mistake at build time.
 
 ### File System as Source of Truth
 
-| File / Directory | Purpose |
-|---|---|
-| `Agent role.md` | Universal entry point and init parser (this file) |
-| `skills/project-onboarding/SKILL.md` | The `add project <project-folder>` command: how a new project joins the Symphony |
-| `skills/global-skill/SKILL.md` | Global behavior rules, ambiguity resolution, live-state/repository gates, Git workflow |
-| `skills/token-discipline/SKILL.md` | Mandatory vendor-neutral input/output token discipline; terse conversation with lossless engineering artifacts |
-| `skills/semantic-memory/SKILL.md` | **Optional** provider-neutral locator for historical engineering knowledge; recalled content is advisory and must be verified against live canon |
-| `skills/cli-output-optimization/SKILL.md` | **Optional** accelerator policy: which CLI output may be compressed, which must stay raw, how to recover full output. Never required |
-| `skills/agent-symphony/SKILL.md` | Core protocol: ticket lifecycle, agent boundaries, batch rules |
-| `skills/marathon/SKILL.md` | The `start marathon` command: one seat reviews what is done, then carries an open batch to the end, self-unblocking with Architect judgment. Never overrides the WD-334 self-review limit |
-| `skills/ticket-management/SKILL.md` | Ticket naming conventions and creation templates |
-| `skills/rtest/SKILL.md` | Common regression test conventions and TDD principles |
-| `skills/ios-port/SKILL.md` | Conditional SRTL workflow for same-repository Android→iOS planning, target-aware tests, and the manual-device handoff |
-| `skills/release-launch/SKILL.md` | Secure release preflight, signed artifact verification, launch checklist, and store handoff |
-| `skills/blocker-resolution/SKILL.md` | Self-fix vs. escalate triage for role-boundary blocks (QA↔Dev, Tester↔Implementer); CANNOT + alarm procedure |
-| `skills/stateless-protocol/SKILL.md` | Enforces that no agent relies on conversation history; all context is preserved to the filesystem |
-| `skills/code-intelligence/SKILL.md` | **Optional** structural source retrieval — symbol lookup, dependency/call and impact analysis, in place of broad file reads. Never a substitute for an exact current-source read before an edit, review, or gate |
-| `skills/context-assurance/SKILL.md` | **Optional** reduction of a large model-bound evidence bundle while preserving authority, provenance, and exact fallback. Never for canonical gates or required exact evidence |
-| `skills/portal-auth/SKILL.md` | **Domain skill** — building/hardening an authenticated web portal: OAuth+PKCE, email OTP and magic links, sessions/CSRF, systemd hardening, least-privilege layout, secrets, timed-flow client defects, pre-launch checklist. Load before designing any project where a user signs in |
-| `skills/criso/SKILL.md` | **Domain skill** — private, cookie-free aggregate analytics from query-free server logs, with offline snapshot generation and admin-gated reporting. Load before implementing analytics in a portal |
-| `skills/question-induction/SKILL.md` | **Project-specific SOP (Wisdom Capsules)** — authoring, replica-gating, duplicate-chaining, validating, and atomically deploying assessment-bank questions. The workflow generalizes; the paths and commands do not |
-| `skills/grok-build-cli-preferences/SKILL.md` | Shared vendor-independent CLI/terminal preferences (console title rule, auto-rename recommendation) |
-| `.agent_profiles/<role>_profile.md` | Role-specific identity, boundaries, workflow |
+`Applies to` is the project family from Step 2. **All** = every project. **Mobile** = `android-dev`
+and `kmp-mobile` only. **Content web** = `content-web` only. Skip a skill whose family is not yours.
+
+| File / Directory | Applies to | Purpose |
+|---|---|---|
+| `Agent role.md` | All | Universal entry point and init parser (this file) |
+| `skills/project-onboarding/SKILL.md` | All | The `add project <project-folder>` command: how a new project joins the Symphony |
+| `skills/global-skill/SKILL.md` | All | Global behavior rules, ambiguity resolution, live-state/repository gates, Git workflow |
+| `skills/token-discipline/SKILL.md` | All | Mandatory vendor-neutral input/output token discipline; terse conversation with lossless engineering artifacts |
+| `skills/semantic-memory/SKILL.md` | All | **Optional** provider-neutral locator for historical engineering knowledge; recalled content is advisory and must be verified against live canon |
+| `skills/cli-output-optimization/SKILL.md` | All | **Optional** accelerator policy: which CLI output may be compressed, which must stay raw, how to recover full output. Never required |
+| `skills/agent-symphony/SKILL.md` | All | Core protocol: ticket lifecycle, agent boundaries, batch rules |
+| `skills/marathon/SKILL.md` | All | The `start marathon` command: one seat reviews what is done, then carries an open batch to the end, self-unblocking with Architect judgment. Never overrides the WD-334 self-review limit |
+| `skills/ticket-management/SKILL.md` | All | Ticket naming conventions and creation templates |
+| `skills/rtest/SKILL.md` | All | Common regression test conventions and TDD principles. The principles are universal; most worked examples are Gradle/Android, so a content-web project applies the discipline to its own runner |
+| `skills/blocker-resolution/SKILL.md` | All | Self-fix vs. escalate triage for role-boundary blocks (QA↔Dev, Tester↔Implementer); CANNOT + alarm procedure |
+| `skills/stateless-protocol/SKILL.md` | All | Enforces that no agent relies on conversation history; all context is preserved to the filesystem |
+| `skills/code-intelligence/SKILL.md` | All | **Optional** structural source retrieval — symbol lookup, dependency/call and impact analysis, in place of broad file reads. Never a substitute for an exact current-source read before an edit, review, or gate |
+| `skills/context-assurance/SKILL.md` | All | **Optional** reduction of a large model-bound evidence bundle while preserving authority, provenance, and exact fallback. Never for canonical gates or required exact evidence |
+| `skills/grok-build-cli-preferences/SKILL.md` | All | Shared vendor-independent CLI/terminal preferences (console title rule, auto-rename recommendation) |
+| `skills/release-launch/SKILL.md` | **Mobile** | Secure release preflight, signed artifact verification, launch checklist, and store handoff. Then read exactly one platform reference: `references/android-play.md` or `references/ios-app-store.md`. Content-web projects have no store — their deploy/rollback discipline is `portal-auth` §10–12 |
+| `skills/ios-port/SKILL.md` | **Mobile** | Conditional SRTL workflow for same-repository Android→iOS planning, target-aware tests, and the manual-device handoff |
+| `skills/adb-diagnostics/SKILL.md` | **Mobile** | Conditional SRTL workflow for physical Android device inspection over ADB |
+| `skills/portal-auth/SKILL.md` | **Content web** | Building/hardening an authenticated portal: OAuth+PKCE, email OTP and magic links, sessions/CSRF, systemd hardening, least-privilege layout, secrets, timed-flow client defects, deploy/rollback, pre-launch checklist. Load before designing any project where a user signs in |
+| `skills/criso/SKILL.md` | **Content web** | Private, cookie-free aggregate analytics from query-free server logs, with offline snapshot generation and admin-gated reporting |
+| `skills/question-induction/SKILL.md` | **Content web** — Wisdom Capsules only | Authoring, replica-gating, duplicate-chaining, validating, and atomically deploying assessment-bank questions. The workflow generalizes; the paths and commands do not |
+| `.agent_profiles/<role>_profile.md` | All | Role-specific identity, boundaries, workflow |
 | `<project-folder>/MEMORY.md` | Project state, architecture decisions, philosophy, ticket status |
 | `<project-folder>/SKILL.md` | Project-specific build commands, rtest commands, key paths |
 | `<project-folder>/tickets/` | The communication API between agents |

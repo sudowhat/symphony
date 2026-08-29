@@ -142,7 +142,8 @@ Apply §4. Record the outcome; never edit the ticket.
 Two edits to `C:\Users\pooji\Documents\symphony\Agent role.md`:
 
 1. Append a row to the **Project Registry** table: `| <short-name> | <project-folder> | <type> | <roles> |`.
-2. Add the project to its **lifecycle** list under "Two Main Lifecycles". If the type is new to that lifecycle, add one bracketed sentence saying what differs — for `kmp-mobile`, that "builds and passes" means both platforms, and that a non-macOS host reports the iOS phase as `HOST_SKIPPED`, which is never PASS.
+2. Add the short name to its **project family** row in the "Project families" table directly under the registry — `kmp-mobile` and `android-dev` join **Mobile app**, `content-web` joins **Content web**. The family is what tells every future agent which domain skills apply, so a project missing from it silently gets the wrong reading list. If the type itself is new, add a family row rather than leaving the type unclassified.
+3. Add the project to its **lifecycle** list under "Two Main Lifecycles". If the type is new to that lifecycle, add one bracketed sentence saying what differs — for `kmp-mobile`, that "builds and passes" means both platforms, and that a non-macOS host reports the iOS phase as `HOST_SKIPPED`, which is never PASS.
 
 Until this edit lands, `init <short-name> <role>` cannot resolve. It is the step that actually makes the project real.
 

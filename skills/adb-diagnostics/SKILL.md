@@ -1,6 +1,6 @@
 ---
 name: adb-diagnostics
-description: Optional SRTL protocol for deterministic Android Debug Bridge diagnostics on a user-connected USB-debugging device. Use only after init <project> srtl adb [serial] to run project-owned ADB cases that can be driven and proven without manual judgment.
+description: "MOBILE APP PROJECTS ONLY (android-dev, kmp-mobile). Optional SRTL protocol for deterministic Android Debug Bridge diagnostics on a user-connected USB-debugging device. Use only after init <project> srtl adb [serial] to run project-owned ADB cases that can be driven and proven without manual judgment."
 ---
 
 # ADB Diagnostics

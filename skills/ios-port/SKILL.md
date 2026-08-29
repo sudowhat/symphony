@@ -1,6 +1,6 @@
 ---
 name: ios-port
-description: Audit an existing Android or Kotlin Multiplatform Symphony project, plan the minimum same-repository iOS migration, create dependency-ordered QA/Dev tickets, extend rtest across common/Android/iOS targets, and stop at IOS_READY_FOR_MANUAL_TEST. Load only for `init <project> srtl ios`.
+description: "MOBILE APP PROJECTS ONLY (android-dev, kmp-mobile). Audit an existing Android or Kotlin Multiplatform Symphony project, plan the minimum same-repository iOS migration, create dependency-ordered QA/Dev tickets, extend rtest across common/Android/iOS targets, and stop at IOS_READY_FOR_MANUAL_TEST. Load only for `init <project> srtl ios`."
 ---
 
 # iOS Port
