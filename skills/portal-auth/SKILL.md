@@ -1,6 +1,6 @@
 ---
 name: portal-auth
-description: How to build, harden, and ship an authenticated web portal — loopback Node API behind Nginx, OAuth with PKCE, sessions and CSRF, systemd hardening, least-privilege filesystem layout, secret handling, timed-flow client defects, and a pre-launch checklist. Load before designing or deploying any project where a user signs in.
+description: How to build, harden, and ship an authenticated web portal — loopback Node API behind Nginx, OAuth with PKCE, universal email login with 6-digit OTP and disposable domain filtering, transactional email delivery (Resend), sessions and CSRF, systemd hardening, least-privilege filesystem layout, secret handling, timed-flow client defects, and a pre-launch checklist. Load before designing or deploying any project where a user signs in.
 ---
 
 # Portal Auth — Building an Authenticated Portal
@@ -188,7 +188,135 @@ PORTAL_BETA_EMAIL_ALLOWLIST=person@example.com,other@example.com
 
 ---
 
-## 4. Sessions and CSRF
+## 4. Universal Email Authentication: 6-Digit OTP, Magic Links, Disposable Filtering & Delivery
+
+Email authentication without passwords is clean and low-friction, but implementing it robustly across devices and real email ecosystems requires solving four critical problems:
+
+```text
+User enters any valid email ───> [Disposable Domain Filter] ───> [Generate Token + 6-Digit Code]
+                                                                        │
+                                                                 [Resend API]
+                                                                        │
+                       ┌────────────────────────────────────────────────┴───────────────────────────────┐
+                       ▼                                                                                ▼
+             [In-Tab 6-Digit Code]                                                           [1-Click Fallback Link]
+   (User types OTP into current screen)                                              (User clicks link in browser)
+                       │                                                                                │
+            POST /api/auth/email/verify                                                       GET /auth/email/callback
+                       │                                                                                │
+                       └───────────────────────► [Validate, Hash, Consume] ◄────────────────────────────┘
+                                                              │
+                                                   [Issue Session Cookie]
+```
+
+### 4.1 Universal Email Acceptance Principle
+
+- **Accept any legitimate domain:** Never restrict sign-in to a hardcoded whitelist of popular webmail providers (e.g. only Gmail/Outlook) unless explicitly building a closed corporate intranet. Corporate addresses, academic domains (`.edu`), privacy-focused providers (`proton.me`, `tuta.com`), regional domains, and personal custom domains must work seamlessly.
+- **Normalization:** Normalize addresses on ingress (`trim()`, `toLowerCase()`, punycode conversion for internationalized domain names via `domainToASCII`).
+- **Do not leak user existence:** The response to `/api/auth/email/start` must be an identical generic `202 Accepted` whether the user is new or existing.
+
+### 4.2 Disposable & Burner Domain Filtering
+
+- **Why filter disposable domains:** Temporary burner email services (Mailinator, 10MinuteMail, TempMail, GuerrillaMail, etc.) allow automated abuse, throwaway quiz spam, and certificate flooding while breaking long-term account recovery.
+- **Load a canonical plain-text denylist:** Store disposable domains in a sorted, newline-delimited text file (e.g. `disposable-email-domains.txt`). Load it into a `Set` at startup:
+  ```js
+  function loadDisposableDomains(filePath) {
+    if (!fs.existsSync(filePath)) return new Set();
+    const content = fs.readFileSync(filePath, 'utf8');
+    return new Set(content.split(/\r?\n/).map(line => domainToASCII(line.trim().toLowerCase())).filter(Boolean));
+  }
+  ```
+- **Parent-domain traversal matching:** Attackers frequently create subdomains on disposable providers (e.g. `xyz.mailinator.com`). Your lookup must traverse the domain hierarchy from full host to root:
+  ```js
+  function disposableDomain(domain) {
+    let current = domain;
+    while (current) {
+      if (disposableSet.has(current)) return true;
+      const dot = current.indexOf('.');
+      if (dot === -1) break;
+      current = current.slice(dot + 1);
+    }
+    return false;
+  }
+  ```
+- **Avoid false positives on local parts:** Reject ONLY based on the domain part after the `@`. An address like `mailinator.user@gmail.com` has a disposable keyword in the local part but is hosted on Gmail — it must be accepted.
+
+### 4.3 The "Device Shift / Tab Shift" Problem & The 6-Digit OTP Solution
+
+- **The Problem with Pure Magic Links:** When a user initiates sign-in on their laptop (e.g. during an exam or purchase), they almost always check their email on their **mobile phone**. Clicking a magic link on their phone authenticates the mobile browser, leaving the laptop tab stuck waiting on the sign-in screen.
+- **The Solution: 6-Digit Verification Code (OTP) + Fallback Link:**
+  - When the user submits their email, the open browser tab **stays on the sign-in screen** and transitions immediately to a **6-digit code input field**.
+  - The email sent contains both:
+    1. A prominent, large 6-digit numeric verification code (`123456`).
+    2. A 1-click fallback link for users opening the email on the same device.
+  - The user reads the 6 digits from their phone and types them directly into the open laptop screen.
+  - Submitting the code calls `POST /api/auth/email/verify`, sets the session cookie in that browser, and redirects immediately to the target dashboard.
+
+### 4.4 Data Model & Token Security
+
+```sql
+CREATE TABLE email_tokens (
+  token_hash TEXT PRIMARY KEY,
+  code_hash TEXT,
+  email TEXT NOT NULL,
+  return_to TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  used_at TEXT
+);
+CREATE INDEX IF NOT EXISTS email_tokens_by_expiry ON email_tokens(expires_at, used_at);
+```
+
+- **Hash both credentials:** Store SHA-256 hashes of both the raw magic-link token (`token_hash = hash(token)`) and the 6-digit OTP code (`code_hash = hash(code)`). Never store raw tokens or plain text codes in SQLite.
+- **Cryptographic randomness:** Generate the 6-digit code using a CSPRNG (`crypto.randomInt(100000, 1000000).toString()`).
+- **Atomic consumption:** Check validity, expiry, and stamp `used_at = datetime('now')` inside a single database transaction. Once verified (via code or link), the token is consumed and cannot be replayed.
+- **Auto-cleanup:** Delete previous tokens for the same email or expired tokens whenever a new sign-in is issued (`DELETE FROM email_tokens WHERE email = ? OR expires_at <= datetime('now')`).
+
+### 4.5 Brute-Force Defense for 6-Digit Codes
+
+A 6-digit code has only $1,000,000$ combinations. Without strict rate limiting, it can be brute-forced within its 10-minute validity window.
+- **Limit verification attempts per account:** Maximum 10 verification attempts per hour per normalized email address on `POST /api/auth/email/verify`.
+- **Limit verification attempts per IP:** Maximum 30 attempts per hour per IP.
+- **Limit code issuance:** Maximum 5 code generation requests per hour per email address, 15 per hour per IP on `POST /api/auth/email/start`.
+- **Short lifespan:** 10 minutes maximum.
+
+### 4.6 Transactional Email Integration (Resend API)
+
+Use a lightweight, zero-dependency REST integration with standard `fetch`:
+- **Native Fetch Call:**
+  ```js
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`
+    },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM || 'App <support@yourdomain.com>',
+      to: [email],
+      subject: `${code} is your App verification code`,
+      html: `...<h1>${code}</h1>...<a href="${signInUrl}">Or sign in with 1-click</a>...`,
+      text: `Your verification code is: ${code}\n\nOr click: ${signInUrl}`
+    }),
+    signal: AbortSignal.timeout(8000)
+  });
+  ```
+- **Domain Verification Caveat:** In Resend (and similar providers), testing with the default sandbox sender (`onboarding@resend.dev`) **only permits sending to your own account email**. Attempting to send to any external address (Outlook, Proton, etc.) will fail with an upstream 403 error until custom domain DNS records (DKIM, SPF, MX) are verified and `EMAIL_FROM` uses that verified domain.
+- **Rollback on delivery failure:** If the upstream email API returns an error or times out, immediately delete the inserted `email_tokens` row and return `503 email_delivery_unavailable` so the user is not left waiting for a code that never dispatched.
+
+### 4.7 Client-Side UX for OTP Sign-In
+
+- **Single-Card Step Transitions:** Keep the user on the same card without full page reloads:
+  1. *Step 1 (Email)*: Input field + "Continue".
+  2. *Step 2 (Code)*: Hide OAuth provider buttons (Google, GitHub) and dividers to eliminate visual distraction; change title to "Enter verification code"; show target email in subtitle; autofocus the 6-digit input.
+- **Auto-Submission on 6th Digit:** Listen to the `input` event. Strip non-digits, and automatically trigger form submission as soon as `value.length === 6`.
+- **Digit Readability:** Style the input with monospaced font and wide letter-spacing (`letter-spacing: 0.35em; font-size: 1.5rem; text-align: center;`).
+- **Escape Hatches:** Provide clear, styled text actions:
+  - `← Use different email` (smoothly resets state back to Step 1).
+  - `Resend code` (re-triggers generation and shows feedback).
+
+---
+
+## 5. Sessions and CSRF
 
 ### Cookies
 
@@ -252,13 +380,13 @@ Check both on every authenticated request, refresh `last_seen_at` on success, an
 
 ---
 
-## 5. systemd hardening pitfalls
+## 6. systemd hardening pitfalls
 
 **All three of these shipped broken.** Each was being compensated for by a hand-written drop-in override on the production host, so the unit files in the repository would have produced a service that could never start on any fresh deployment — and nobody would have known until the next host build.
 
 > **Meta-lesson, and the most valuable rule in this section:** when a host drill forces you to change a unit on the box, **the repository unit is now wrong**. Fix it in the repo, delete the drop-in, and add a regression assertion on the unit file's text. A drop-in that "makes it work" is a silent time bomb aimed at your next deploy.
 
-### 5.1 Release symlink + ESM entry guard → the service exits 0 and looks healthy
+### 6.1 Release symlink + ESM entry guard → the service exits 0 and looks healthy
 
 **Symptom:** `systemctl start` succeeds. `systemctl status` shows no error. `Restart=on-failure` never fires. Nothing is listening on the port. The journal is empty. The service is dead and reports success.
 
@@ -285,7 +413,7 @@ assert(/^ExecStart=\/usr\/bin\/node --preserve-symlinks-main /m.test(apiUnit),
 
 *Also worth knowing:* `Type=simple` tells systemd the service is up as soon as it forks, so it cannot detect this either. If your runtime supports it, `Type=notify` plus a readiness notification after `listen()` turns this class of failure into a start-up error instead of a silent success.
 
-### 5.2 `RestrictSUIDSGID=true` blocks a `2750` setgid directory
+### 6.2 `RestrictSUIDSGID=true` blocks a `2750` setgid directory
 
 **Symptom:** the service refuses to start on a host where the data directory *already exists with the right mode*. The failure surfaces as a permission error from a `mkdir`/`chmod` call that should have been a no-op.
 
@@ -302,7 +430,7 @@ RestrictSUIDSGID=false
 
 `NoNewPrivileges=true`, `ProtectSystem=strict`, `ProtectHome=true`, `PrivateTmp=true`, `RestrictAddressFamilies=`, and the `ReadOnlyPaths=`/`ReadWritePaths=` pair all remain in force — this single directive is the only one that must be relaxed, and the setgid group model it conflicts with is itself a security control.
 
-### 5.3 `User=` strips CAP_SETUID from the effective set — **even `User=root`**
+### 6.3 `User=` strips CAP_SETUID from the effective set — **even `User=root`**
 
 **Symptom:** a root-owned orchestrator script fails at `runuser -u <backupuser>` with `EPERM`. Nothing in the unit removes the capability. `systemctl show -p CapabilityBoundingSet` **lists `cap_setuid`**, which appears to prove the capability is present.
 
@@ -330,7 +458,7 @@ The directive that changes the outcome is the answer. This takes minutes and rep
 
 ---
 
-## 6. Filesystem layout and least privilege
+## 7. Filesystem layout and least privilege
 
 Target layout (adapt names; keep the relationships):
 
@@ -347,7 +475,7 @@ Target layout (adapt names; keep the relationships):
 
 Accounts: `<appuser>` runs the API, `<backupuser>` runs backups, and both are members of `<dbgroup>` — that shared group is the *only* thing they have in common.
 
-**The setgid data directory (`2750`).** The setgid bit makes every file the application creates in `/var/lib/<app>/` inherit group `<dbgroup>`, which is what keeps SQLite's `-wal` and `-shm` sidecars readable by the backup account without a cron job re-chowning them. `0` for other means nothing outside those two accounts can read the database at all. The API unit sets `UMask=0027` so new files land `0640`. This is also the mode that `RestrictSUIDSGID=true` (§5.2) forbids — the two directives are in direct conflict and the setgid model wins.
+**The setgid data directory (`2750`).** The setgid bit makes every file the application creates in `/var/lib/<app>/` inherit group `<dbgroup>`, which is what keeps SQLite's `-wal` and `-shm` sidecars readable by the backup account without a cron job re-chowning them. `0` for other means nothing outside those two accounts can read the database at all. The API unit sets `UMask=0027` so new files land `0640`. This is also the mode that `RestrictSUIDSGID=true` (§6.2) forbids — the two directives are in direct conflict and the setgid model wins.
 
 **`/etc/<app>` at `0751` — the traversal problem.** `<backupuser>` must read `/etc/<app>/backup-remote.conf`, but is deliberately **not** a member of `<appuser>`'s group, because that group can read `<app>.env` and therefore the OAuth client secrets. Without the `1` (execute/traverse) bit for other on the directory, `<backupuser>` cannot even path into `/etc/<app>/` to reach its own file.
 
@@ -372,7 +500,7 @@ stat -c '%U:%G %a %n' /srv/<app>/current/ops/*.sh /etc/<app> /var/lib/<app>
 
 ---
 
-## 7. Secret handling
+## 8. Secret handling
 
 **Never print a secret value. Never ask the user to paste one into chat.** Both rules are absolute, and they hold even when the user offers.
 
@@ -442,11 +570,11 @@ Application logs should be **minimal structured security events** — `authentic
 
 ---
 
-## 8. Client-side pitfalls in timed / authenticated flows
+## 9. Client-side pitfalls in timed / authenticated flows
 
 Every one of these was a real defect in a live portal. They share a shape: the server was correct and the browser quietly disagreed.
 
-### 8.1 Never compare a server-issued deadline against `Date.now()`
+### 9.1 Never compare a server-issued deadline against `Date.now()`
 
 **Symptom:** a user's timed attempt is submitted blank, milliseconds after it starts, before a single question renders. In production: an attempt created and auto-submitted 257 ms later, scoring zero. Unreproducible on any developer machine.
 
@@ -466,7 +594,7 @@ const remaining = Math.max(0, Math.ceil((deadline - serverNow()) / 1000));
 
 Do this on **every** surface that shows the same countdown — the timed screen *and* the "you have something in progress" panel elsewhere in the portal. And keep the server authoritative regardless: it must finalize an expired item itself and reject late writes, so a client that never ticks changes nothing.
 
-### 8.2 bfcache: the back button restores a page without re-running your startup code
+### 9.2 bfcache: the back button restores a page without re-running your startup code
 
 **Symptom:** a user goes back to a previous page and finds a button that is enabled but that the server rejects — with an error the page offers no way to act on.
 
@@ -480,7 +608,7 @@ window.addEventListener('pageshow', event => { if (event.persisted) refreshFromS
 
 Any page whose rendering depends on server-side state that can change while the user is away needs this. It is two lines and it is almost never written.
 
-### 8.3 Offer *Resume*, not a disabled or lying button
+### 9.3 Offer *Resume*, not a disabled or lying button
 
 **Symptom:** the user has work in progress on the server, and the page shows a Start button gated only by a local checkbox. Re-ticking the checkbox re-arms the button; the server then refuses with "finish your active attempt first" — advice the page provides no way to follow.
 
@@ -488,7 +616,7 @@ Any page whose rendering depends on server-side state that can change while the 
 
 **Fix:** when the server reports in-progress state, replace the action entirely — a **Resume** button that navigates to the existing work, with a live (skew-corrected) countdown, and the pre-conditions locked rather than re-armable. On any server refusal, re-read state and re-render rather than just displaying the error. And **name the states the user experiences**: work the server finalized as *expired* should read "you abandoned it," not a bare cooldown timestamp.
 
-### 8.4 Guard unloads during a timed flow — and lift the guard on submit
+### 9.4 Guard unloads during a timed flow — and lift the guard on submit
 
 ```js
 const unloadGuard = event => { if (submitting) return undefined; event.preventDefault(); event.returnValue = ''; return ''; };
@@ -499,7 +627,7 @@ window.removeEventListener('beforeunload', unloadGuard);
 
 The state lives on the server and survives a reload, but a stray refresh or back gesture mid-flow is never intentional. **Forgetting the removal is its own defect** — the user completes the flow correctly and is then interrogated about leaving. Assert both halves in tests.
 
-### 8.5 Persist form fields on blur, not only via a save button
+### 9.5 Persist form fields on blur, not only via a save button
 
 **Symptom:** the user types their name, sees it on screen, proceeds — and the system uses the old value everywhere. Confirmed in production: the database still held the provider-supplied name and the access log recorded **zero** `PATCH` requests to the update route.
 
@@ -515,7 +643,7 @@ if (!(await saveName())) return;    // do not create the attempt with an unsaved
 
 The general rule: **a value the user can see must be the value the server holds.** If those can diverge, the UI is lying.
 
-### 8.6 A bare descendant selector matches nested elements too
+### 9.6 A bare descendant selector matches nested elements too
 
 **Symptom:** one column of a header row is taller than its neighbours; a label wraps onto a third line. Only on some screens, only for some content.
 
@@ -530,7 +658,7 @@ The general rule: **a value the user can see must be the value the server holds.
 
 Equalize label and value line-heights so sibling blocks are exactly the same number of rows tall, and give any user-supplied string in a fixed row `overflow: hidden; text-overflow: ellipsis` rather than letting it stretch the layout.
 
-### 8.7 User strings in fixed-size artifacts need a server-side cap *and* dynamic sizing
+### 9.7 User strings in fixed-size artifacts need a server-side cap *and* dynamic sizing
 
 **Symptom:** a generated PDF/certificate renders a long name past the printed border, and a short name visibly off-centre.
 
@@ -552,7 +680,7 @@ const x     = Math.max(86, (792 - width) / 2);
 
 Keep the input's `maxlength` and its helper copy **numerically identical** to the server constant, and assert that in tests — a mismatch is a guaranteed support ticket. Then prove the geometry at the boundaries: compute the drawn box at the minimum, a middle, and the maximum length and assert it stays inside the border at all three. Also escape the string for the artifact format (in PDF: backslash, parentheses, and newlines) and let the HTML rendering **wrap** long values rather than clipping them against an `overflow: hidden` parent.
 
-### 8.8 Scope authenticated chrome by construction, not by convention
+### 9.8 Scope authenticated chrome by construction, not by convention
 
 If the portal is in a **soft launch** — reachable but unlisted, `noindex`, absent from navigation and sitemap — then any authenticated UI you add is a new way to leak its existence. An account menu placed in the *shared* base template renders on every public marketing page too, and a signed-in visitor browsing public content advertises the private area.
 
@@ -573,7 +701,7 @@ Deliberately exclude the control from any **timed flow** page. Sign-out during a
 
 ---
 
-## 9. Testing discipline
+## 10. Testing discipline
 
 > **Every regression assertion must be verified to FAIL when its defect is deliberately reintroduced. A test that cannot fail is worthless.**
 
@@ -611,11 +739,11 @@ assert(!/^User=/m.test(backupUnit) && !/^Group=/m.test(backupUnit),
 
 **A fake clock is mandatory** for anything with expiry, cooldowns, or deadlines: inject `clock` into the server factory and advance it (`currentTime += 20 * 60 * 1000 + 1`) rather than sleeping. It makes idle/absolute expiry, single-use state, and timed finalization deterministically testable in milliseconds.
 
-**Assert on the shipped ops artifacts.** The systemd defects in §5 were invisible to every application test in the suite because nothing read the unit files. Reading a config file and asserting on its text is cheap, and it is the only thing standing between a host drop-in and a broken fresh deploy.
+**Assert on the shipped ops artifacts.** The systemd defects in §6 were invisible to every application test in the suite because nothing read the unit files. Reading a config file and asserting on its text is cheap, and it is the only thing standing between a host drop-in and a broken fresh deploy.
 
 ---
 
-## 10. Deployment and rollback
+## 11. Deployment and rollback
 
 **Release layout:**
 
@@ -629,7 +757,7 @@ assert(!/^User=/m.test(backupUnit) && !/^Group=/m.test(backupUnit),
 
 1. Deploy from a **clean, pushed, explicitly authorized commit**. The authorization names the host *and* the SHA. A new SHA needs a new authorization.
 2. Build and run the full verification suite locally first — build, regression, server, security, dependency audit. A deployment script should do local verification only and never mutate a remote host as a side effect.
-3. Create `releases/<sha>/`, write `RELEASE`, then **re-apply ownership and modes** (§6) — this is the step that gets forgotten.
+3. Create `releases/<sha>/`, write `RELEASE`, then **re-apply ownership and modes** (§7) — this is the step that gets forgotten.
 4. **Back up the currently installed units and proxy config before replacing them**, along with an archive of the current release. Rollback is only fast if the previous state was captured *before* the change:
    ```bash
    ssh <host> 'tar czf /root/<app>-predeploy-$(date -u +%Y%m%dT%H%M%SZ).tar.gz \
@@ -648,7 +776,7 @@ assert(!/^User=/m.test(backupUnit) && !/^Group=/m.test(backupUnit),
    fi
    ```
    `ln -sfn` + `mv -Tf` replaces the symlink in one rename rather than deleting and recreating it — there is no instant where `current` does not exist.
-7. **`is-active` is not liveness** — see §5.1, where a dead process reported success. Add a real check: `ss -ltnp` shows the API on loopback only, and an actual request returns the expected status.
+7. **`is-active` is not liveness** — see §6.1, where a dead process reported success. Add a real check: `ss -ltnp` shows the API on loopback only, and an actual request returns the expected status.
 8. **Verify the perimeter from a network that is not the host** — a `curl` from the box itself proves nothing about the firewall or the proxy:
    ```bash
    curl -I  http://example.com/portal/                  # expect 301 to https
@@ -661,7 +789,7 @@ assert(!/^User=/m.test(backupUnit) && !/^Group=/m.test(backupUnit),
 
 ---
 
-## 11. Pre-launch checklist
+## 12. Pre-launch checklist
 
 Executable, in order. `[x]` requires recorded evidence — a command and its output — not a recollection.
 
@@ -715,7 +843,7 @@ Executable, in order. `[x]` requires recorded evidence — a command and its out
 | Provider | Configured in code | Exercised in production | Notes |
 |---|---|---|---|
 | Google | Yes — PKCE, `prompt=select_account`, `email_verified` gate | **Yes** | The `select_account` and Testing-mode findings (§2, §3) come from this provider. |
-| Email magic link | Yes — hashed single-use token, 10 min, webhook delivery | Partially — code path tested; a real transactional webhook was never exercised end-to-end | Generic 202 response regardless of address; token deleted if delivery fails. |
+| Email OTP & Magic Link (Resend) | Yes — 6-digit numeric OTP in-tab verification + fallback link, 10 min, Resend REST API | **Yes** | Universal email acceptance, disposable domain filtering, 6-digit in-tab verification to eliminate device shift, custom DNS domain verification (§4). |
 | GitHub | Yes — PKCE, second call to `/user/emails` for a primary+verified address | **No** | Configured but never run against the live provider. Treat its notes as **untested**. |
 | Facebook | Yes — state-protected, `pkce: false`, no verified-email assertion so it never auto-links by email | **No** | Configured but never run against the live provider. Treat its notes as **untested**. |
 

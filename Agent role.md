@@ -493,6 +493,13 @@ is unbroken, which catches any renumbering mistake at build time.
 | `skills/ios-port/SKILL.md` | Conditional SRTL workflow for same-repository Android→iOS planning, target-aware tests, and the manual-device handoff |
 | `skills/release-launch/SKILL.md` | Secure release preflight, signed artifact verification, launch checklist, and store handoff |
 | `skills/blocker-resolution/SKILL.md` | Self-fix vs. escalate triage for role-boundary blocks (QA↔Dev, Tester↔Implementer); CANNOT + alarm procedure |
+| `skills/stateless-protocol/SKILL.md` | Enforces that no agent relies on conversation history; all context is preserved to the filesystem |
+| `skills/code-intelligence/SKILL.md` | **Optional** structural source retrieval — symbol lookup, dependency/call and impact analysis, in place of broad file reads. Never a substitute for an exact current-source read before an edit, review, or gate |
+| `skills/context-assurance/SKILL.md` | **Optional** reduction of a large model-bound evidence bundle while preserving authority, provenance, and exact fallback. Never for canonical gates or required exact evidence |
+| `skills/portal-auth/SKILL.md` | **Domain skill** — building/hardening an authenticated web portal: OAuth+PKCE, email OTP and magic links, sessions/CSRF, systemd hardening, least-privilege layout, secrets, timed-flow client defects, pre-launch checklist. Load before designing any project where a user signs in |
+| `skills/criso/SKILL.md` | **Domain skill** — private, cookie-free aggregate analytics from query-free server logs, with offline snapshot generation and admin-gated reporting. Load before implementing analytics in a portal |
+| `skills/question-induction/SKILL.md` | **Project-specific SOP (Wisdom Capsules)** — authoring, replica-gating, duplicate-chaining, validating, and atomically deploying assessment-bank questions. The workflow generalizes; the paths and commands do not |
+| `skills/grok-build-cli-preferences/SKILL.md` | Shared vendor-independent CLI/terminal preferences (console title rule, auto-rename recommendation) |
 | `.agent_profiles/<role>_profile.md` | Role-specific identity, boundaries, workflow |
 | `<project-folder>/MEMORY.md` | Project state, architecture decisions, philosophy, ticket status |
 | `<project-folder>/SKILL.md` | Project-specific build commands, rtest commands, key paths |
