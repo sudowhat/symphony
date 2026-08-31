@@ -8,12 +8,33 @@ You are an agent in the **Symphony Protocol** ecosystem — a stateless, file-dr
 
 You are a capable software engineering agent. You operate in a stateless manner: every time you start a fresh session or your context is cleared, you must re-load your entire context from files. You never assume context from previous turns unless explicitly confirmed in the files you read.
 
-**The Symphony root** (memorize this path):
+**The Symphony root** (resolve it once per session — never memorize a literal path):
 ```
-C:\Users\pooji\Documents\symphony\
+<project-home>/symphony/
 ```
 
 All project folders, profiles, and skills live under this root.
+
+### Resolving `<project-home>` (MANDATORY — do this before any other path use)
+
+`<project-home>` is the **host-specific parent directory that contains the `symphony` folder**. It is the only part of any Symphony path that differs between machines; everything below the root is identical everywhere. The same protocol files therefore work unmodified on every host.
+
+| Machine | `<project-home>` | Symphony root |
+|---|---|---|
+| Workstation | `C:\Users\pooji\Documents` | `C:\Users\pooji\Documents\symphony` |
+| Home machine | the user's home directory — `%USERPROFILE%` / `$HOME` (e.g. `C:\Users\<user>`) | `<home>\symphony` |
+
+**Resolution procedure** — run it at init Step 4, before reading anything else:
+
+1. If your session is already running inside the tree, the nearest ancestor directory containing `Agent role.md` **is** the Symphony root, and `<project-home>` is its parent. Stop here; this is the authoritative answer.
+2. Otherwise probe, in exactly this order, and take the **first** directory that contains `Agent role.md`:
+   `%USERPROFILE%\Documents\symphony` → `%USERPROFILE%\symphony`
+3. Record the resolved absolute root and use it **literally** for every path for the rest of the session. Once it resolves, do not probe again and do not keep a second candidate alive.
+4. If no candidate contains `Agent role.md`, **STOP and report to the user.** Never create the root, never clone one, never accept a directory that merely resembles it.
+
+Every `<project-home>/symphony/...` path in this file, in the role profiles, and in the skills means that resolved root — substitute it, and write the resolved absolute path when you actually run a command. The `/` above is portable notation; on Windows the separator is `\`.
+
+**This does not loosen Path Integrity.** Resolution supplies the *host prefix* and nothing more. The project folder itself still comes only from the Project Registry below, and once `<project-home>` is fixed, a project folder that is absent under it is simply absent — never a licence to go looking elsewhere. See §"Path Integrity Protocol".
 
 ### Project topology and access modes
 
@@ -115,17 +136,17 @@ Optional capabilities never become init dependencies. Their absence, provider fa
 
 | Role | Profile Path | Additional Required Skills |
 |---|---|---|
-| architect | `C:\Users\pooji\Documents\symphony\.agent_profiles\architect_profile.md` | ticket-management |
-| qa | `C:\Users\pooji\Documents\symphony\.agent_profiles\qa_profile.md` | rtest |
-| dev | `C:\Users\pooji\Documents\symphony\.agent_profiles\dev_profile.md` | rtest |
-| srtl | `C:\Users\pooji\Documents\symphony\.agent_profiles\srtl_profile.md` | rtest; ticket-management + ios-port only for `init <project> srtl ios`; adb-diagnostics only for `init <project> srtl adb [serial]` |
-| launcher | `C:\Users\pooji\Documents\symphony\.agent_profiles\launcher_profile.md` | release-launch, rtest |
-| orchestrator | `C:\Users\pooji\Documents\symphony\.agent_profiles\orchestrator_profile.md` | — |
-| composer | `C:\Users\pooji\Documents\symphony\.agent_profiles\composer_profile.md` | — |
-| critic | `C:\Users\pooji\Documents\symphony\.agent_profiles\critic_profile.md` | — |
-| designer | `C:\Users\pooji\Documents\symphony\.agent_profiles\designer_profile.md` | ticket-management |
-| tester | `C:\Users\pooji\Documents\symphony\.agent_profiles\tester_profile.md` | rtest |
-| implementer | `C:\Users\pooji\Documents\symphony\.agent_profiles\implementer_profile.md` | rtest |
+| architect | `<project-home>/symphony/.agent_profiles/architect_profile.md` | ticket-management |
+| qa | `<project-home>/symphony/.agent_profiles/qa_profile.md` | rtest |
+| dev | `<project-home>/symphony/.agent_profiles/dev_profile.md` | rtest |
+| srtl | `<project-home>/symphony/.agent_profiles/srtl_profile.md` | rtest; ticket-management + ios-port only for `init <project> srtl ios`; adb-diagnostics only for `init <project> srtl adb [serial]` |
+| launcher | `<project-home>/symphony/.agent_profiles/launcher_profile.md` | release-launch, rtest |
+| orchestrator | `<project-home>/symphony/.agent_profiles/orchestrator_profile.md` | — |
+| composer | `<project-home>/symphony/.agent_profiles/composer_profile.md` | — |
+| critic | `<project-home>/symphony/.agent_profiles/critic_profile.md` | — |
+| designer | `<project-home>/symphony/.agent_profiles/designer_profile.md` | ticket-management |
+| tester | `<project-home>/symphony/.agent_profiles/tester_profile.md` | rtest |
+| implementer | `<project-home>/symphony/.agent_profiles/implementer_profile.md` | rtest |
 
 ### Step 4: Load Context and Synchronize (EXACT ORDER — do not skip)
 
@@ -133,12 +154,13 @@ Read these files and perform the gate in this exact order. Fully read every mand
 
 1. **This file** (`Agent role.md`) — you are already reading it.
 2. **Your role profile** (from Step 3) — identity, boundaries, and role workflow.
-3. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\global-skill\\SKILL.md`** — global behavior, Repository Sync/Direct-Remote gates, and Git workflow.
-4. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\token-discipline\\SKILL.md`** — mandatory input/output token discipline with a lossless engineering floor.
-5. **`C:\\Users\\pooji\\Documents\\symphony\\skills\\agent-symphony\\SKILL.md`** — core protocol, lifecycle, boundaries, and one-at-a-time rules.
+3. **`<project-home>/symphony/skills/global-skill/SKILL.md`** — global behavior, Repository Sync/Direct-Remote gates, and Git workflow.
+4. **`<project-home>/symphony/skills/token-discipline/SKILL.md`** — mandatory input/output token discipline with a lossless engineering floor.
+5. **`<project-home>/symphony/skills/agent-symphony/SKILL.md`** — core protocol, lifecycle, boundaries, and one-at-a-time rules.
 6. **Verify Path Integrity (MANDATORY — see the Path Integrity Protocol below)** —
-   - **Local CLI:** confirm `.symphony-root` exists at `C:\\Users\\pooji\\Documents\\symphony\\<project-folder>\\.symphony-root` and its `project=` line matches the init command.
+   - **Local CLI:** confirm `.symphony-root` exists at `<project-home>/symphony/<project-folder>/.symphony-root` and its `project=` line matches the init command.
    - **Direct-repo/cloud:** fetch `.symphony-root` from the selected project's live target branch; its `project=` line must match the init command and its `canonical_path=` must name the canonical Symphony folder.
+   - **`canonical_path=` is host-portable.** Both forms are valid on read: the placeholder `<SYMPHONY_ROOT>/<project-folder>/` (written by `project-onboarding` and preferred) and a legacy absolute path from one machine. Resolve the placeholder against the `<project-home>` you already fixed above. A legacy absolute path that names a *different machine's* root is not a mismatch and is never a reason to stop — only a `project=` that disagrees with your init command, or a marker naming a different **project folder**, is. Never rewrite a marker to "correct" its host prefix during ticket work.
    If the marker is missing or mismatched, STOP immediately and report to the user. Do not create it, create a directory, or search for/accept an alternative project.
 7. **Synchronize the project source (MANDATORY for a Git project)** —
    - **Local CLI:** complete the clean-tree, fetch, and fast-forward-only **Repository Sync Gate** in `global-skill/SKILL.md`.
@@ -423,7 +445,7 @@ add project <project-folder>
 
 Also triggered by "onboard X to symphony" or equivalent. This is **not** a role and **not** a ticket — it is a one-time, whole-folder operation that makes an existing folder `init`-able.
 
-**Read `C:\Users\pooji\Documents\symphony\skills\project-onboarding\SKILL.md` and follow it exactly.** In outline it: survives five hard stops (folder must already exist; no existing/mismatched `.symphony-root`; short name not already registered; no look-alike folder) → derives short name, type, roles, ticket prefix, remote and branch from pattern rather than asking → creates `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md` and `tickets/.claims/` → checks that ticket 0 mandates multi-platform → appends the Project Registry row and lifecycle entry here → commits, sets the remote, pushes → verifies from disk → hands back the working `init <short-name> <role>` command.
+**Read `<project-home>/symphony/skills/project-onboarding/SKILL.md` and follow it exactly.** In outline it: survives five hard stops (folder must already exist; no existing/mismatched `.symphony-root`; short name not already registered; no look-alike folder) → derives short name, type, roles, ticket prefix, remote and branch from pattern rather than asking → creates `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md` and `tickets/.claims/` → checks that ticket 0 mandates multi-platform → appends the Project Registry row and lifecycle entry here → commits, sets the remote, pushes → verifies from disk → hands back the working `init <short-name> <role>` command.
 
 Two rules that surprise agents:
 
@@ -600,7 +622,7 @@ through. Rules:
 - **OS**: Windows + PowerShell
 - **Directory listing**: `list_dir` and similar tools often hide dot-directories (`.agent_profiles`, `.git`, etc.). Use terminal commands with `Get-ChildItem -Force` to discover them.
 - **Ticket filenames contain brackets**: `[APPROVED]`, `[READY_FOR_DEV]`, `[DONE]`, etc. These break PowerShell globs. For renames, always use `Move-Item -LiteralPath` or `cmd /c ren`. Never use simple `Rename-Item` with bracketed names.
-- **Full paths**: Always prefer explicit full paths over relative paths. The Symphony root is `C:\Users\pooji\Documents\symphony\`.
+- **Full paths**: Always prefer explicit full paths over relative paths. The Symphony root is `<project-home>/symphony/`.
 - **Build-unrelated shared files**: place screenshots, logs, temporary exports, and drafts in the active project's ignored `.workspace-temp/`. It is local and unencrypted; never use it for credentials, keystores, tokens, personal data, or durable canonical artifacts. Never delete its contents without explicit user instruction.
 
 ---

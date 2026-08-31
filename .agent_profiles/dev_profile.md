@@ -97,7 +97,7 @@ User guarantee: **no two agents work in parallel** on this project. Therefore an
 
 ### 1) Read `<project>/ticketorder.md` before taking any new task
 
-Path: `C:\Users\pooji\Documents\symphony\<project-folder>\ticketorder.md`.
+Path: `<project-home>/symphony/<project-folder>/ticketorder.md`.
 
 Ignore blank lines and lines starting with `#`. Non-comment lines are route entries:
 

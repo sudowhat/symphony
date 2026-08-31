@@ -18,8 +18,8 @@ This skill defines general behavior rules and project-wide conventions used by *
 Directory listing tools often hide dot-directories (e.g., `.agent_profiles`, `.git`, `.idea`). When you need to explore them, use terminal commands with PowerShell:
 
 ```powershell
-Get-ChildItem -Path "C:\Users\pooji\Documents\symphony" -Force
-Get-ChildItem -Path "C:\Users\pooji\Documents\symphony\whatdate-folder" -Recurse -Force
+Get-ChildItem -Path "<project-home>\symphony" -Force
+Get-ChildItem -Path "<project-home>\symphony\whatdate-folder" -Recurse -Force
 ```
 
 Always prefer explicit full paths.
@@ -294,7 +294,7 @@ Even when reading the final output, **always trim** with `Select-Object -Last N`
 
 ### Temp directory
 
-Use `C:\Users\pooji\AppData\Local\Temp\opencode\` (pre-approved for external access) for all background-job log/err/done files. Clean up old markers before launching a new job with the same name.
+Use `$env:TEMP\opencode\` (pre-approved for external access) for all background-job log/err/done files. Clean up old markers before launching a new job with the same name.
 
 ---
 
@@ -449,7 +449,7 @@ After implementing the solution, running all tests to green, and promoting the t
 
 ## WhatDate Android Project Specifics
 
-- **Primary active project**: `C:\Users\pooji\Documents\symphony\whatdate-folder/`
+- **Primary active project**: `<project-home>/symphony/whatdate-folder/`
 - `MEMORY.md` in the above folder is the source of truth for architecture decisions, core philosophy ("WhatDate is a memory..."), model invariants, and recent ticket status.
 - On **every** Architect initialization, you **must** re-read the Fundamental Definition + Core Model Invariants sections from `MEMORY.md`.
 - Real tickets use the prefix style `[APPROVED]_WD-078_brief_description.md`, `[READY_FOR_DEV]_...`, `[DONE]_...`.

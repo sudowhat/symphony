@@ -242,7 +242,7 @@ rather than a confirmable defect, note it as a recommendation rather than rewrit
 
 - Windows + PowerShell.
 - Ticket filenames contain brackets — always use `Move-Item -LiteralPath` or `cmd /c ren`.
-- Full paths always. Symphony root: `C:\Users\pooji\Documents\symphony\`
+- Full paths always. Symphony root: `<project-home>/symphony/`
 - rtest command defined in project `SKILL.md`.
 
 ### Path Integrity (MANDATORY)

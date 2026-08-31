@@ -83,7 +83,7 @@ Mirror `whatdate-folder/`. All four live at the **project root** — never insid
 
 ```
 project=<short-name>
-canonical_path=C:\Users\pooji\Documents\symphony\<project-folder>\
+canonical_path=<SYMPHONY_ROOT>/<project-folder>/
 # SYMPHONY PATH-INTEGRITY MARKER — DO NOT COPY, MOVE, OR RECREATE THIS FILE.
 # Agents: verify this file exists at your Active Workspace and that
 # project= matches your init command BEFORE your first write of a session.
@@ -139,7 +139,7 @@ Apply §4. Record the outcome; never edit the ticket.
 
 ### Step 6 — Register in `Agent role.md`
 
-Two edits to `C:\Users\pooji\Documents\symphony\Agent role.md`:
+Two edits to `<project-home>/symphony/Agent role.md`:
 
 1. Append a row to the **Project Registry** table: `| <short-name> | <project-folder> | <type> | <roles> |`.
 2. Add the short name to its **project family** row in the "Project families" table directly under the registry — `kmp-mobile` and `android-dev` join **Mobile app**, `content-web` joins **Content web**. The family is what tells every future agent which domain skills apply, so a project missing from it silently gets the wrong reading list. If the type itself is new, add a family row rather than leaving the type unclassified.
@@ -195,7 +195,7 @@ The ones that recur:
 - **`.workspace-temp/` is intentionally the exception:** it is ignored and created only on demand, so never seed it with a tracked placeholder.
 - **Restricted mounts.** Some sandboxes permit create-and-write but not delete. Git then leaves `.git/index.lock` and `tmp_obj_*` files behind, and the *next* git command fails with "Another git process seems to be running". Remove the leftovers — request delete permission from the host if the sandbox refuses — before continuing, and never leave a lock file in the user's repo. If you cannot remove it, say so loudly: it blocks every future git operation on that machine.
 - **Never write into a vendor directory.** `.claude/`, `.cursor/`, `.gemini/` and friends are invisible to other vendors' agents, and the Symphony is vendor-neutral by design.
-- **Full literal paths only.** The Symphony root is `C:\Users\pooji\Documents\symphony\`.
+- **Full literal paths only.** The Symphony root is `<project-home>/symphony/`.
 
 ## 8. After onboarding
 

@@ -1,5 +1,5 @@
 **Read the common Symphony version for vendor independence:**
-C:\Users\pooji\Documents\symphony\skills\stateless-protocol\SKILL.md
+<project-home>/symphony/skills/stateless-protocol/SKILL.md
 
 ---
 name: stateless-protocol

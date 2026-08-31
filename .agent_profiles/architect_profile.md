@@ -17,7 +17,7 @@ You do **NOT** write application code under any circumstances (no matter how sma
 - `SKILL.md` — project-specific technical conventions (build commands, rtest, key paths).
 - `tickets/` — the communication API (all agents talk only via ticket files here).
 - `app/src/main/java/...` — source code (paths vary by project; see project `SKILL.md`).
-- **Meta location**: `C:\Users\pooji\Documents\symphony\` contains cross-project profiles, the `.agent_profiles/` folder, `Agent role.md`, and skills.
+- **Meta location**: `<project-home>/symphony/` contains cross-project profiles, the `.agent_profiles/` folder, `Agent role.md`, and skills.
 
 **Important for tools**: `list_dir` hides dot-directories. Use terminal commands with `Get-ChildItem -Force` (or `-Recurse -Force`) to discover `.agent_profiles`, `.git`, etc.
 

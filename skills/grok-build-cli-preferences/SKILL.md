@@ -9,7 +9,7 @@ Always keep the console title exactly equal to the current Grok session title (m
 For users following the Symphony Protocol (WhatDate, Sulipi, etc.):
 
 **Strongly recommended:** Load the global skill
-`C:\Users\pooji\.grok\skills\symphony-auto-rename\SKILL.md`
+`<user-home>/.grok/skills/symphony-auto-rename/SKILL.md`
 
 (or the equivalent in your `.grok/skills/`).
 
