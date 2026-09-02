@@ -60,7 +60,7 @@ Every non-Architect role runs exactly this:
 
 ```
 loop: while (true) {
-    0. sync:    clean tree + fetch + fast-forward update? -> otherwise report user ; STOP
+    0. sync:    clean tree + fetch + fast-forward update? -> otherwise goto 5 (WAIT — never exit)
     1. resume:  any half-finished ticket of MY role?  -> take it
     2. read:    <project>/ticketorder.md
     3. exit:    no open line for MY role anywhere?    -> print "<role>|exit" ; STOP
@@ -69,13 +69,14 @@ loop: while (true) {
 }
 ```
 
-Three mantras:
+Four mantras:
 
-1. **Never exit while I still have an open line in the batch.** Blocked is not finished.
+1. **Never exit while I still have an open line in the batch.** Blocked is not finished. Neither is dirty, diverged, or gated.
 2. **Exit the moment nothing on the list is mine.** Don't linger, don't "check in case".
 3. **Sleep must resume *this* session with its context intact.** Not a cloud job, not a new agent, not a fresh `init`, not a poll storm. A 300-second blocking sleep qualifies; so does a background watcher that stays silent until there's work.
+4. **Step 3 is the only exit.** Every other unhappy path — a failed sync gate included — routes to step 5. No state calls for ending the turn to ask permission to continue.
 
-For a Git project, the sync step runs before every real work entry: init, handoff re-entry, post-wake poll, and bare continuation. It first checks for **any** tracked or untracked worktree change. A dirty tree is reported to the user and stops the agent; it is never stashed, reset, cleaned, or pulled over. A clean tree updates only by fetch plus fast-forward pull. The canonical detail is in `skills/global-skill/SKILL.md`.
+For a Git project, the sync step runs before every real work entry: init, handoff re-entry, post-wake poll, and bare continuation. It first checks for **any** tracked or untracked worktree change. A dirty tree is **waited out, not fatal** — Symphony deliberately runs several roles against one worktree, so a dirty tree mid-batch is the normal signature of a peer mid-ticket. The agent reports it once, sleeps, and re-runs the gate; it never stashes, resets, cleans, or pulls over another agent's work, and it never ends the session while it still holds an open line. `REPO_DIVERGED` and `REPO_SYNC_BLOCKED` need human hands, so they also ring the attention bell — then keep polling. A clean tree updates only by fetch plus fast-forward pull. The canonical detail is in `skills/global-skill/SKILL.md`.
 
 A loop that burns tokens waiting is a broken loop even if it breaks no rule.
 
