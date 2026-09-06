@@ -44,6 +44,8 @@ If a project uses `[USER]` tickets, document that project-specific extension in 
 
 After a meaningful build, runtime, device, or release finding, record the lesson while evidence is available. Do not wait until launch to reconstruct it. Record nothing when a ticket produced no reusable finding.
 
+**Write each guard so the defect it describes would fail it, and prove that before trusting it.** Port work is full of adapters that return plausible success — a correctly named empty file, a state flag with no native call behind it, a permission predicate whose default is `true`. A test written from the contract ("does it return the right shape?") passes against all of them; a test written from the defect ("does the file contain a decodable track?") does not. State the specific defect a new guard exists to catch, and demonstrate it failing on that defect: a guard that has never failed has never been tested.
+
 Use this compact structure in a relevant `references/<project>.md` entry:
 
 ```text

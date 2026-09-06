@@ -55,3 +55,84 @@ These are source observations, not results of a native build or an iPhone test. 
 - Correction: **NOT YET VERIFIED**. Reconcile iOS usage descriptions, actual prompts, privacy manifest, policy, and store answers from the current capture/egress contract.
 - Regression: inspect actual prompt copy and packaged metadata in the signed build; owner reviews final policy declarations.
 - Transfer: audit dormant platform resources when shared behavior changes. Do not copy privacy answers across platforms without inspecting their adapters and SDKs.
+
+---
+
+# Staging pass, 2026-09-07 (DBM-61)
+
+Repository: `sudowhat/dbmeter`, commits `75537ad..ade262d`. Tickets DBM-34, 44, 45, 46, 47, 48, all
+`[IN_PROGRESS]`.
+
+**Status of entries 1-6 above: corrections are now DRAFTED, and every one of them is still
+`NOT YET VERIFIED`.** They were written on a Windows workstation with no Kotlin/Native toolchain,
+under an explicit user instruction to stage the work without building or testing. No Kotlin was
+compiled, no test executed, no simulator or device touched. Nothing here raises an evidence level;
+it records that a proposed correction exists and where to find it.
+
+One amendment to entry 4, from writing the wiring: the sharper failure was not the empty defaults.
+`hasLocationPermission` defaults to `{ true }` — a **non-empty default that returns a wrong answer**.
+An unwired empty callback does nothing visible and is eventually noticed; a defaulted predicate feeds
+confident false state into shared UI and looks like working software. When auditing shared
+callbacks, sort them by "what does the default *assert*", not by "which ones are unwired".
+
+## 7. A platform's default backup posture can contradict the product promise
+
+- Evidence level: **OBSERVED_SOURCE** (both halves verifiable without a build).
+- Source: `androidApp/src/main/AndroidManifest.xml` sets `android:allowBackup="false"`; the iOS app
+  stored its database and audio attachments under `Documents/`, which iOS includes in iCloud backup
+  by default. `privacy-policy.md` states "deleting locally is deleting everywhere this data exists".
+  DBM-46.
+- Symptom and cause: the two platforms would have shipped **opposite** data-egress postures behind
+  one written promise, and the policy sentence would have been false on iOS — a deleted measurement
+  would still sit in the user's iCloud backup. Nobody chose this; it is the platform default, and
+  platform defaults do not read the privacy policy.
+- Correction: **NOT YET VERIFIED**. Mark the attachment directory and the database
+  `NSURLIsExcludedFromBackupKey`. Note the ordering trap that came with it: an ORM that creates its
+  database file lazily has nothing to mark on a first-ever launch, so the flag lands one session
+  late unless a post-create hook is added.
+- Regression: inspect the platform backup footprint after writing several attachments; assert it
+  does not grow with them. This is a device check, not a unit test.
+- Transfer: applies whenever one product ships to two platforms with different default backup,
+  sync or cloud behaviour, and any user-facing claim depends on data staying local. Derive the
+  policy from the **already-decided** platform, rather than treating the second platform's default
+  as a fresh product decision. It does not apply where the product intends cloud sync.
+
+## 8. Host detection in a shared test runner can silently read null
+
+- Evidence level: **OBSERVED_SOURCE**.
+- Source: `rtest.ps1` gated its native iOS phase on `if ($IsMacOS)`. DBM-44.
+- Symptom and cause: `$IsMacOS` and `$IsWindows` were introduced in PowerShell 6 and **do not exist
+  at all** in Windows PowerShell 5.1, which is what actually ran this script. The branch read
+  `$null`, took the else path, printed `HOST_SKIPPED`, and looked correct — because on that host the
+  answer happened to be right. The bug is invisible until the same script runs somewhere else,
+  which is exactly when a cross-platform runner is being relied on. Two smaller instances of the
+  same class turned up alongside it: the wrapper invoked `gradlew.bat` unconditionally, and a
+  Windows-authored repository stores `gradlew` as mode `100644`, so a macOS runner fails with
+  "permission denied" before compiling anything.
+- Correction: **NOT YET VERIFIED**. Ask the runtime
+  (`RuntimeInformation.IsOSPlatform(...)`) instead of trusting an automatic variable that may not
+  exist; resolve the wrapper filename per host; `chmod +x` in CI rather than depending on a stored
+  mode bit.
+- Regression: run the wrapper on every supported host and assert the *intended* phase actually
+  executed. A skip that was never reachable reports identically to a skip that was chosen.
+- Transfer: any script whose platform branch has only ever run on one platform. Prefer a runtime
+  query over a magic variable, and prove the other branch by executing it — reading it is not
+  enough.
+
+## 9. Write the guard so the known-bad implementation fails it
+
+- Evidence level: **OBSERVED_SOURCE**, applied while writing tests for entries 2 and 3.
+- Source: the stub encoder returned `EvidenceEncodedAudio(mimeType = "audio/mp4", durationMs = ...)`
+  for a zero-byte file. DBM-46.
+- Symptom and cause: the natural test — assert `finish()` returns non-null with the right MIME type
+  and duration — passes against the stub. A test written from the *contract* rather than from the
+  *defect* would have shipped green over a feature that did not exist.
+- Correction: **VERIFIED as a method, not as a fix.** Every assertion checks the produced bytes:
+  non-zero file size, reopenable by the platform decoder, non-zero decoded frame count, decoded
+  sample rate matching the negotiated rate, duration within tolerance. Separately, for a static
+  guard that could be executed on the authoring host, the guard was run against nine sandboxed
+  mutations of the thing it protects and all nine were confirmed to fail it.
+- Regression: before trusting a new guard, state the specific defect it exists to catch and
+  demonstrate it failing on that defect. A guard that has never failed has never been tested.
+- Transfer: universal, and cheapest at the moment the defect is still in front of you. It matters
+  most for adapters that can return plausible success — media, storage, network, permissions.
