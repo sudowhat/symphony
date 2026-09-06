@@ -629,6 +629,7 @@ skill whose family is not yours.
 | `skills/context-assurance/` | All · *optional* | shrink a model-bound evidence bundle, preserving provenance |
 | `skills/release-launch/` | Mobile | release preflight, signed-artifact verification, launch checklist, store handoff + one platform reference |
 | `skills/ios-port/` | Mobile | SRTL workflow: same-repo Android→iOS planning, target-aware tests, manual-device handoff |
+| `skills/ios-porting/` | Mobile · optional | practical parity audit and verified porting lessons; complements `ios-port`, not a new init mode |
 | `skills/adb-diagnostics/` | Mobile | SRTL workflow for physical Android device inspection over ADB |
 | `skills/portal-auth/` | Web | authenticated portals — OAuth+PKCE, OTP/magic links, sessions/CSRF, systemd hardening, secrets, deploy/rollback (§10–12), pre-launch checklist. Load before designing any project where a user signs in |
 | `skills/criso/` | Web | private, cookie-free aggregate analytics from query-free server logs |

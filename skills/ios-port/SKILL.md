@@ -135,3 +135,7 @@ NEXT: run the physical-iPhone checklist; then init <project> launcher ios testfl
 ```
 
 A simulator build is never physical-device certification. `HOST_SKIPPED`, an unreviewed ticket, or a failing Android gate blocks this terminal state.
+
+## Practical implementation lessons (optional)
+
+For behavior-parity auditing and lessons grounded in native evidence, use [ios-porting](../ios-porting/SKILL.md). It complements this planning workflow and does not change init, dispatch, or publication authority.
