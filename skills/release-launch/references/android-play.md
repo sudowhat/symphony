@@ -24,16 +24,17 @@
 
 ## Local signing properties
 
-Prefer environment variables, with an ignored properties file as a local fallback. Typical non-secret keys:
+Prefer environment variables, with an ignored properties file as a local fallback. In Gradle `build.gradle.kts`, always wrap the path in `rootProject.file(releaseStoreFile)` so both relative and absolute paths resolve seamlessly across multiple developer machines:
 
 ```properties
-storeFile=C:/absolute/path/outside/repository/upload-key.jks
+# May be a relative path (e.g. keystore/upload.jks) or an absolute path
+storeFile=keystore/upload-key.jks
 storePassword=<local secret>
 keyAlias=<alias>
 keyPassword=<local secret>
 ```
 
-Before building, prove the properties file is ignored with `git check-ignore` and absent from `git ls-files`.
+Before building, verify that `.gitignore` locks all sensitive signing artifacts: `signing.properties`, `*.jks`, `*.keystore`, `*.aab`, and `*.apk`. Prove the properties file is ignored with `git check-ignore` and absent from `git ls-files`.
 
 ## Build and verification
 
@@ -85,27 +86,55 @@ The build is the easy half. These are the store-side steps, in the order that un
      hosted policy must actually contain deletion instructions, or the URL is a false pointer.
 4. **Republish the hosted privacy policy and byte-check it** against the repository copy every
    release. A hosted copy drifts silently; compare normalized SHA-256, don't eyeball it.
-5. **Store listing copy.** The **App name is Play's highest-weighted ASO field** — a bare brand name
+5. **Store listing copy & App Name cap.** The **App name is Play's highest-weighted ASO field** — a bare brand name
    carries no keyword weight. Short description is the second lever. Verify every product claim
    against the code before pasting it; a store listing is a public assertion about behavior.
-6. **Graphic asset specs, checked locally before upload** (PIL or equivalent, not by rejection):
+   - **Strict 30-character cap on App Name:** Play enforces this strictly. Manually count characters,
+     spaces, and parentheses. Watch for trailing punctuation (e.g. adding a period to a 30-char title
+     makes it 31 and fails validation).
+   - **Freeze rule:** Do NOT submit store listing metadata updates while a Production Access application
+     is in flight. Queue title/copy updates to be submitted concurrently with the approved Production release.
+6. **Android developer verification.** Confirm all apps and signing keys are registered on the
+   Developer verification page early (required before Sept 30, 2026), even for apps still in progress.
+   Confirm the Console Home banner shows compliance: "All of your apps have been successfully registered...".
+7. **Graphic asset specs, checked locally before upload** (PIL or equivalent, not by rejection):
    - Screenshots: each side 320–3840 px, aspect ratio ≤ 2:1, 24-bit PNG/JPEG **with no alpha**.
    - Feature graphic: **fixed** 1024×500 — a size, not a ratio.
    - Icon: 512×512 32-bit PNG **with** alpha.
    - Label AI-generated or AI-edited assets in the AI declaration.
-7. **Submission is batched.** There is no per-change rollout button. Console collects every pending
+8. **Submission is batched.** There is no per-change rollout button. Console collects every pending
    edit plus the release into one **"Submit N changes for review"** on Publishing overview. Confirm
    the count matches what you changed. With **Managed publishing off**, approval auto-publishes; with
    it on, approval leaves a second manual gate.
-8. **Closed testing before production** (accounts created after Nov 2023): ≥12 testers continuously
+9. **Closed testing before production** (accounts created after Nov 2023): ≥12 testers continuously
    opted in for ≥14 days. Push 2–3 minor updates during the window — review favors visible iteration.
    Answer the production questionnaire from what the app actually does on the submission date; paid
-   testing services supply boilerplate answers that are frequently false for the specific app.
+   testing services supply boilerplate answers (`db_production.pdf`) that are frequently false for the specific app.
 
 ## Traps with a track record
 
 Each of these has cost a real launch cycle at least once.
 
+- **Freeze store listing & metadata while Production Access is under review.** Submitting title,
+  description, or asset changes while Google's human team is reviewing the 14-day closed testing questionnaire
+  creates a concurrent review queue item that can delay or complicate the production auditor's decision.
+  Batch metadata changes into the actual Production release rollout once approved.
+- **Distinguish Play Console advisory SDK notices from blocking policy violations.** Advisory notices
+  from Google Play SDK Index ("SDK version is outdated... Consider updating") do NOT block releases or
+  production access. Many official Google libraries (e.g. `play:review-ktx:2.0.2`) transitively drag in
+  obsolete libraries (`androidx.fragment:fragment:1.1.0`). Silence them cleanly by adding an explicit
+  modern dependency in Gradle (e.g. `implementation("androidx.fragment:fragment:1.8.6")`), but recognize
+  they are not launch blockers.
+- **Third-party testing agency boilerplate questionnaire answers are dangerous.** Templates provided by
+  closed-testing services routinely claim capabilities the app does not possess (e.g. onboarding walkthroughs,
+  paid testing providers, customer satisfaction data). Submitting false claims to Google reviewers risks
+  immediate rejection of production access. Always answer truthfully based on shipped code.
+- **Hardcoded absolute signing paths break multi-seat workflows.** Hardcoding `C:\Users\<user>\...` in
+  `signing.properties` breaks release builds immediately on another workstation. Always use
+  `rootProject.file(...)` in Gradle so relative paths work portably, and verify `.gitignore` ignores
+  all keystores and signing properties.
+- **App title 30-character hard cap & punctuation trap.** 30 characters is an absolute ceiling. Appending
+  a period to a 30-character title produces 31 characters and triggers an instant Console validation failure.
 - **A version code is burned only by upload.** Built-but-never-uploaded codes are free to reuse.
   Bump at upload time, not at build time, or you leak version numbers on every rebuild.
 - **Source drift with no version bump blocks everything.** Check the live version code against the
