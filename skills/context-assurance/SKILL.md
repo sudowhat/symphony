@@ -79,7 +79,7 @@ This skill is not permission to gather broad context first and compress later. `
 
 Keep these raw/exact and outside context assurance:
 
-- `Agent role.md`, role profiles, mandatory skills, and protocol instructions required by init;
+- `Agent-role.md`, role profiles, mandatory skills, and protocol instructions required by init;
 - active ticket acceptance criteria, ticket lifecycle/status, claims, `ticketorder.md`, and `.symphony-root`;
 - project `MEMORY.md` / `SKILL.md` and architecture/design material when being used as authoritative instruction;
 - source/config/schema/API content whose exact form is required for an implementation, edit, review, or decision;

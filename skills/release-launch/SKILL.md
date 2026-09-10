@@ -48,7 +48,7 @@ If the init command omits the target, infer it only from one unambiguous user-re
 
 ### 1. Establish live state
 
-1. Resolve the canonical project path from `Agent role.md`.
+1. Resolve the canonical project path from `Agent-role.md`.
 2. Verify `.symphony-root`.
 3. Pass the Repository Sync or Direct-Remote Gate before reading project state.
 4. Read project `MEMORY.md`, `SKILL.md`, release documentation, active tickets, route, and launch checklist.

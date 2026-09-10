@@ -131,15 +131,15 @@ Create `tickets/` (if absent) and `tickets/.claims/`. Git does not track empty d
 
 Ensure the project root `.gitignore` contains `.workspace-temp/`. Create `.gitignore` when absent. The directory itself may be created on demand and stays untracked; do not seed it with a tracked placeholder. It is the universal local drop zone for screenshots, logs, drafts, and other build-unrelated files shared with agents. It is not encrypted and must never hold secrets, signing material, personal data, or the only copy of an important artifact.
 
-**Do not create `requests/`.** The Architect's request-intake path (`Agent role.md`, Architect step 4) reads `<project>/requests/` for `[NEW]_REQ-*.md`, but an absent directory simply means no requests — it is not an error, and every live project runs without one. Create it only when the project actually starts using Orchestrator intake.
+**Do not create `requests/`.** The Architect's request-intake path (`Agent-role.md`, Architect step 4) reads `<project>/requests/` for `[NEW]_REQ-*.md`, but an absent directory simply means no requests — it is not an error, and every live project runs without one. Create it only when the project actually starts using Orchestrator intake.
 
 ### Step 5 — Ticket 0 check
 
 Apply §4. Record the outcome; never edit the ticket.
 
-### Step 6 — Register in `Agent role.md`
+### Step 6 — Register in `Agent-role.md`
 
-Two edits to `<project-home>/symphony/Agent role.md`:
+Two edits to `<project-home>/symphony/Agent-role.md`:
 
 1. Append a row to the **Project Registry** table: `| <short-name> | <project-folder> | <type> | <roles> |`.
 2. Add the short name to its **project family** row in the "Project families" table directly under the registry — `kmp-mobile` and `android-dev` join **Mobile app**, `content-web` joins **Content web**. The family is what tells every future agent which domain skills apply, so a project missing from it silently gets the wrong reading list. If the type itself is new, add a family row rather than leaving the type unclassified.
@@ -203,7 +203,7 @@ Onboarding does not begin work. It ends by handing the user `init <short-name> <
 
 ## References
 
-- `Agent role.md` — the `add project` command, the Project Registry, the Path Integrity Protocol, the Ticket Integrity Rules
+- `Agent-role.md` — the `add project` command, the Project Registry, the Path Integrity Protocol, the Ticket Integrity Rules
 - `whatdate-folder/` — the reference implementation of all four files
 - `skills/ticket-management/SKILL.md` — ticket naming and templates
 - `skills/global-skill/SKILL.md` — global rules, repository gates, and live-state freshness

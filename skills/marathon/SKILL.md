@@ -39,7 +39,7 @@ The user's framing: *"review already DONE and finish remaining in the batch."*
 6. CLOSE: attempt batch close. Any open -SRTL line blocks it — stage everything, then ring.
 ```
 
-Marathon mode's single deviation from the Role Work Loop (`Agent role.md`) is step 2: one seat may
+Marathon mode's single deviation from the Role Work Loop (`Agent-role.md`) is step 2: one seat may
 take consecutive lines belonging to different roles. Everything else in that loop still binds —
 strict top-down order, never skipping the head, sync gate before each fresh queue read.
 

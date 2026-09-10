@@ -8,7 +8,7 @@ init project1 <role>        # architect | qa | dev | srtl | orchestrator
 
 Source of truth, in mandatory load order:
 
-1. `<SYMPHONY_ROOT>/Agent role.md` — universal entry and role registry
+1. `<SYMPHONY_ROOT>/Agent-role.md` — universal entry and role registry
 2. `<SYMPHONY_ROOT>/.agent_profiles/<role>_profile.md` — role boundaries
 3. `<SYMPHONY_ROOT>/skills/global-skill/SKILL.md` — global rules and repository/live-state gates
 4. `<SYMPHONY_ROOT>/skills/token-discipline/SKILL.md` — lossless input/output discipline

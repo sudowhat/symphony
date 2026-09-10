@@ -24,7 +24,7 @@ Thumbs.db
 !/.gitignore
 !/LICENSE
 !/README.md
-!/Agent role.md
+!/Agent-role.md
 !/orchestrator model map.md
 !/taskagent.md
 !/.agent_profiles/

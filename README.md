@@ -130,7 +130,7 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 
 ```
 .
-├── Agent role.md                  # THE entry point. Every agent reads this first.
+├── Agent-role.md                  # THE entry point. Every agent reads this first.
 ├── taskagent.md                   # orchestrator only - see "Status" below, not yet usable
 ├── orchestrator model map.md      # orchestrator only - model slug legend
 ├── .agent_profiles/               # one file per role: identity, boundaries, workflow
@@ -164,7 +164,7 @@ The ticket IDs in the shipped skill files (`WD-…`, `CAP-…`) are real inciden
 
 1. **Clone this repo.** It becomes your `<SYMPHONY_ROOT>` — the paths inside the protocol files are written as `<SYMPHONY_ROOT>`; replace them with your absolute path, or keep the placeholder if your agent resolves relative paths reliably.
 2. **Add your project** — say `add project <your-folder>` to any agent and it writes the files, registers the project and verifies the result (see [Adding your own project](#adding-your-own-project) below). Prefer to do it by hand? Copy `project1/` (dev) or `project2/` (content), rename it, and do steps 3–4 yourself.
-3. **Add a row to the Project Registry** in `Agent role.md`.
+3. **Add a row to the Project Registry** in `Agent-role.md`.
 4. **Edit three files in your new folder:**
    - `.symphony-root` — set `project=` and `canonical_path=`
    - `SKILL.md` — your real build and test commands. Nothing else tells the agents how to build.
@@ -194,7 +194,7 @@ The agent reads `skills/project-onboarding/SKILL.md` and runs a fixed procedure:
 **What lands:** `.symphony-root`, `MEMORY.md`, `SKILL.md`, `ticketorder.md`, plus `tickets/` and `tickets/.claims/`. Two things about that set are worth knowing:
 
 - `.symphony-root` is the path-integrity marker, and **onboarding is the only moment it is ever legitimate to create one.** Every other rule in the protocol says a role agent that finds it missing is lost and must stop.
-- The registry row appended to `Agent role.md` is **the step that actually makes the project real.** Until that edit lands, `init <short-name> <role>` cannot resolve, no matter how complete the folder looks.
+- The registry row appended to `Agent-role.md` is **the step that actually makes the project real.** Until that edit lands, `init <short-name> <role>` cannot resolve, no matter how complete the folder looks.
 
 Onboarding does not start work. It ends by handing you `init <short-name> <role>`, and the Architect's own init takes it from there.
 

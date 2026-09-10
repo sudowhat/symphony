@@ -33,8 +33,8 @@ If saving tokens would weaken any item above, spend the tokens.
 This skill complements existing rules; it does not restate or supersede their semantics:
 
 - `global-skill` Cost-Aware Execution owns ask-versus-assume decisions.
-- `global-skill` and `Agent role.md` No Keepalive / No Tool Spam own WAIT and EXIT behavior.
-- `Agent role.md` owns the exact one-line Role Work Loop status strings.
+- `global-skill` and `Agent-role.md` No Keepalive / No Tool Spam own WAIT and EXIT behavior.
+- `Agent-role.md` owns the exact one-line Role Work Loop status strings.
 - `global-skill` owns Repository Sync, Direct-Remote, and live-state reread gates.
 - `agent-symphony`, role profiles, and active tickets own boundaries, lifecycle, scope, and completeness.
 
@@ -214,7 +214,7 @@ Operational detail — command classification, recovery, per-tool guidance, priv
 
 Report only meaningful state changes, decisions, blockers, or evidence. Do not narrate every read, search, edit, or test command.
 
-When `Agent role.md` defines an exact Role Work Loop line, print it verbatim—for example:
+When `Agent-role.md` defines an exact Role Work Loop line, print it verbatim—for example:
 
 - `<role>|exit`
 - `<role>|waiting on <ticket>`

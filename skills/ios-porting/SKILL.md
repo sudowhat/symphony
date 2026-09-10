@@ -7,7 +7,7 @@ description: Plan and validate Android-to-iOS ports with close UX and behavior p
 
 Keep one product across platforms. Use this skill to turn an audit or a demonstrated porting failure into an actionable plan or a reusable engineering lesson. It does not activate a ticket queue, authorize cloud spending, or authorize Apple account, signing, or publication actions.
 
-For Symphony initialization and ticket lifecycle, follow `../../Agent role.md`. Explicit `srtl ios` planning uses `../ios-port/SKILL.md`; distribution uses `../release-launch/SKILL.md` and its iOS reference. This skill supplies implementation evidence and decision checks, not a competing lifecycle.
+For Symphony initialization and ticket lifecycle, follow `../../Agent-role.md`. Explicit `srtl ios` planning uses `../ios-port/SKILL.md`; distribution uses `../release-launch/SKILL.md` and its iOS reference. This skill supplies implementation evidence and decision checks, not a competing lifecycle.
 
 ## Audit behavior, not filenames
 

@@ -112,7 +112,7 @@ When QA hits `[CANNOT_QA]` or Dev hits `[CANNOT_DEV]`, you have the authority to
 
 ### Auto-Proceed (after init) — Role Work Loop (2026-07-25; Architect exempt, SRTL included)
 
-Canonical law: `Agent role.md` §"Role Work Loop" (Repository Sync Gate → EXIT / WAIT / TAKE).
+Canonical law: `Agent-role.md` §"Role Work Loop" (Repository Sync Gate → EXIT / WAIT / TAKE).
 For SRTL since 2026-08-21 there is a fourth state, **ASK**: when the batch is closed, or nothing on
 it is takeable by you, ring the attention bell and ask whether a review is wanted rather than
 exiting silently or reviewing uninvited. See §"Function 1".
@@ -247,7 +247,7 @@ rather than a confirmable defect, note it as a recommendation rather than rewrit
 
 ### Path Integrity (MANDATORY)
 
-Same as all roles: resolve project folder ONLY from the Project Registry in `Agent role.md`. Verify `.symphony-root` before first write. Never create project directories.
+Same as all roles: resolve project folder ONLY from the Project Registry in `Agent-role.md`. Verify `.symphony-root` before first write. Never create project directories.
 
 **See also:**
 - `skills/agent-symphony/SKILL.md` (protocol, boundaries, Hard Rules)

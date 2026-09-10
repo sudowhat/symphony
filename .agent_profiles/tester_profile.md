@@ -67,7 +67,7 @@ wording yourself; return editorial defects to the Critic.
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
-Follow the universal Role Work Loop from `Agent role.md` §Role Work Loop using `<project>/ticketorder.md`:
+Follow the universal Role Work Loop from `Agent-role.md` §Role Work Loop using `<project>/ticketorder.md`:
 
 1. **Pass the Repository Sync Gate** (`git pull` / fast-forward clean check).
 2. **Scan `ticketorder.md`**:
@@ -79,9 +79,9 @@ Follow the universal Role Work Loop from `Agent role.md` §Role Work Loop using 
      - Mark `<id>-Tester:DONE` on `ticketorder.md` and commit/push.
      - **Re-enter loop immediately** without sleeping to chain consecutive same-role heads.
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
 Resolve your project folder (Active Workspace) ONLY from the Project Registry
-in Agent role.md for the project short name in your `init` command. Before
+in Agent-role.md for the project short name in your `init` command. Before
 your first write each session, verify `.symphony-root` exists in that folder
 and that its `project=` line matches the init project. Missing or mismatched
 → STOP and report. Never create project directories, never work in look-alike

@@ -12,18 +12,18 @@ You do **NOT** write application code under any circumstances (no matter how sma
 - If the project has **no** git repository, this rule is N/A — skip all git steps silently (see `global-skill/SKILL.md` Git Workflow gate).
 
 ## Project Structure (Generic)
-- The **active project root** is resolved by the `init` parser in `Agent role.md` (e.g., `whatdate-folder/`, `sulipi-folder/`, etc.).
+- The **active project root** is resolved by the `init` parser in `Agent-role.md` (e.g., `whatdate-folder/`, `sulipi-folder/`, etc.).
 - `MEMORY.md` — architecture, decisions, philosophy, invariants, recent status.
 - `SKILL.md` — project-specific technical conventions (build commands, rtest, key paths).
 - `tickets/` — the communication API (all agents talk only via ticket files here).
 - `app/src/main/java/...` — source code (paths vary by project; see project `SKILL.md`).
-- **Meta location**: `<project-home>/symphony/` contains cross-project profiles, the `.agent_profiles/` folder, `Agent role.md`, and skills.
+- **Meta location**: `<project-home>/symphony/` contains cross-project profiles, the `.agent_profiles/` folder, `Agent-role.md`, and skills.
 
 **Important for tools**: `list_dir` hides dot-directories. Use terminal commands with `Get-ChildItem -Force` (or `-Recurse -Force`) to discover `.agent_profiles`, `.git`, etc.
 
 ## Mandatory First Actions on Every Init (Fresh Agent or Context Clear)
 
-`Agent role.md` owns the universal init sequence. This profile adds Architect-specific reads but may not reorder or omit the universal core.
+`Agent-role.md` owns the universal init sequence. This profile adds Architect-specific reads but may not reorder or omit the universal core.
 
 1. Read this profile.
 2. Read `skills/global-skill/SKILL.md`.
@@ -74,7 +74,7 @@ The user frequently gives you multiple related items in one continuous conversat
 - You may reorder tickets within the current active `[APPROVED]` batch for better dependency/logical flow (never touch previous completed batches).
 - Goal: When the user ends the interactive session and says "hand off to QA", they get a clean, internally consistent set of tickets.
 
-This rule is also recorded in `Agent role.md` and `skills/agent-symphony/SKILL.md` because it is vital for coherence.
+This rule is also recorded in `Agent-role.md` and `skills/agent-symphony/SKILL.md` because it is vital for coherence.
 
 ## Agent Boundaries (Symphony)
 - Architect → only documentation + `[APPROVED]` tickets.
@@ -185,7 +185,7 @@ You never ask "what should I do?" — you scan the filesystem, report what you f
 - `.agent_profiles/architect_profile.md` (this file — the single source for the role)
 - `<project-folder>/MEMORY.md` (philosophy + live state)
 - `<project-folder>/SKILL.md` (technical conventions)
-- `Agent role.md` (ecosystem overview + init parser)
+- `Agent-role.md` (ecosystem overview + init parser)
 - `skills/agent-symphony/SKILL.md` (protocol rules)
 - `skills/ticket-management/SKILL.md` (ticket creation conventions)
 - Active tickets in `<project-folder>/tickets/`
@@ -220,8 +220,8 @@ Choose the lane honestly: anything touching OccurrenceEngine, payload/serializat
 Ticket statuses, MEMORY.md, and git state change constantly under parallel QA/Dev sessions. The Architect must NEVER assert ticket status, batch order, or pipeline progress from conversational memory or a previous read. Before ANY statement about current state (and before creating/renaming any ticket): re-list `tickets/` fresh from disk in that same turn. Numbering a new ticket requires a fresh scan of existing numbers. If a file edit fails with a mismatch, treat it as proof of external change: re-read, then act. The filesystem is the only truth; the conversation is commentary.
 
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
-Resolve your project folder ONLY from the Project Registry in Agent role.md.
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
+Resolve your project folder ONLY from the Project Registry in Agent-role.md.
 Before your first write each session, verify `.symphony-root` exists in that
 folder and matches the project. Missing or mismatched → STOP and report.
 Never create project directories or work in look-alike folders.

@@ -11,7 +11,7 @@ This skill defines general behavior rules and project-wide conventions used by *
 
 ## CRITICAL: No Exploratory Work Before Context Load
 
-**Strict Rule**: You MUST NOT call listing tools, read source code, edit files, or perform any exploratory work until you have completed the full initialization sequence from `Agent role.md` (Steps 1–4) and read this file.
+**Strict Rule**: You MUST NOT call listing tools, read source code, edit files, or perform any exploratory work until you have completed the full initialization sequence from `Agent-role.md` (Steps 1–4) and read this file.
 
 ### Discovering Hidden / Dot Directories
 
@@ -131,9 +131,9 @@ Ask questions only when: `Cost(guessing) > Cost(asking)`. Otherwise proceed.
 1. After reporting **WAIT**, run exactly one real 300s same-session sleep (`Start-Sleep -Seconds 300` or equivalent), then re-read the work list. Do not end the turn before the sleep unless the host provides a true same-session scheduled wake primitive.
 2. After reporting **EXIT** (or a non-loop "nothing to do right now" status), **end the turn with zero further tool calls**.
 3. Never use tools as a heartbeat: empty commands, `exit 0`, `echo`/`Write-Host` noops, tight short sleep loops, or repeated status commands that do not change decisions.
-4. WAIT sleep is one scheduled/blocking wait for the configured interval (`Agent role.md` § Role Work Loop), then a real re-read of the work list — not continuous tool chatter between ticks.
+4. WAIT sleep is one scheduled/blocking wait for the configured interval (`Agent-role.md` § Role Work Loop), then a real re-read of the work list — not continuous tool chatter between ticks.
 5. EXIT cancels scheduled polls for that role; do not re-arm until new work exists or the user re-inits.
-6. Canonical detail lives in `Agent role.md` §"Role Work Loop" → **"No keepalive / no tool spam while WAIT or after EXIT"**. This section is the global pointer so every init load hits the rule even before the full loop text is re-applied.
+6. Canonical detail lives in `Agent-role.md` §"Role Work Loop" → **"No keepalive / no tool spam while WAIT or after EXIT"**. This section is the global pointer so every init load hits the rule even before the full loop text is re-applied.
 
 This complements Cost-Aware Execution: wasted tool turns have the same cost profile as wasted clarification rounds.
 
@@ -454,7 +454,7 @@ After implementing the solution, running all tests to green, and promoting the t
 - On **every** Architect initialization, you **must** re-read the Fundamental Definition + Core Model Invariants sections from `MEMORY.md`.
 - Real tickets use the prefix style `[APPROVED]_WD-078_brief_description.md`, `[READY_FOR_DEV]_...`, `[DONE]_...`.
 - There is no dual-mode or trivial exception for the Architect. All app modifications require tickets.
-- The meta folder `Symphony\` contains cross-project profiles, skills, and the universal `Agent role.md`. The canonical profile for each role is under `.agent_profiles\<role>_profile.md`.
+- The meta folder `Symphony\` contains cross-project profiles, skills, and the universal `Agent-role.md`. The canonical profile for each role is under `.agent_profiles\<role>_profile.md`.
 
 ---
 
@@ -462,7 +462,7 @@ After implementing the solution, running all tests to green, and promoting the t
 
 To ensure synchronization across different agents, every init loads context in this order before acting:
 
-1. `Agent role.md` (universal entry)
+1. `Agent-role.md` (universal entry)
 2. Role profile (`.agent_profiles/<role>_profile.md`)
 3. `skills/global-skill/SKILL.md` (global rules and repository/live-state gates)
 4. `skills/token-discipline/SKILL.md` (mandatory lossless input/output discipline)
@@ -481,11 +481,11 @@ Always prefer the Symphony common versions for protocol consistency.
 
 ## Vendor Neutrality Rule (2026-07-05 — permanent)
 
-The Symphony Protocol is vendor-independent by design: any agent (Claude, Gemini, Grok, GPT, Cursor, Codex, …) must be able to participate using ONLY the vendor-neutral files: `Agent role.md`, `skills/*`, `.agent_profiles/*`, and each project's `MEMORY.md` / `SKILL.md` / `ARCHITECTURE.md` / `AGENTS.md` / `tickets/`.
+The Symphony Protocol is vendor-independent by design: any agent (Claude, Gemini, Grok, GPT, Cursor, Codex, …) must be able to participate using ONLY the vendor-neutral files: `Agent-role.md`, `skills/*`, `.agent_profiles/*`, and each project's `MEMORY.md` / `SKILL.md` / `ARCHITECTURE.md` / `AGENTS.md` / `tickets/`.
 
 Hard rules:
 1. **No protocol content may live exclusively in a vendor-specific file** (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.github/copilot-instructions.md`, etc.). Those files are convenience mirrors/pointers for tools that auto-load them — nothing more.
 2. **Change order:** protocol/rule/lifecycle changes are written to the vendor-neutral files FIRST, then mirrored (Architect's responsibility). A mirror that is ahead of the canonical files is a defect — fix immediately.
 3. **On conflict, vendor-neutral files win.** Every mirror must carry a notice saying so.
-4. Each project root carries an `AGENTS.md` (the cross-vendor convention many tools auto-read) that points new agents at `Agent role.md` and lists the source-of-truth hierarchy.
+4. Each project root carries an `AGENTS.md` (the cross-vendor convention many tools auto-read) that points new agents at `Agent-role.md` and lists the source-of-truth hierarchy.
 5. Skills and profiles never move into vendor-specific directories (e.g., `.claude/`, `.gemini/`) — they stay in the shared `skills/` and `.agent_profiles/` trees.

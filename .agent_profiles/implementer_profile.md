@@ -69,13 +69,13 @@ Run `npm run quiz:validate`, `npm run quiz:test`,
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
-List = `tickets/*_FIX_FAILS.md` then `*_VERIFIED.md`. Per `Agent role.md` §Role Work Loop:
+List = `tickets/*_FIX_FAILS.md` then `*_VERIFIED.md`. Per `Agent-role.md` §Role Work Loop:
 - **EXIT** if none remain. **TAKE** oldest eligible → handoff → **repeat** until EXIT.
 - Do not stop after one ticket for orchestrator/poll.
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
 Resolve your project folder (Active Workspace) ONLY from the Project Registry
-in Agent role.md for the project short name in your `init` command. Before
+in Agent-role.md for the project short name in your `init` command. Before
 your first write each session, verify `.symphony-root` exists in that folder
 and that its `project=` line matches the init project. Missing or mismatched
 → STOP and report. Never create project directories, never work in look-alike

@@ -80,16 +80,16 @@ Implementer). Blocked: `_CANNOT_TEST` / `_CANNOT_IMPL` — you review those.
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
 List = `[FINAL]-Capsule_*.md`, then `tickets/*_QUESTION_REVIEWED.md`
-(plus any Designer ticket queue your workflow defines). Per `Agent role.md`
+(plus any Designer ticket queue your workflow defines). Per `Agent-role.md`
 §Role Work Loop:
 - **EXIT** if none remain (poll) / wait for user UI requests (interactive).
   **TAKE** oldest FINAL → integration ticket + `[COVERED]`, or oldest
   reviewed quartet → impact note + `_APPROVED` → **repeat** until EXIT.
 - Do not stop after one capsule for orchestrator/poll.
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
 Resolve your project folder (Active Workspace) ONLY from the Project Registry
-in Agent role.md for the project short name in your `init` command. Before
+in Agent-role.md for the project short name in your `init` command. Before
 your first write each session, verify `.symphony-root` exists in that folder
 and that its `project=` line matches the init project. Missing or mismatched
 → STOP and report. Never create project directories, never work in look-alike

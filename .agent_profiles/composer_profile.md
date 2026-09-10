@@ -130,13 +130,13 @@ no-ticket boundary.
 
 ## Role Work Loop (MANDATORY — 2026-07-25; Architect exempt)
 
-List = `[REVISION]-*.md` in project root (oldest first). Per `Agent role.md` §Role Work Loop:
+List = `[REVISION]-*.md` in project root (oldest first). Per `Agent-role.md` §Role Work Loop:
 - **EXIT** if none remain. **TAKE** oldest → fix → `[DRAFT]` → **re-scan and repeat** until EXIT.
 - Do not stop after one file for orchestrator/poll.
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
 Resolve your project folder (Active Workspace) ONLY from the Project Registry
-in Agent role.md for the project short name in your `init` command. Before
+in Agent-role.md for the project short name in your `init` command. Before
 your first write each session, verify `.symphony-root` exists in that folder
 and that its `project=` line matches the init project. Missing or mismatched
 → STOP and report. Never create project directories, never work in look-alike

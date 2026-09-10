@@ -147,14 +147,14 @@ The answer key and private rationales remain server-side. Never place them in
 
 List = `[DRAFT]-*.md` in project root, then
 `tickets/*_QUESTION_DRAFT.md` whose source capsule passed editorial review
-(oldest first). Per `Agent role.md` §Role Work Loop:
+(oldest first). Per `Agent-role.md` §Role Work Loop:
 - **EXIT** if none remain. **TAKE** oldest → review (+ placement on capsule
   pass, or direct quartet correction) → **re-scan and repeat** until EXIT.
 - Do not stop after one file for orchestrator/poll.
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
 Resolve your project folder (Active Workspace) ONLY from the Project Registry
-in Agent role.md for the project short name in your `init` command. Before
+in Agent-role.md for the project short name in your `init` command. Before
 your first write each session, verify `.symphony-root` exists in that folder
 and that its `project=` line matches the init project. Missing or mismatched
 → STOP and report. Never create project directories, never work in look-alike

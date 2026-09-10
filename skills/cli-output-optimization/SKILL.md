@@ -71,7 +71,7 @@ Never invert the default. An unclassified command is CLASS A until deliberately 
 
 Exact output/content is part of correctness, synchronization, review, or protocol behavior:
 
-- `Agent role.md`, role profiles, `skills/global-skill`, `skills/token-discipline`,
+- `Agent-role.md`, role profiles, `skills/global-skill`, `skills/token-discipline`,
   `skills/agent-symphony`, and this file
 - project `MEMORY.md`, project `SKILL.md`, architecture/design docs used as authoritative instruction
 - tickets, `.claims/`, `ticketorder.md`, `.symphony-root`

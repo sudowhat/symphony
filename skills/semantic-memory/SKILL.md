@@ -28,7 +28,7 @@ Do not report provider absence during routine work. Absence is a supported confi
 
 Preserve these levels:
 
-1. **Protocol:** `Agent role.md`, role profile, and mandatory skills.
+1. **Protocol:** `Agent-role.md`, role profile, and mandatory skills.
 2. **Project invariants:** current `MEMORY.md`, `SKILL.md`, architecture/design canon.
 3. **Active state:** current route, claims, ticket, branch/ref, source, tests, and Git state.
 4. **Project history:** completed tickets, prior decisions, regressions, incidents, and implementation lessons. Semantic recall may locate these.

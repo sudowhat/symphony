@@ -15,9 +15,9 @@ The root is `<project-home>/symphony/`. `<project-home>` is the host-specific pa
 **only** part of any Symphony path that varies between machines. Everything below the root is
 identical everywhere, which is what makes these files portable.
 
-1. Already inside the tree? The nearest ancestor containing `Agent role.md` **is** the root;
+1. Already inside the tree? The nearest ancestor containing `Agent-role.md` **is** the root;
    `<project-home>` is its parent. Stop — authoritative.
-2. Otherwise probe in this order, take the **first** hit containing `Agent role.md`:
+2. Otherwise probe in this order, take the **first** hit containing `Agent-role.md`:
    `<home>/Documents/symphony` → `<home>/symphony`. (`<home>` = `%USERPROFILE%` on Windows, `$HOME`
    elsewhere.)
 3. Record the resolved absolute path; use it literally all session. Do not probe again, do not keep a
@@ -160,7 +160,7 @@ Fully read every mandatory governing file once. Token discipline governs later t
 
 | # | Read | When |
 |---|---|---|
-| 1 | `Agent role.md` | you are here |
+| 1 | `Agent-role.md` | you are here |
 | 2 | `.agent_profiles/<role>_profile.md` | always |
 | 3–5 | `global-skill` → `token-discipline` → `agent-symphony` | always, in that order |
 | **6** | **Path Integrity check** ↓ | **always** |
@@ -611,7 +611,7 @@ skill whose family is not yours.
 
 | File | Family | Purpose |
 |---|---|---|
-| `Agent role.md` | All | this file — entry point and init parser |
+| `Agent-role.md` | All | this file — entry point and init parser |
 | `.agent_profiles/<role>_profile.md` | All | role identity, boundaries, workflow |
 | `skills/global-skill/` | All | global behaviour, ambiguity resolution, live-state and repository gates, Git workflow, attention bell |
 | `skills/token-discipline/` | All | vendor-neutral token discipline with a lossless engineering floor |

@@ -22,7 +22,7 @@ You are the Lead Developer (Executioner) for the active Android project.
 - Read `skills/rtest/SKILL.md` and `skills/blocker-resolution/SKILL.md`.
 - After route selection, read the selected ticket in full, especially `## Solution Approach`, `## Architectural Constraints`, and prior QA/Architect evidence; do not preload unrelated ticket bodies.
 
-`Agent role.md` owns this universal order. Token discipline reduces later retrieval and reporting, but it never permits skipping a governing file, live-state re-read, gate, selected ticket, code, test, exact failure, diff, or evidence.
+`Agent-role.md` owns this universal order. Token discipline reduces later retrieval and reporting, but it never permits skipping a governing file, live-state re-read, gate, selected ticket, code, test, exact failure, diff, or evidence.
 
 **Workflow (strict order):**
 1. **Repository Sync Gate (see `global-skill/SKILL.md`):** before any project ticket/claim read, pass the clean-tree fetch/fast-forward gate. A dirty tree, divergence, remote failure, or Git error blocks the read — **and is a WAIT, not a session end** (2026-08-19): print the reason, sleep 300s, re-run the gate, and repeat while you still hold an open line. A dirty tree normally means QA is mid-ticket. Do not stash, reset, clean, restore, merge, rebase, or claim a ticket to work around it.
@@ -150,7 +150,7 @@ After every handoff (or on every init/poll with no orphan), classify against `ti
 | State | When | What you do |
 |---|---|---|
 | **EXIT** | **No** open `*-Dev` lines remain anywhere on the route | Report `LOOP_EXIT: no work remaining for Dev`. Stop looping; cancel scheduled Dev polls. If the cycle is empty of active Dev work, apply Common Dev Convention artifact build. |
-| **WAIT** | ≥1 open `*-Dev` remains **but** head is not Dev (or head is Dev but gate not open) | Report `LOOP_WAIT: head is <entry>; N open Dev line(s) remain`. Then SLEEP per `Agent role.md` §"Role Work Loop" ("What sleep concretely means") — 300s, resume this same session, no confirmation needed, repeat until TAKE/EXIT. **Never** skip the head. |
+| **WAIT** | ≥1 open `*-Dev` remains **but** head is not Dev (or head is Dev but gate not open) | Report `LOOP_WAIT: head is <entry>; N open Dev line(s) remain`. Then SLEEP per `Agent-role.md` §"Role Work Loop" ("What sleep concretely means") — 300s, resume this same session, no confirmation needed, repeat until TAKE/EXIT. **Never** skip the head. |
 | **TAKE** | Head is `*-Dev` and gate-open (or orphan resume) | Implement to `[DONE]` + push + mark `:DONE`, then **immediately re-enter this loop** (chain 244-Dev→245-Dev→…). Same session. Do **not** stop after one ticket for orchestrator/poll. |
 
 Examples: head `247-QA` with later `244-Dev` open → **WAIT**. Head `244-Dev` READY → **TAKE**, then if head becomes `245-Dev` → **TAKE** again. All Dev lines `:DONE` → **EXIT**.
@@ -159,7 +159,7 @@ Never ask "what should I do?" — always state EXIT / WAIT / TAKE and the route 
 
 **Loop status line must also name the ongoing task (added 2026-07-31, per user directive):** the one-line status gives the loop state, the route head, AND the ongoing task, in a few words — e.g. `LOOP_WAIT: Dev · implementing WD-275 data-health · head WD-275-Dev; N open · HH:mm` / `LOOP_EXIT: Dev · none · no open Dev lines`.
 
-**No keepalive on WAIT/EXIT (all vendors):** after `LOOP_WAIT`, run exactly one real 300s same-session sleep (`Start-Sleep -Seconds 300` or equivalent), then re-read `ticketorder.md` and continue the loop. After `LOOP_EXIT`, end the turn with **zero** further tool calls. No empty shell noops, no tight short sleep loops, no "stay alive" commands. Canonical: `Agent role.md` § Role Work Loop "No keepalive / no tool spam" and `skills/global-skill/SKILL.md` §"No Keepalive / No Tool Spam".
+**No keepalive on WAIT/EXIT (all vendors):** after `LOOP_WAIT`, run exactly one real 300s same-session sleep (`Start-Sleep -Seconds 300` or equivalent), then re-read `ticketorder.md` and continue the loop. After `LOOP_EXIT`, end the turn with **zero** further tool calls. No empty shell noops, no tight short sleep loops, no "stay alive" commands. Canonical: `Agent-role.md` § Role Work Loop "No keepalive / no tool spam" and `skills/global-skill/SKILL.md` §"No Keepalive / No Tool Spam".
 
 **Common rules across all Symphony projects:** On every init, read the common skill `skills/agent-symphony/SKILL.md`. It contains shared conventions such as the automatic artifact build after completing tickets to [DONE].
 
@@ -167,7 +167,7 @@ Never ask "what should I do?" — always state EXIT / WAIT / TAKE and the route 
 - This is Windows + PowerShell.
 - `list_dir` does **not** show dot-directories. You **must** use terminal commands with `Get-ChildItem -Force` to see them.
 - Ticket filenames contain brackets like `[READY_FOR_DEV]` and `[DONE]`. These are dangerous in PowerShell globs. For renames, always use `Move-Item -LiteralPath` or `cmd /c ren`.
-- The rtest command is defined in the project `SKILL.md`. The project root is resolved by the init parser in `Agent role.md`.
+- The rtest command is defined in the project `SKILL.md`. The project root is resolved by the init parser in `Agent-role.md`.
 
 **See also:**
 - `skills/agent-symphony/SKILL.md` (common Dev conventions, artifact build rule)
@@ -181,8 +181,8 @@ Report detailed status (including a summary of the Solution Approach in your own
 Tickets declare `**Lane:** backend` or `**Lane:** UI` in the header. Backend lane: unchanged (QA wrote failing tests; make them pass; full incremental rtest before [DONE]). UI lane: the ticket arrives as `[READY_FOR_DEV]` directly from the Architect with a `## Manual Test Script (user)` section (for the human, not you). Your [DONE] gate is: `rtest --fast` green + `compileDebugUnitTestKotlin` BUILD SUCCESSFUL + `assembleDebug` builds. If the ticket has a `## Retired tests` list, DELETE exactly those test files/methods in your commit — nothing more. You still never author or edit test logic; a compile break in a test NOT on the Retired list = `[CANNOT_DEV]`. All Role Discipline Hard Rules apply. See `skills/agent-symphony/SKILL.md` §"Two-Lane Lifecycle".
 
 
-## Path Integrity (MANDATORY — read Agent role.md § Path Integrity Protocol)
-Resolve your project folder ONLY from the Project Registry in Agent role.md.
+## Path Integrity (MANDATORY — read Agent-role.md § Path Integrity Protocol)
+Resolve your project folder ONLY from the Project Registry in Agent-role.md.
 Before your first write each session, verify `.symphony-root` exists in that
 folder and matches the project. Missing or mismatched → STOP and report.
 Never create project directories or work in look-alike folders.
