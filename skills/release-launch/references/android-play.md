@@ -159,6 +159,18 @@ Each of these has cost a real launch cycle at least once.
 - **An unhedged inference propagates as fact.** "Console shows X," written once without anyone
   looking, spreads into every document that cites it and is quoted back as verified. Screenshot-verify
   console state before recording it; hedge explicitly when you have not.
+- **Promoting from Closed Testing to Production is zero-build.** Once closed testing satisfies Google's
+  duration and policy requirements, Google grants production access directly ("Congratulations! Your app has
+  been granted Google Play production access"). Promoting an existing build to Production does NOT require
+  building or uploading a new AAB: in Play Console under `Production`, simply click `Create new release`,
+  click `Add from library`, pick the already-approved closed-testing AAB, paste release notes, and start
+  rollout. Any store listing changes (like App Name) saved in Main Store Listing are packaged into the release
+  batch and published together.
+- **US Third-Party App Store Distribution (Court Order Remedy).** Under Play Console `Settings > Third-party app stores`,
+  Google now automatically mirrors US listings to registered stores (e.g., Aptoide) per court order.
+  Downloads are fulfilled securely through Google Play backend at no extra cost or development effort.
+  Developers can leave it enabled for free additional reach, or opt out per store if Google Play exclusivity
+  is desired.
 
 ## Required evidence
 

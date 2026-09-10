@@ -136,3 +136,44 @@ callbacks, sort them by "what does the default *assert*", not by "which ones are
   demonstrate it failing on that defect. A guard that has never failed has never been tested.
 - Transfer: universal, and cheapest at the moment the defect is still in front of you. It matters
   most for adapters that can return plausible success — media, storage, network, permissions.
+
+---
+
+# CI & Physical Device Execution Pass, 2026-09-09 (DBM-34 / DBM-55)
+
+Repository: `sudowhat/dbmeter`, build `34369193304`. Toolchain: Xcode 26, macOS-15 runner.
+
+## 10. Cloud macOS CI testing vs. physical device validation economics
+
+- Evidence level: **OBSERVED_PROCESS** / **VERIFIED_METHOD**.
+- Source: GitHub Actions macOS runner billing and CI execution logs.
+- Symptom and cause: booting iOS simulators and running automated tests on cloud macOS runners
+  consumes substantial runner time and burns limited monthly/paid CI minutes ($0.08–$0.16/min).
+  Furthermore, iOS simulators do not have real hardware microphones, cannot simulate actual phone
+  audio interruptions, lock button suspends, route yanking, or real device microphone sensitivity.
+- Correction: **VERIFIED DIRECTIVE**. Standing ruling: **No automated testing on CI**.
+  CI is strictly for fast compilation verification (`xcodebuild` clean build and framework link).
+  All functional, audio, microphone, storage, and UI testing is conducted directly on a physical
+  device (iPhone 15).
+- Regression: enforce compilation-only CI workflows with minimal runner minutes; route all
+  functional test cases to physical device checklists (`MANUAL_RELEASE_CHECKLIST.md`).
+- Transfer: applies to any mobile multiplatform project balancing cloud CI spend against physical
+  hardware testing.
+
+## 11. Unsigned physical device IPA packaging for free-tier sideloading
+
+- Evidence level: **VERIFIED_FIX**.
+- Source: `.github/workflows/ios.yml`, output artifact `dbmeter-unsigned.ipa` (18.2 MB).
+- Symptom and cause: testing on a physical iPhone usually requires a paid $99/year Apple Developer
+  Program account for TestFlight or development provisioning profiles. Waiting for enrollment or
+  paying upfront can stall initial physical-device testing.
+- Correction: **VERIFIED FIX**. Build an unsigned ARM64 physical device binary via CI:
+  `xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'generic/platform=iOS' archive ... CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO`.
+  Package the resulting `.xcarchive/Products/Applications/iosApp.app` into a standard `Payload/iosApp.app`
+  directory, zip it, and name it `.ipa`. The developer can install this directly onto an iPhone 15
+  using free tools like Sideloadly with a standard Apple ID.
+- Regression: verify generated IPA contains valid ARM64 Mach-O binary and Compose framework assets
+  without requiring code signing entitlements during build.
+- Transfer: ideal for bootstrapping pre-enrollment physical-device testing on iOS without incurring
+  Apple Developer fees.
+
