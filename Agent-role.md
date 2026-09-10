@@ -12,14 +12,17 @@ Any vendor, any model, any OS. Nothing here is specific to one of them.
 ## 1. Resolve the Symphony root (first, every session)
 
 The root is `<project-home>/symphony/`. `<project-home>` is the host-specific parent directory — the
-**only** part of any Symphony path that varies between machines. Everything below the root is
+**only** part of any Symphony path that varies between machines. Consistently across all hosts,
+Symphony lives directly under the user's home directory (`<home>/symphony/`), where `<home>` is the system
+environment variable (%USERPROFILE% on Windows, $HOME elsewhere). Everything below the root is
 identical everywhere, which is what makes these files portable.
 
 1. Already inside the tree? The nearest ancestor containing `Agent-role.md` **is** the root;
    `<project-home>` is its parent. Stop — authoritative.
-2. Otherwise probe in this order, take the **first** hit containing `Agent-role.md`:
-   `<home>/Documents/symphony` → `<home>/symphony`. (`<home>` = `%USERPROFILE%` on Windows, `$HOME`
-   elsewhere.)
+2. When invoked from `<home>` (%USERPROFILE% or $HOME), the agent directly sees `symphony/` and project
+   directories under it. Probe in this order, take the **first** hit containing `Agent-role.md`:
+   `<home>/symphony` → `<home>/Documents/symphony` (legacy fallback). (`<home>` = `%USERPROFILE%` on Windows,
+   `$HOME` elsewhere.)
 3. Record the resolved absolute path; use it literally all session. Do not probe again, do not keep a
    second candidate alive.
 4. No hit → **STOP and report.** Never create the root, clone one, or accept a directory that merely
@@ -181,13 +184,12 @@ Fully read every mandatory governing file once. Token discipline governs later t
 
 - **Local CLI:** `<project-folder>/.symphony-root` must exist with `project=` matching your init
   command. **Cloud:** fetch it from the live target branch; `project=` must match and
-  `canonical_path=` must name the canonical Symphony folder.
-- **`canonical_path=` is host-portable — both forms are valid on read:** the placeholder
-  `<SYMPHONY_ROOT>/<project-folder>/` (preferred, written by `project-onboarding`) and a legacy
-  absolute path from another machine. Resolve the placeholder against the `<project-home>` fixed in
-  §1. **A legacy absolute path naming a different machine's root is not a mismatch and never a reason
-  to stop.** Only a `project=` disagreeing with your init command, or a marker naming a different
-  *project folder*, is. Never rewrite a marker to "correct" its host prefix during ticket work.
+  `canonical_path=` must name the canonical project folder relative to the Symphony root (e.g. `<project-folder>/`).
+- **`canonical_path=` is relative to Symphony root — host-portable:** relative paths like `<project-folder>/`
+  (e.g. `whatdate-folder/`), `<SYMPHONY_ROOT>/<project-folder>/`, and legacy absolute paths are all valid on read.
+  Relative paths resolve against the Symphony root fixed in §1. A legacy absolute path naming a different machine's
+  root is not a mismatch and never a reason to stop. Only a `project=` disagreeing with your init command, or a marker
+  naming a different *project folder*, is. Never rewrite a marker to "correct" its host prefix during ticket work.
 - Missing or genuinely mismatched → **STOP and report.** Do not create it, do not create a directory,
   do not search for or accept an alternative project.
 

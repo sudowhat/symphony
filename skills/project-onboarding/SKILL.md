@@ -83,7 +83,7 @@ Mirror `whatdate-folder/`. All four live at the **project root** — never insid
 
 ```
 project=<short-name>
-canonical_path=<SYMPHONY_ROOT>/<project-folder>/
+canonical_path=<project-folder>/
 # SYMPHONY PATH-INTEGRITY MARKER — DO NOT COPY, MOVE, OR RECREATE THIS FILE.
 # Agents: verify this file exists at your Active Workspace and that
 # project= matches your init command BEFORE your first write of a session.
