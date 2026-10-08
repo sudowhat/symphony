@@ -238,6 +238,13 @@ your normal code-authority — same as any other correction — and log it in th
 under a `## SRTL Correction — Layout robustness` heading. When something is a stylistic judgment call
 rather than a confirmable defect, note it as a recommendation rather than rewriting it.
 
+### VPS work (any project)
+
+Before any SSH, SCP, deploy, nginx or service change on the shared VPS, load
+`skills/vps-access/SKILL.md`: where the private host notes are, the user's standing authorization
+and its care steps (backup, dry run, `nginx -t`, verify every site), and rollback. Symphony is
+public: host details stay in the private project files.
+
 ### Environment Notes
 
 - Windows + PowerShell.
@@ -254,3 +261,4 @@ Same as all roles: resolve project folder ONLY from the Project Registry in `Age
 - `skills/rtest/SKILL.md` (test conventions, execution tiers)
 - `skills/global-skill/SKILL.md` (Git workflow, long-running commands, clarification policy)
 - `skills/ios-port/SKILL.md` (conditional `init <project> srtl ios` migration planning and manual-test handoff)
+- `skills/vps-access/SKILL.md` (reaching and changing the shared VPS, for any project)

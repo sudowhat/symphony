@@ -636,6 +636,7 @@ skill whose family is not yours.
 | `skills/portal-auth/` | Web | authenticated portals — OAuth+PKCE, OTP/magic links, sessions/CSRF, systemd hardening, secrets, deploy/rollback (§10–12), pre-launch checklist. Load before designing any project where a user signs in |
 | `skills/criso/` | Web | private, cookie-free aggregate analytics from query-free server logs |
 | `skills/question-induction/` | Web · Wisdom Capsules | authoring, replica-gating, validating, and atomically deploying assessment-bank questions |
+| `skills/vps-access/` | SRTL · any project on the VPS | the shared VPS: where the private host notes are, non-interactive SSH, standing authorization and care steps, verify and rollback |
 | `<project-folder>/MEMORY.md` | project | live state, decisions, philosophy, ticket status |
 | `<project-folder>/SKILL.md` | project | build/rtest commands, key paths, conventions |
 | `<project-folder>/ticketorder.md` | project | dispatch queue and live record of the open batch |
