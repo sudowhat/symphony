@@ -24,6 +24,9 @@ For Symphony initialization and ticket lifecycle, follow `../../Agent-role.md`. 
 - Check that the Xcode project parses and exposes a scheme before diagnosing linker failures. Verify the framework architecture matches the simulator destination. Prove both simulator and device framework builds before describing the port as ready for a physical device.
 - Run shared tests on a cheap compatible host and native tests on macOS. Preserve the existing regression entry point and its guards when adding platform selectors; unsupported hosts must report a skip or an explicit unsupported result, never a false pass.
 - Limit cloud retries, job duration, artifact retention, and spending to the account owner's settings. Preserve the first failure log and diagnose before retrying. A CI configuration file without a successful run is planned infrastructure.
+- Compile `commonMain` for a native target (or its metadata) from the first ticket, on the cheap host. Code that only ever compiled for Android can carry JVM-only APIs for months (dbmeter entry 17).
+- Pin Xcode explicitly and put the Xcode and Kotlin versions in the Kotlin/Native cache key. Declare only targets that every dependency publishes; put opt-ins on leaf Apple source sets; guard macOS-only source-set accessors in shared build scripts (dbmeter entries 12–15, 18).
+- Native macOS minutes are an account-wide budget on private repositories. Decide per project which native checks run on CI (compile/link, tests, simulator launch) and trigger them manually; triage compile errors in batches per run (dbmeter entries 10, 19, 20).
 
 ## Native behavior that needs separate proof
 

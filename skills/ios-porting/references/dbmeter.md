@@ -177,3 +177,132 @@ Repository: `sudowhat/dbmeter`, build `34369193304`. Toolchain: Xcode 26, macOS-
 - Transfer: ideal for bootstrapping pre-enrollment physical-device testing on iOS without incurring
   Apple Developer fees.
 
+
+---
+
+# Compilation pass, 2026-09-09 (DBM-34): moved here from the project handoff on 2026-10-11
+
+Repository: `sudowhat/dbmeter`, `MEMORY.md` → "iOS port — HANDOFF STATE (2026-09-09)", CI runs
+34141641058, 34146772472, 34149062240 and later. These findings were recorded in the project but had
+not reached this shared reference (DBM-61, the consolidation ticket, is still a draft). Compile
+results come from macOS CI; nothing below is device-confirmed unless stated.
+
+## 12. The runner's default Xcode could not link the app
+
+- Evidence level: **VERIFIED_FIX** (CI).
+- Source: `.github/workflows/ios.yml` input `xcode_version` (default now `26.0`); DBM-34.
+- Symptom and cause:
+  - the `macos-15` image defaulted to Xcode 16.4 / iOS SDK 18.5;
+  - Compose Multiplatform 1.11.1 ships an object referencing `UIViewLayoutRegion`, which is absent
+    from that SDK;
+  - the Kotlin framework linked anyway, because it compiles against its own sysroot, so the failure
+    appeared only at the **app** link.
+- Correction: pin Xcode explicitly; a blank value silently restores the broken toolchain. App Store
+  uploads also need the current SDK, so the same pin serves release.
+- Regression: the workflow fails loudly if the selected Xcode differs from the pin.
+- Transfer: any KMP project whose dependencies track the newest Apple SDK. "The framework links" is
+  not "the app links".
+
+## 13. The Kotlin/Native cache key must include the Xcode version
+
+- Evidence level: **VERIFIED_FIX** (CI timing).
+- Symptom and cause: the cache key lacked the Xcode version. After switching Xcode, CI restored
+  `~/.konan` built for the old SDK, spent 16m39s regenerating platform libraries, and then skipped
+  the cache save, because the exact key had hit. Every run paid it again.
+- Correction: include the Xcode version (and Kotlin version) in the key.
+- Regression: a second run on an unchanged toolchain restores the cache and skips platform-library
+  generation.
+- Transfer: every Kotlin/Native CI on macOS, where minutes are billed at a multiplier.
+
+## 14. One unsupported target fails the whole iOS configuration
+
+- Evidence level: **VERIFIED_FIX** (82 errors collapsed to 74 real ones once removed).
+- Symptom and cause:
+  - `iosX64` (the Intel-Mac simulator) was declared;
+  - Compose Multiplatform stopped publishing it after `1.11.0-alpha01`;
+  - Gradle resolves every declared target, so one missing artifact failed iOS dependency
+    resolution for all targets.
+- Correction: drop the target, with the owner's approval. The project runner asserts `iosArm64` +
+  `iosSimulatorArm64` exist and `iosX64` stays absent.
+- Regression: that runner assertion.
+- Transfer: declare only targets that every dependency publishes; check before adding a library.
+
+## 15. Opt-ins must reach the leaf Apple source sets
+
+- Evidence level: **VERIFIED_FIX** (CI compile).
+- Symptom and cause: `ExperimentalForeignApi` declared only on the intermediate
+  `appleMain`/`appleTest` tier was a **configuration** failure, worse than no opt-in: 22 errors plus
+  inference cascades.
+- Correction: declare it on the whole Apple subtree, leaves included.
+- Transfer: any language-feature or opt-in setting in a hierarchical KMP source-set tree.
+
+## 16. An "unresolved reference" to an obvious Apple API is usually a missing category import
+
+- Evidence level: **VERIFIED_FIX** (the last 23 compile errors).
+- Symptom and cause: Objective-C **category** members (`setActive`, `timeIntervalSince1970`,
+  `sizeWithAttributes`, …) are exposed by Kotlin/Native as extensions. Each needs its own import
+  (`platform.AVFAudio.setActive`, `platform.Foundation.timeIntervalSince1970`,
+  `platform.UIKit.sizeWithAttributes`).
+- Correction: also, `CLLocation.coordinate` is a by-value C struct and needs `useContents { }`.
+- Transfer: check the import list before doubting the platform API.
+
+## 17. "Shared" code that only ever compiled for Android was not portable
+
+- Evidence level: **VERIFIED_FIX** (CI compile).
+- Symptom and cause: three `commonMain` files had shipped on Android for months while using
+  JVM-only APIs: `Math.PI` (java.lang), `toSortedMap()` (java.util) and `Dispatchers.IO`. The
+  Windows/Android lane compiled `commonMain` only for the JVM, so nothing objected.
+- Correction:
+  - replace them with Kotlin-common APIs;
+  - make the dispatcher `expect`/`actual` so Android keeps `Dispatchers.IO` exactly. Moving the
+    shipping product onto `Default` for an iOS compile convenience was forbidden.
+- Regression: compile `commonMain` for a non-JVM target (or its metadata) on every change, on the
+  cheap host.
+- Transfer: universal for Android-first KMP. Until `commonMain` has compiled for a native target,
+  "it is in commonMain" proves nothing.
+
+## 18. Source-set accessors that exist only on macOS break the Windows lane
+
+- Evidence level: **VERIFIED_FIX** (Android lane green after the change).
+- Symptom and cause: `appleMain`/`appleTest` exist only when iOS targets are enabled (macOS hosts).
+  Touching their accessors unguarded broke the Android build on Windows.
+- Correction: guard with the project's `iosTargetsEnabled` flag.
+- Transfer: any build script shared between hosts with different target sets.
+
+## 19. Order CI so its own evidence is not gated by unrelated, uncompiled tests
+
+- Evidence level: **VERIFIED_FIX**.
+- Symptom and cause: the regression step ran before the app build, so a never-compiled test source
+  set (another ticket's) blocked the build-and-launch evidence this ticket needed.
+- Correction: build and launch first; run tests afterwards under `always()`, each step capped. The
+  simulator test step is capped at 12 minutes and the job at 60.
+- Transfer: any pipeline where several in-flight tickets share one workflow.
+
+## 20. Simulator tests can hang on a headless runner; budget decides the testing model
+
+- Evidence level: **REPRODUCED_NATIVE** for the hang (not fixed). **VERIFIED_METHOD** for the cost
+  model.
+- Symptom and cause:
+  - simulator boot cost about 4m30s;
+  - the iOS test suite hung for over 21 minutes with no log and took a whole job down; the prime
+    suspect is audio tests touching `AVAudioSession` on a headless simulator;
+  - on a private repository, macOS minutes bill at 10x, which left roughly 200 macOS minutes a
+    month on the free plan, shared by every private repository of the account.
+- Correction (project ruling, see entry 10):
+  - CI is compile/link only, with a `stop_after` input (`discovery` ≈ 2 min < `link` ≈ 1–2 min
+    cached < `compile_app` ≈ 3 min);
+  - `workflow_dispatch` only, never on push/PR;
+  - native compile errors are triaged in batches per run, not one run per fix.
+- Transfer: weigh the macOS minute budget per account before planning native test runs. Hardware-
+  bound behaviour belongs on a device either way.
+
+## 21. Two native-adapter defects found while wiring (fixes not yet device-verified)
+
+- Evidence level: **OBSERVED_SOURCE**; corrections **NOT YET VERIFIED** on a device (DBM-46).
+- `CLLocationManager.delegate` is a **weak** reference. An adapter that did not keep its own strong
+  reference could lose the delegate before the fix arrived. The request then completed into
+  nothing, which is indistinguishable from "location unavailable".
+- A player created while the audio session is still in `.record` (left there by the meter) produces
+  **no audible output**. The session must switch to `.playback` first.
+- Transfer: weak delegates and shared audio-session state are classic silent-failure sources in any
+  iOS adapter.
