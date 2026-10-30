@@ -362,6 +362,8 @@ Do **not** run the gate while actively executing a claimed ticket: the worktree 
 
 `REPO_DIRTY` resolves on its own when the peer finishes. `REPO_DIVERGED` and `REPO_SYNC_BLOCKED` need human hands, so **ring the attention bell** (§"Audible Attention Signal") and then keep polling — the human's fix lands and the next tick picks it up with no re-init.
 
+**Handoff-claim exception (SRTL, user ruling 2026-10-30):** if the user's init explicitly says to take/finish a handoff, `REPO_DIRTY` is the expected handoff state — SRTL claims and continues instead of waiting (audit the dirty/unpushed work against its ticket, adopt it, finish, commit + push). Canonical text: `Agent-role.md` §7.2. Never inferred; other roles still WAIT.
+
 **Unchanged and non-negotiable:** you never stash, reset, clean, restore, checkout, commit, absorb, or "tidy" another agent's uncommitted work to get past this gate. That prohibition is the entire reason the gate exists (WD-170/170A). Waiting replaces quitting — it does not license touching.
 
 **Never end a turn to ask permission to continue.** "Shall I proceed?" is not a loop state. `init <project> <role>` pre-authorizes the batch. Your host may still gate individual *actions* (a commit, a push) — that is an environment permission boundary, not a cue to abandon the queue.

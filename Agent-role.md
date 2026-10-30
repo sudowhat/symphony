@@ -286,8 +286,19 @@ dirtied the tree carries on.
 | `REPO_DIVERGED` / `REPO_SYNC_BLOCKED` | **WAIT + ring the bell.** These need human hands — make noise, keep polling. The fix lands and the next tick resumes on its own. |
 | passes | continue to step 1 |
 
-Unchanged and permanent: **never** stash, reset, clean, restore, checkout, commit, absorb, or "tidy"
-another agent's uncommitted work. Wait for their committed-and-pushed handoff; never go get it
+**Exception — explicit handoff claim (SRTL, user ruling 2026-10-30).** When the user's `init` request
+says to take/finish a **handoff** (e.g. "take and finish the handoff from cloud srtl"), a dirty tree is
+the *expected* signature of that handoff, not a peer mid-ticket. SRTL does **not** WAIT: it claims the
+handoff and continues. Procedure: record `git status`/`git diff`, `git fetch --prune` and check
+ahead/behind (diverged → `REPO_DIVERGED`, ring the bell, WAIT as usual) → treat the dirty/unpushed
+work as an orphan (`agent-symphony` §Orphaned-Work Recovery: audit against the ticket, adopt, complete
+the missing gates) → commit + push per Definition of Done → delete the claim → resume the normal loop
+through the sync gate. Limits: user-stated only, **never inferred** from a dirty tree; SRTL only (other
+roles still WAIT); no stash/reset/clean/restore/checkout of the work; if the dirt maps to no handoff
+ticket, report it and WAIT.
+
+Otherwise unchanged and permanent: **never** stash, reset, clean, restore, checkout, commit, absorb, or
+"tidy" another agent's uncommitted work. Wait for their committed-and-pushed handoff; never go get it
 yourself.
 
 **Orphan resume (step 1) outranks everything below it.** After a successful sync, a
@@ -673,6 +684,7 @@ Audit trail only. **Not instructions**; nothing here overrides §1–§13.
 | 2026-08-19 | `init <project> <role>` authorizes the whole batch; the loop never asks permission | §7.1 |
 | 2026-08-19 | An open batch is an open SRTL line | §7.4 |
 | 2026-08-21 | Review is requested, not owed: `:DONE` without `:REVIEWED` is finished. SRTL gains ASK | §7.4 |
+| 2026-10-30 | Explicit SRTL handoff claim: dirty tree is the handoff, claim and continue instead of WAIT | §7.2 |
 | 2026-08-27 | Strict project boundary and window-mismatch flag-off | §1 |
 | WD-334 | A seat that implemented or corrected a ticket may not self-certify its review | §7.4 |
 | WD-170/170A | Never stash, reset, clean, restore, or absorb another agent's uncommitted work | §7.2 |
