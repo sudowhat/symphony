@@ -50,3 +50,21 @@ The iOS source (SwiftUI app, `iosMain`, `commonMain`) was written across about 4
   - The unsigned IPA carries no entitlements, so Associated Domains (Universal Links) and Time Sensitive notifications are expected to be absent.
   - The owner types the Apple ID password into the signer; agents never handle it.
 - **Transfer.** Any pre-membership device test. Not a substitute for TestFlight evidence.
+
+## 5. Swift written without a compiler: what Kotlin's Objective-C export really looks like
+
+- Evidence level: **REPRODUCED_NATIVE** for the errors: Codemagic build 2, Xcode 26.0, Kotlin 2.3.21, 147 errors in 30 of 74 Swift files; build 3 then reported 14, mostly code the first errors had hidden. The corrections are **VERIFIED_FIX** for compiling: build 3 left 14 errors, build 4 one, and build 5 archived the app. Nothing has run on a device yet.
+- **Symptom and cause.** About 40 tickets wrote Swift against guessed Kotlin names and signatures. Each wrong guess type-checks only on a Mac.
+- **What Swift actually sees:**
+  - A nested class is `Outer.Inner` (`SqlValue.Text`, not `SqlValueText`). Two levels deep it is `Outer.MiddleInner` (`DeliveryLedgerRule.ClassificationMissed`). An object is `X.shared`; a companion's members are `X.companion.member`.
+  - A Kotlin `Pair`'s members arrive optional, and a generic function's `List<T>` results arrive as `[Any]`.
+  - A dependency's types carry a module prefix: `Kotlinx_datetimeTimeZone`, not `kotlinx_datetimeTimeZone`.
+  - A function whose name starts with `new`, `copy`, `alloc` or `init` gets a `do` prefix (`newAttempt` is `doNewAttempt`).
+  - A generic Kotlin function gives Swift `AnyObject` for `T`: pass `[HomeEntryItem<AnyObject>]`, then cast the results back.
+  - Objective-C has no default arguments, so Swift passes every argument. A Kotlin property named `description` is `description_`.
+  - `KotlinThrowable.asError()` is already exported; a Swift extension with the same name is ambiguous.
+  - **Swift cannot implement a throwing Kotlin interface method that returns `Boolean`, `Long` or a nullable value.** Swift requires an `@objc` throwing method to return `Void` or a non-null object. A port that Swift implements returns `Unit` or a non-null holder (WhatDate: `StoredSetting`, `StoredSecret`, `SqlExecution`), and a Swift extension restores the typed getters.
+- **Correction.**
+  - Print Swift's names for every exported type in the CI log: grep the generated header for lines that start with `__attribute__((swift_name(`. A wrong name can then be checked without downloading anything.
+  - Fix in batches, one CI run per batch (dbmeter lesson 20). Errors that hide behind an unknown type surface only on the next run.
+- **Transfer.** Any port whose Swift was written before the first native build. Audit Kotlin ports that Swift implements for throwing methods with primitive or nullable results before the first CI run.
