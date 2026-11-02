@@ -24,7 +24,8 @@ For Symphony initialization and ticket lifecycle, follow `../../Agent-role.md`. 
 - Check that the Xcode project parses and exposes a scheme before diagnosing linker failures. Verify the framework architecture matches the simulator destination. Prove both simulator and device framework builds before describing the port as ready for a physical device.
 - Run shared tests on a cheap compatible host and native tests on macOS. Preserve the existing regression entry point and its guards when adding platform selectors; unsupported hosts must report a skip or an explicit unsupported result, never a false pass.
 - Limit cloud retries, job duration, artifact retention, and spending to the account owner's settings. Preserve the first failure log and diagnose before retrying. A CI configuration file without a successful run is planned infrastructure.
-- Compile `commonMain` for a native target (or its metadata) from the first ticket, on the cheap host. Code that only ever compiled for Android can carry JVM-only APIs for months (dbmeter entry 17).
+- Compile `commonMain` for a native target (or its metadata) from the first ticket, on the cheap host. Code that only ever compiled for Android can carry JVM-only APIs for months (dbmeter entry 17). On Kotlin 2.x the iOS klibs themselves (`compileKotlinIosArm64`, `iosMain` included) compile on Windows/Linux; only linking and Swift need macOS (whatdate entry 1).
+- Before planning on hosted CI, confirm the account can start jobs at all: `gh run list` across all workflows (whatdate entry 2).
 - Pin Xcode explicitly and put the Xcode and Kotlin versions in the Kotlin/Native cache key. Declare only targets that every dependency publishes; put opt-ins on leaf Apple source sets; guard macOS-only source-set accessors in shared build scripts (dbmeter entries 12–15, 18).
 - Native macOS minutes are an account-wide budget on private repositories. Decide per project which native checks run on CI (compile/link, tests, simulator launch) and trigger them manually; triage compile errors in batches per run (dbmeter entries 10, 19, 20).
 
@@ -65,6 +66,7 @@ Keep account IDs, credentials, user recordings/locations, raw private logs, and 
 ## References
 
 - [dB Meter findings](references/dbmeter.md): initial source audit; read for KMP wrapper, audio-adapter, callback-wiring, and workflow pitfalls. Native fixes are not yet verified.
+- [WhatDate findings](references/whatdate.md): validating a never-built port without a Mac: Windows klib gate, CI start check, x86_64 simulator exclusion, unsigned IPA plus sideloading.
 - [Apple Xcode compatibility](https://developer.apple.com/xcode/system-requirements): verify the build-host/toolchain pair when choosing it.
 - [Apple submission requirements](https://developer.apple.com/app-store/submitting/): check current SDK and submission requirements at release time.
 - [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): check the owner's current allowance, runner rate, storage, and budget behavior before paid CI use.
