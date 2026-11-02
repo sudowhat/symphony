@@ -68,3 +68,10 @@ The iOS source (SwiftUI app, `iosMain`, `commonMain`) was written across about 4
   - Print Swift's names for every exported type in the CI log: grep the generated header for lines that start with `__attribute__((swift_name(`. A wrong name can then be checked without downloading anything.
   - Fix in batches, one CI run per batch (dbmeter lesson 20). Errors that hide behind an unknown type surface only on the next run.
 - **Transfer.** Any port whose Swift was written before the first native build. Audit Kotlin ports that Swift implements for throwing methods with primitive or nullable results before the first CI run.
+
+## 6. XcodeGen `info: path:` overwrites the app's Info.plist
+
+- Evidence level: **REPRODUCED_NATIVE** (Codemagic build 5's `.ipa`, inspected on Windows). Fix: *NOT YET VERIFIED* by a build.
+- **Symptom and cause.** The archive succeeded, but the app's Info.plist had 23 default keys and version 1.0. `info: path: X` tells XcodeGen to generate X, so it wrote a default plist over the committed one. The app lost its launch screen (iOS then runs it letterboxed), every usage description (a permission request crashes), fonts, URL scheme, document types and background modes.
+- **Correction.** Point the target at the committed file with `INFOPLIST_FILE` and drop `info:`. CI compares the built app's Info.plist keys with `git show HEAD:<plist>` and fails on any missing key.
+- **Transfer.** Any XcodeGen project with a hand-written Info.plist. A successful archive proves compilation, not packaging: open the built Info.plist before calling an `.ipa` installable.
